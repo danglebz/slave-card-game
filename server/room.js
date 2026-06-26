@@ -165,6 +165,7 @@ export class Room {
     this.log.push(`👑→⛓️ สลาฟหมดมือก่อนคิง! ${this.players[order[n - 1]].name} (คิงเดิม) ตกเป็นสลาฟ — แจกไพ่ใหม่`);
     this.noticeSeq++;
     this.noticeText = `👑→⛓️ คิงตกบัลลังก์! ${this.players[order[n - 1]].name} ตกเป็นสลาฟ — แจกไพ่ใหม่`;
+    this._miyakoExchange = true; // คิงตกบัลลังก์ → แลกไพ่เฉพาะคิง↔สลาฟ (ควีน/รองสลาฟไม่ต้องแลก)
     this.start(); // อ่าน finishOrder เป็นอันดับใหม่ → แจก + เข้าเฟสแลกไพ่ทันที
     return { ok: true };
   }
@@ -175,8 +176,12 @@ export class Room {
   setupExchange(order) {
     const n = order.length;
     const tiers = Math.floor(n / 2);
+    // คิงตกบัลลังก์ → แลกเฉพาะคู่สุดขั้ว (คิง↔สลาฟ) เท่านั้น; ปกติแลกทุกคู่
+    const onlyKingSlave = this._miyakoExchange;
+    this._miyakoExchange = false;
+    const maxTier = onlyKingSlave ? 1 : tiers;
     this.giveTasks = {}; // เฉพาะผู้ชนะที่ต้องเลือก: { [winnerIdx]: { to, count, cards|null } }
-    for (let i = 0; i < tiers; i++) {
+    for (let i = 0; i < maxTier; i++) {
       const count = tiers - i; // คู่สุดขั้วแลกมากสุด
       const w = order[i]; // ผู้ชนะ
       const l = order[n - 1 - i]; // ผู้แพ้
@@ -267,7 +272,14 @@ export class Room {
     }
 
     if (!canBeat(this.pile, combo)) {
-      throw new Error(this.pile ? 'ชุดนี้กินกองบนโต๊ะไม่ได้' : 'ลงชุดนี้ไม่ได้');
+      if (!this.pile) throw new Error('ลงชุดนี้ไม่ได้');
+      const TYPE_TH = { single: 'ไพ่เดี่ยว', pair: 'คู่', triple: 'ตอง', quad: 'โฟร์', straight: `เรียง ${this.pile.len} ใบ` };
+      const want = TYPE_TH[this.pile.type] || 'ชุดเดียวกัน';
+      // ชนิด/จำนวนตรงกับกอง? (ถ้าตรง = แค่เล็กกว่า / ถ้าไม่ตรง = ผิดชนิด)
+      const sameShape = combo.type === this.pile.type && (combo.type !== 'straight' || combo.len === this.pile.len);
+      throw new Error(sameShape
+        ? 'ชุดนี้เล็กกว่ากองบนโต๊ะ — ต้องสูงกว่า'
+        : `ต้องลง "${want}" ที่สูงกว่า (หรือบอมบ์)`);
     }
     combo.mode = playMode(this.pile, combo);
 

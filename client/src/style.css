@@ -105,6 +105,7 @@ button.loading:disabled { opacity: 0.92; }
 /* ============ Lobby (ฟอร์มกระจกเข้ม) ============ */
 #lobby-screen { align-items: center; justify-content: center; padding: 20px; }
 .card-panel {
+  position: relative;
   background: rgba(0,0,0,0.34);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
   border: 1px solid rgba(255,255,255,0.12);
@@ -115,6 +116,20 @@ button.loading:disabled { opacity: 0.92; }
   box-shadow: var(--shadow-lg);
   color: #fff;
 }
+
+/* ปุ่มไอคอนมุมฟอร์ม — ติดตั้งแอป (ซ้ายบน) / GitHub (ขวาบน) */
+.corner-btn {
+  position: absolute; top: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; min-height: 0; padding: 0; border-radius: 50%;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16);
+  color: rgba(255,255,255,0.82); cursor: pointer; text-decoration: none;
+  transition: background .15s, color .15s;
+}
+.corner-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+.corner-tl { left: 12px; }
+.corner-tr { right: 12px; }
+.corner-btn svg { width: 17px; height: 17px; }
 .project-logo {
   width: 84px; height: 84px; object-fit: cover; align-self: center;
   border-radius: 18px; border: 1px solid rgba(255,255,255,0.15);

@@ -47,6 +47,7 @@
   "dependencies": {
     "express": "^4.21.2",
     "lucide": "^1.21.0",
+    "qrcode": "^1.5.4",
     "socket.io": "^4.8.1",
     "valibot": "^1.4.1"
   },

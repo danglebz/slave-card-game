@@ -1,5 +1,6 @@
 // app.js — ฝั่ง client เกมไพ่สลาฟ
 import { io } from 'socket.io-client';
+import QRCode from 'qrcode';
 import { icon, iconize, refreshIcons } from './icons.js';
 import { NameSchema, CodeSchema, validateField } from './validation.js';
 import './style.css';
@@ -204,6 +205,27 @@ function openLeaveConfirm() {
   openDialog($('leave-modal'));
 }
 $('leave-confirm').onclick = () => { closeDialog($('leave-modal')); socket.emit('leave'); };
+
+// ---------- แชร์ห้อง (QR) ----------
+function roomCode() { return (myState && myState.code) || $('room-code').textContent.trim(); }
+function roomShareUrl() { return `${location.origin}/?room=${encodeURIComponent(roomCode())}`; }
+$('share-btn').onclick = async () => {
+  const url = roomShareUrl();
+  $('share-code').textContent = roomCode();
+  $('share-url').textContent = url.replace(/^https?:\/\//, ''); // ตัด scheme ให้อ่านสั้น
+  try {
+    const dataUrl = await QRCode.toDataURL(url, {
+      width: 440, margin: 1, errorCorrectionLevel: 'M',
+      color: { dark: '#18181b', light: '#ffffff' },
+    });
+    $('share-qr-img').src = dataUrl;
+  } catch (e) { $('share-qr-img').removeAttribute('src'); }
+  openDialog($('share-modal'));
+};
+$('share-link').onclick = async () => {
+  const ok = await copyText(roomShareUrl());
+  showToast(ok ? 'คัดลอกลิงก์แล้ว' : 'คัดลอกไม่สำเร็จ', { success: ok, error: !ok });
+};
 
 // ---------- ตั้งค่า (เฟือง) ----------
 $('settings-btn').onclick = () => { syncSettingsUI(myState); openDialog($('settings-modal')); };

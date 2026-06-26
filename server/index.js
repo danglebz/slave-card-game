@@ -91,10 +91,11 @@ function armTurnTimer(room) {
   clearTimeout(room._turnTimer);
   room._turnTimer = null;
   room._turnSig = sig;
-  room.turnDeadline = Date.now() + Room.TURN_MS;
+  const ms = room.turnMs(); // เวลาต่อตาตามตั้งค่าห้อง
+  room.turnDeadline = Date.now() + ms;
   // ตั้ง auto-act เฉพาะตอนเปิด auto-pass; ถ้าปิด = โชว์ countdown เฉยๆ ไม่บังคับ
   if (room.settings?.autoPass !== false) {
-    room._turnTimer = setTimeout(() => onTurnTimeout(room.code), Room.TURN_MS);
+    room._turnTimer = setTimeout(() => onTurnTimeout(room.code), ms);
   }
 }
 function onTurnTimeout(code) {

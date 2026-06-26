@@ -42,13 +42,23 @@ export class Room {
     this.noticeSeq = 0; // ตัวนับแจ้งเตือนเด้ง (toast) ฝั่ง client
     this.noticeText = null;
     this.turnDeadline = null; // timestamp(ms) ที่ตาปัจจุบันจะหมดเวลา (ตั้งโดย server, ไม่เซฟลงไฟล์)
-    this.settings = { timer: true, autoPass: true }; // ตั้งค่าห้อง (หัวห้องคุม)
+    // ตั้งค่าห้อง (หัวห้องคุม)
+    this.settings = { timer: true, autoPass: true, turnSeconds: Math.max(1, Math.round(Room.TURN_MS / 1000)) };
   }
 
-  // ปรับตั้งค่าห้อง (เฉพาะค่า boolean ที่รู้จัก)
+  static TURN_SECONDS_CHOICES = [15, 30, 45, 60];
+
+  // ปรับตั้งค่าห้อง (เฉพาะค่าที่รู้จัก/ถูกต้อง)
   setSettings(patch) {
-    if (patch && typeof patch.timer === 'boolean') this.settings.timer = patch.timer;
-    if (patch && typeof patch.autoPass === 'boolean') this.settings.autoPass = patch.autoPass;
+    if (!patch) return;
+    if (typeof patch.timer === 'boolean') this.settings.timer = patch.timer;
+    if (typeof patch.autoPass === 'boolean') this.settings.autoPass = patch.autoPass;
+    if (Room.TURN_SECONDS_CHOICES.includes(patch.turnSeconds)) this.settings.turnSeconds = patch.turnSeconds;
+  }
+
+  // เวลาต่อตาเป็น ms (ตามตั้งค่าห้อง)
+  turnMs() {
+    return (this.settings?.turnSeconds || Math.round(Room.TURN_MS / 1000)) * 1000;
   }
 
   addHistory(entry) {
@@ -446,7 +456,7 @@ export class Room {
       turnName: this.players[this.turn]?.name ?? null,
       turnRemainingMs: this.phase === 'playing' && this.turnDeadline
         ? Math.max(0, this.turnDeadline - Date.now()) : null,
-      turnMs: Room.TURN_MS,
+      turnMs: this.turnMs(),
       settings: this.settings,
       dir: this.dir,
       pile: this.pile,
@@ -526,7 +536,7 @@ export class Room {
     room.giveTasks = data.giveTasks || null;
     room._prevOrder = data._prevOrder || null;
     room.roundOrder = data.roundOrder || null;
-    room.settings = data.settings || { timer: true, autoPass: true };
+    room.settings = { timer: true, autoPass: true, turnSeconds: Math.max(1, Math.round(Room.TURN_MS / 1000)), ...(data.settings || {}) };
     room.everPlayed = data.everPlayed ?? (data.phase !== 'lobby');
     // socket หายหมดตอน restart → ทุกคนออฟไลน์จนกว่าจะ reconnect ด้วยชื่อเดิม
     room.players.forEach((p) => { p.connected = false; });

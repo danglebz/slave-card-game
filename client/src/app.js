@@ -263,6 +263,13 @@ function emitSettings() {
   if (!myState?.youAreHost) return;
   socket.emit('settings', { timer: $('set-timer').checked, autoPass: $('set-autopass').checked });
 }
+// เวลาต่อตา = segmented control (หัวห้องคุม)
+$('turn-seconds-seg').querySelectorAll('button').forEach((btn) => {
+  btn.onclick = () => {
+    if (!myState?.youAreHost || $('set-timer').checked === false) return;
+    socket.emit('settings', { turnSeconds: Number(btn.dataset.sec) });
+  };
+});
 // อัปเดตหน้าตา settings ให้ตรงกับ state ปัจจุบัน + สิทธิ์หัวห้อง
 function syncSettingsUI(s) {
   const st = (s && s.settings) || { timer: true, autoPass: true };
@@ -271,6 +278,12 @@ function syncSettingsUI(s) {
   $('set-autopass').checked = st.autoPass !== false;
   $('set-timer').disabled = !isHost;
   $('set-autopass').disabled = !isHost || st.timer === false; // ปิด timer แล้ว auto-pass ไม่มีผล
+  // เวลาต่อตา: ไฮไลต์ค่าปัจจุบัน + ปิดใช้งานถ้าไม่ใช่หัวห้อง/ปิด timer
+  const curSec = st.turnSeconds || 30;
+  $('turn-seconds-seg').querySelectorAll('button').forEach((btn) => {
+    btn.classList.toggle('active', Number(btn.dataset.sec) === curSec);
+    btn.disabled = !isHost || st.timer === false;
+  });
   $('set-notif').checked = notifPref;
   $('set-sfx-play').checked = sfxPref.play;
   $('set-sfx-bomb').checked = sfxPref.bomb;

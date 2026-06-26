@@ -262,6 +262,17 @@ button.loading:disabled { opacity: 0.92; }
 }
 .settings-logout { width: 100%; margin-top: 16px; min-height: 2.7rem; }
 
+/* segmented control (เลือกเวลาต่อตา) */
+.seg { display: inline-flex; gap: 2px; padding: 2px; border-radius: var(--radius-md); background: var(--border); flex: none; }
+.seg button {
+  min-height: 0; padding: 4px 10px; border: none; border-radius: var(--radius-sm);
+  font-size: 0.82rem; font-weight: 600; font-variant-numeric: tabular-nums;
+  background: transparent; color: var(--muted-foreground);
+}
+.seg button:hover:not(:disabled):not(.active) { background: var(--hover); color: var(--foreground); }
+.seg button.active { background: var(--surface); color: var(--foreground); box-shadow: var(--shadow-sm); }
+.seg button:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* สวิตช์ toggle (shadcn-like) */
 .switch {
   -webkit-appearance: none; appearance: none; flex: none; cursor: pointer;

@@ -247,6 +247,7 @@ function render(s) {
   renderHand(s);
   renderCombos(s);
   renderControls(s);
+  renderTurnTimer(s);
 
   if (s.phase === 'finished' && s.result) showResult(s.result);
   else hideModal(); // ออกจากเฟสจบรอบ (เช่นเข้าเฟสแลกไพ่) → ปิด modal
@@ -331,6 +332,36 @@ function renderPile(s) {
     el.innerHTML = '';
     $('pile-label').textContent = s.phase === 'playing' ? 'โต๊ะว่าง — ลงไพ่ได้เลย' : 'กองบนโต๊ะ';
   }
+}
+
+// ---------- นาฬิกานับถอยหลังต่อตา ----------
+let turnEndsAt = null;
+let turnTick = null;
+function stopTurnTimer() {
+  clearInterval(turnTick);
+  turnTick = null;
+  turnEndsAt = null;
+  const el = $('turn-timer');
+  if (el) el.classList.add('hidden');
+}
+function renderTurnTimer(s) {
+  const el = $('turn-timer');
+  if (!el) return;
+  if (s.phase !== 'playing' || s.turnRemainingMs == null) { stopTurnTimer(); return; }
+  // sync กับเวลาที่ server บอก (กัน clock skew) แล้วเดินด้วยนาฬิกาเครื่องเรา
+  turnEndsAt = Date.now() + s.turnRemainingMs;
+  el.classList.toggle('mine', s.turn === s.youIndex); // ตาเรา = เน้นสี
+  clearInterval(turnTick);
+  const tick = () => {
+    const ms = Math.max(0, turnEndsAt - Date.now());
+    const sec = Math.ceil(ms / 1000);
+    $('turn-timer-sec').textContent = sec;
+    el.classList.remove('hidden');
+    el.classList.toggle('urgent', sec <= 5); // ใกล้หมด → แดงเต้น
+    if (ms <= 0) { clearInterval(turnTick); turnTick = null; }
+  };
+  tick();
+  turnTick = setInterval(tick, 250);
 }
 
 // มินิการ์ดสำหรับประวัติ (เล็ก แสดงเลข+ดอก)

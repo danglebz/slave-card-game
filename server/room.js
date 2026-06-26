@@ -19,6 +19,8 @@ const RANK_TITLES = {
 let roomSeq = 0;
 
 export class Room {
+  static TURN_MS = Number(process.env.TURN_MS) || 30000; // เวลาต่อตา (ms) ก่อน auto-pass/auto-play
+
   constructor(code) {
     this.code = code;
     this.id = ++roomSeq;
@@ -39,6 +41,7 @@ export class Room {
     this.roundOrder = null; // คิง/สลาฟ ของรอบปัจจุบัน (ใช้กฎคิงตกบัลลังก์)
     this.noticeSeq = 0; // ตัวนับแจ้งเตือนเด้ง (toast) ฝั่ง client
     this.noticeText = null;
+    this.turnDeadline = null; // timestamp(ms) ที่ตาปัจจุบันจะหมดเวลา (ตั้งโดย server, ไม่เซฟลงไฟล์)
   }
 
   addHistory(entry) {
@@ -250,7 +253,10 @@ export class Room {
   }
 
   play(socketId, cardIds) {
-    const idx = this.indexOf(socketId);
+    return this._play(this.indexOf(socketId), cardIds);
+  }
+
+  _play(idx, cardIds, auto = false) {
     if (this.phase !== 'playing') throw new Error('ยังไม่ถึงเวลาเล่น');
     if (idx !== this.turn) throw new Error('ยังไม่ถึงตาของคุณ');
     const player = this.players[idx];
@@ -292,8 +298,8 @@ export class Room {
     this.pileOwner = idx;
     this.everPlayed = true;
     this._lastPileCards = cardIds.map((id) => ({ ...cardFromId(id), id }));
-    this.log.push(`${player.name} ลง ${cardIds.map(idToLabel).join(' ')}`);
-    this.addHistory({ name: player.name, cards: cardIds.map(cardFromId) });
+    this.log.push(`${player.name} ลง ${cardIds.map(idToLabel).join(' ')}${auto ? ' (หมดเวลา)' : ''}`);
+    this.addHistory({ name: player.name, cards: cardIds.map(cardFromId), auto });
 
     if (player.hand.length === 0) {
       player.finished = true;
@@ -323,17 +329,37 @@ export class Room {
   }
 
   pass(socketId) {
-    const idx = this.indexOf(socketId);
+    return this._pass(this.indexOf(socketId));
+  }
+
+  _pass(idx, auto = false) {
     if (this.phase !== 'playing') throw new Error('ยังไม่ถึงเวลาเล่น');
     if (idx !== this.turn) throw new Error('ยังไม่ถึงตาของคุณ');
     if (!this.pile) throw new Error('คุณเป็นคนนำกอง ต้องลงไพ่ (pass ไม่ได้)');
 
     // ผ่านแล้ว = ออกจากกองนี้ ถูกข้ามจนกว่ากองจะเคลียร์
     this.passed.add(idx);
-    this.log.push(`${this.players[idx].name} ผ่าน`);
-    this.addHistory({ name: this.players[idx].name, pass: true });
+    this.log.push(`${this.players[idx].name} ผ่าน${auto ? ' (หมดเวลา)' : ''}`);
+    this.addHistory({ name: this.players[idx].name, pass: true, auto });
     this.advanceTurn();
     return { ok: true };
+  }
+
+  // หมดเวลาในตานี้ → เล่นแทนอัตโนมัติ: มีกองอยู่ = ผ่าน, นำกองอยู่ = ลงไพ่ต่ำสุด
+  autoAct() {
+    if (this.phase !== 'playing') return false;
+    const idx = this.turn;
+    const player = this.players[idx];
+    if (!player || player.finished) return false;
+    if (this.pile) {
+      this._pass(idx, true);
+    } else {
+      sortHand(player.hand);
+      const lowest = player.hand[0]; // ไพ่ต่ำสุด (เกมแรกคือ 3♣ อยู่แล้ว → ผ่านเงื่อนไข 3♣)
+      if (!lowest) return false;
+      this._play(idx, [cardId(lowest)], true);
+    }
+    return true;
   }
 
   // หาคนถัดไปที่ยังเล่นกองนี้อยู่ (ยังไม่หมดมือ และยังไม่ผ่าน, ตามทิศการวน) — คืน null ถ้าไม่มีใครเหลือ
@@ -411,6 +437,9 @@ export class Room {
       youIndex: meIdx,
       turn: this.turn,
       turnName: this.players[this.turn]?.name ?? null,
+      turnRemainingMs: this.phase === 'playing' && this.turnDeadline
+        ? Math.max(0, this.turnDeadline - Date.now()) : null,
+      turnMs: Room.TURN_MS,
       dir: this.dir,
       pile: this.pile,
       pileCards: this._lastPileCards || null,

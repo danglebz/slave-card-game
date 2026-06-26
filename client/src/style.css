@@ -250,6 +250,21 @@ button.loading:disabled { opacity: 0.92; }
 #turn-info.your-turn { color: var(--primary); animation: pulse 1.2s infinite; }
 @keyframes pulse { 50% { opacity: 0.55; } }
 
+/* นาฬิกานับถอยหลังต่อตา — ใต้ชื่อคนเล่น */
+.turn-timer {
+  position: relative; z-index: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  margin: 4px auto 0; padding: 1px 9px;
+  border-radius: 999px;
+  font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: rgba(255,255,255,0.85);
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(255,255,255,0.16);
+}
+.turn-timer svg.lucide { width: 0.95em; height: 0.95em; }
+.turn-timer.mine { color: var(--primary); border-color: var(--primary-border); }
+.turn-timer.urgent { color: #fff; background: var(--red); border-color: var(--red); animation: pulse 0.8s infinite; }
+
 /* ที่นั่งผู้เล่นรอบโต๊ะ (วางในตาราง 3×3 ของ #table) */
 .seat { display: flex; align-items: center; justify-content: center; z-index: 1; min-width: 0; }
 #seat-tl { grid-area: tl; } #seat-top { grid-area: top; } #seat-tr { grid-area: tr; }

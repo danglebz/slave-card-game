@@ -73,7 +73,34 @@ function makeCode() {
   return code;
 }
 
+// ----- ตัวจับเวลาต่อตา (auto-pass / auto-play เมื่อหมดเวลา) -----
+function clearTurnTimer(room) {
+  clearTimeout(room._turnTimer);
+  room._turnTimer = null;
+  room.turnDeadline = null;
+  room._turnSig = null;
+}
+// ตั้ง/รี-เซ็ตเวลาต่อตา — รีเซ็ตเฉพาะตอน "ตาเปลี่ยนจริง" (กัน reconnect มากวนเวลา)
+function armTurnTimer(room) {
+  const anyOnline = room.players.some((p) => p.connected);
+  // เดินเวลาเฉพาะตอนเล่นจริง + มีคนออนไลน์อย่างน้อยหนึ่งคน
+  const sig = room.phase === 'playing' && anyOnline ? `${room.turn}:${room.pileOwner}` : null;
+  if (sig === null) { clearTurnTimer(room); return; }
+  if (sig === room._turnSig && room._turnTimer) return; // ตาเดิม → เดินเวลาต่อ
+  clearTimeout(room._turnTimer);
+  room._turnSig = sig;
+  room.turnDeadline = Date.now() + Room.TURN_MS;
+  room._turnTimer = setTimeout(() => onTurnTimeout(room.code), Room.TURN_MS);
+}
+function onTurnTimeout(code) {
+  const room = rooms.get(code);
+  if (!room || room.phase !== 'playing') return;
+  try { room.autoAct(); } catch (e) { console.error('auto-act:', e.message); }
+  broadcast(room); // จะ arm รอบใหม่ให้เอง
+}
+
 function broadcast(room) {
+  armTurnTimer(room); // ตั้งเวลาก่อนส่ง state เพื่อให้ client ได้ turnRemainingMs ที่ถูกต้อง
   for (const p of room.players) {
     if (p.connected) io.to(p.id).emit('state', room.stateFor(p.id));
   }
@@ -162,6 +189,7 @@ io.on('connection', (socket) => {
     socket.leave(code);
     room.removePlayer(socket.id);
     if (room.players.length === 0 || room.isEmpty()) {
+      clearTurnTimer(room); // ห้องว่าง → หยุดนาฬิกาต่อตา
       clearTimeout(room._cleanupTimer);
       room._cleanupTimer = setTimeout(() => {
         const r = rooms.get(code);
@@ -183,6 +211,7 @@ io.on('connection', (socket) => {
     if (room.players.length === 0 || room.isEmpty()) {
       // ห้องว่าง (รวมกรณีรีเฟรช) → รอ grace period เผื่อ reconnect ก่อนค่อยลบ
       const code = joinedCode;
+      clearTurnTimer(room); // ห้องว่าง → หยุดนาฬิกาต่อตา
       clearTimeout(room._cleanupTimer);
       room._cleanupTimer = setTimeout(() => {
         const r = rooms.get(code);

@@ -126,7 +126,9 @@ button.loading:disabled { opacity: 0.92; }
   color: rgba(255,255,255,0.6); cursor: pointer; text-decoration: none;
   transition: color .15s;
 }
-.corner-btn:hover { color: #fff; }
+.corner-btn:hover { color: #fff; background: none; }
+.corner-btn:active { transform: none; }
+.corner-btn:focus-visible { box-shadow: none; outline: none; }
 .corner-tl { left: 12px; }
 .corner-tr { right: 12px; }
 .corner-btn svg { width: 17px; height: 17px; }

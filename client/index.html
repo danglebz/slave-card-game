@@ -21,7 +21,7 @@
   <!-- progress bar บนสุด (shadcn) — โหลดหน้า / ระหว่างสร้าง-เข้าห้อง -->
   <div id="progress-bar" class="progress-bar" role="progressbar" aria-hidden="true"></div>
   <!-- สถานะการเชื่อมต่อ — โผล่ตอนเน็ตหลุด -->
-  <div id="conn-banner" class="conn-banner hidden" role="status"><i data-lucide="wifi-off"></i> <span>การเชื่อมต่อหลุด — กำลังเชื่อมต่อใหม่…</span></div>
+  <div id="conn-banner" class="conn-banner hidden" role="status"><i data-lucide="wifi-off"></i> <span data-i18n="banner.conn">การเชื่อมต่อหลุด — กำลังเชื่อมต่อใหม่…</span></div>
   <div id="app">
     <!-- หน้าเข้าห้อง -->
     <section id="lobby-screen" class="screen">
@@ -32,25 +32,25 @@
         </a>
         <img class="project-logo" src="/logo.png" alt="" aria-hidden="true" />
         <h1>ไพ่สลาฟ</h1>
-        <p class="sub">เกมเดียวที่หัวหน้ายอมเป็นสลาฟ</p>
+        <p class="sub" data-i18n="lobby.sub">เกมเดียวที่หัวหน้ายอมเป็นสลาฟ</p>
         <div class="field">
           <div class="input-icon">
             <i data-lucide="user"></i>
-            <input id="name-input" class="text-center" maxlength="16" placeholder="ใส่ชื่อของคุณ" autocomplete="off" aria-describedby="name-error" />
+            <input id="name-input" class="text-center" maxlength="16" placeholder="ใส่ชื่อของคุณ" data-i18n-ph="lobby.name" autocomplete="off" aria-describedby="name-error" />
           </div>
           <p class="field-error" id="name-error" role="alert"></p>
         </div>
-        <button id="create-btn" class="primary"><i data-lucide="plus"></i> สร้างห้องใหม่</button>
-        <div class="divider"><span>หรือเข้าห้องที่มีอยู่</span></div>
+        <button id="create-btn" class="primary"><i data-lucide="plus"></i> <span data-i18n="lobby.create">สร้างห้องใหม่</span></button>
+        <div class="divider"><span data-i18n="lobby.or">หรือเข้าห้องที่มีอยู่</span></div>
         <div class="field">
           <div class="input-group">
             <span class="input-addon"><i data-lucide="hash"></i></span>
-            <input id="code-input" maxlength="4" placeholder="รหัสห้อง" autocomplete="off" aria-describedby="code-error" />
-            <button id="join-btn" class="primary"><i data-lucide="log-in"></i> เข้าห้อง</button>
+            <input id="code-input" maxlength="4" placeholder="รหัสห้อง" data-i18n-ph="lobby.code" autocomplete="off" aria-describedby="code-error" />
+            <button id="join-btn" class="primary"><i data-lucide="log-in"></i> <span data-i18n="lobby.join">เข้าห้อง</span></button>
           </div>
           <p class="field-error" id="code-error" role="alert"></p>
         </div>
-        <a id="rules-btn" class="link-btn" role="button" tabindex="0"><i data-lucide="book-open"></i> กติกา / วิธีเล่น</a>
+        <a id="rules-btn" class="link-btn" role="button" tabindex="0"><i data-lucide="book-open"></i> <span data-i18n="lobby.rules">กติกา / วิธีเล่น</span></a>
       </div>
       <footer class="lobby-foot">
         <a id="app-version" class="app-version" href="https://github.com/Danglebz/slave-card-game/blob/main/CHANGELOG.md" target="_blank" rel="noopener" title="ดู changelog"></a>
@@ -67,7 +67,7 @@
         <button id="share-btn" class="icon-btn hidden" type="button" title="แชร์ห้อง (QR)" aria-label="แชร์ห้อง"><i data-lucide="qr-code"></i></button>
         <button id="settings-btn" class="icon-btn" type="button" title="ตั้งค่า" aria-label="ตั้งค่า"><i data-lucide="settings"></i></button>
       </header>
-      <div id="spectator-banner" class="spectator-banner hidden"><i data-lucide="eye"></i> คุณกำลังดูอยู่ — จะได้เข้าเล่นรอบถัดไป</div>
+      <div id="spectator-banner" class="spectator-banner hidden"><i data-lucide="eye"></i> <span data-i18n="banner.spectator">คุณกำลังดูอยู่ — จะได้เข้าเล่นรอบถัดไป</span></div>
 
       <!-- โต๊ะ 3×3: กองไพ่ตรงกลาง (5) ผู้เล่นล้อมรอบ บน(8)/ซ้าย(4)/ขวา(6)/ล่าง(2) -->
       <div id="table">
@@ -92,19 +92,19 @@
 
       <div id="hand-area">
         <div id="bot-controls" class="bot-controls hidden">
-          <button id="add-bot-btn" type="button"><i data-lucide="bot"></i> เพิ่มบอท</button>
-          <button id="remove-bot-btn" type="button"><i data-lucide="bot-off"></i> ลบบอท</button>
-          <button id="shuffle-btn" type="button"><i data-lucide="shuffle"></i> สลับที่นั่ง</button>
+          <button id="add-bot-btn" type="button"><i data-lucide="bot"></i> <span data-i18n="game.addBot">เพิ่มบอท</span></button>
+          <button id="remove-bot-btn" type="button"><i data-lucide="bot-off"></i> <span data-i18n="game.removeBot">ลบบอท</span></button>
+          <button id="shuffle-btn" type="button"><i data-lucide="shuffle"></i> <span data-i18n="game.shuffle">สลับที่นั่ง</span></button>
         </div>
         <div id="combo-hints" class="hidden"></div>
         <button id="sort-toggle" type="button"><i data-lucide="list-ordered"></i> เรียงตามเลข</button>
         <div id="hand"></div>
         <div id="actions">
-          <button id="play-btn" class="primary" disabled><i data-lucide="play"></i> ลงไพ่</button>
-          <button id="pass-btn" disabled><i data-lucide="skip-forward"></i> ผ่าน</button>
-          <button id="give-btn" class="primary hidden" disabled><i data-lucide="gift"></i> ส่งไพ่แลก</button>
-          <button id="start-btn" class="primary hidden">เริ่มเกม</button>
-          <button id="again-btn" class="primary hidden"><i data-lucide="rotate-ccw"></i> เล่นรอบใหม่</button>
+          <button id="play-btn" class="primary" disabled><i data-lucide="play"></i> <span data-i18n="game.play">ลงไพ่</span></button>
+          <button id="pass-btn" disabled><i data-lucide="skip-forward"></i> <span data-i18n="game.pass">ผ่าน</span></button>
+          <button id="give-btn" class="primary hidden" disabled><i data-lucide="gift"></i> <span data-i18n="game.give">ส่งไพ่แลก</span></button>
+          <button id="start-btn" class="primary hidden"><span data-i18n="game.start">เริ่มเกม</span></button>
+          <button id="again-btn" class="primary hidden"><i data-lucide="rotate-ccw"></i> <span data-i18n="game.again">เล่นรอบใหม่</span></button>
         </div>
       </div>
     </section>
@@ -113,9 +113,9 @@
     <div id="result-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
       <div class="modal-box">
         <button class="dialog-close" type="button" data-dialog-close aria-label="ปิด"><i data-lucide="x"></i></button>
-        <h2 id="result-title"><i data-lucide="party-popper"></i> จบรอบ!</h2>
+        <h2 id="result-title"><i data-lucide="party-popper"></i> <span data-i18n="result.title">จบรอบ!</span></h2>
         <ol id="result-list"></ol>
-        <button id="result-close" class="primary" type="button" data-dialog-close>ปิด</button>
+        <button id="result-close" class="primary" type="button" data-dialog-close data-i18n="dialog.close">ปิด</button>
       </div>
     </div>
 
@@ -174,19 +174,19 @@
     <div id="settings-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
       <div class="modal-box settings-box">
         <button class="dialog-close" type="button" data-dialog-close aria-label="ปิด"><i data-lucide="x"></i></button>
-        <h2 id="settings-title"><i data-lucide="settings"></i> ตั้งค่า</h2>
+        <h2 id="settings-title"><i data-lucide="settings"></i> <span data-i18n="set.title">ตั้งค่า</span></h2>
         <div class="settings-list">
-          <p class="settings-group-label"><i data-lucide="users"></i> ทั้งห้อง <span id="settings-host-tag" class="settings-tag hidden">หัวห้องปรับได้</span></p>
+          <p class="settings-group-label"><i data-lucide="users"></i> <span data-i18n="set.room">ทั้งห้อง</span> <span id="settings-host-tag" class="settings-tag hidden" data-i18n="set.hostTag">หัวห้องปรับได้</span></p>
           <label class="setting-row" for="set-timer">
-            <span class="setting-label"><i data-lucide="timer"></i> จับเวลาต่อตา</span>
+            <span class="setting-label"><i data-lucide="timer"></i> <span data-i18n="set.timer">จับเวลาต่อตา</span></span>
             <input type="checkbox" id="set-timer" class="switch" />
           </label>
           <label class="setting-row" for="set-autopass">
-            <span class="setting-label"><i data-lucide="skip-forward"></i> ผ่านอัตโนมัติเมื่อหมดเวลา</span>
+            <span class="setting-label"><i data-lucide="skip-forward"></i> <span data-i18n="set.autopass">ผ่านอัตโนมัติเมื่อหมดเวลา</span></span>
             <input type="checkbox" id="set-autopass" class="switch" />
           </label>
           <div class="setting-row">
-            <span class="setting-label"><i data-lucide="clock"></i> เวลาต่อตา</span>
+            <span class="setting-label"><i data-lucide="clock"></i> <span data-i18n="set.turnsec">เวลาต่อตา</span></span>
             <div class="seg" id="turn-seconds-seg" role="group" aria-label="เวลาต่อตา">
               <button type="button" data-sec="15">15</button>
               <button type="button" data-sec="30">30</button>
@@ -195,38 +195,45 @@
             </div>
           </div>
 
-          <p class="settings-group-label"><i data-lucide="user"></i> ส่วนตัว</p>
+          <p class="settings-group-label"><i data-lucide="user"></i> <span data-i18n="set.personal">ส่วนตัว</span></p>
           <div class="setting-row">
-            <span class="setting-label"><i data-lucide="palette"></i> สีประจำตัว</span>
+            <span class="setting-label"><i data-lucide="languages"></i> <span data-i18n="set.lang">ภาษา</span></span>
+            <div class="seg" id="lang-seg" role="group" aria-label="Language">
+              <button type="button" data-lang="th">ไทย</button>
+              <button type="button" data-lang="en">EN</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span class="setting-label"><i data-lucide="palette"></i> <span data-i18n="set.color">สีประจำตัว</span></span>
             <div class="swatches" id="color-swatches"></div>
           </div>
           <label class="setting-row" for="set-theme">
-            <span class="setting-label"><i data-lucide="sun-moon"></i> ธีมสว่าง</span>
+            <span class="setting-label"><i data-lucide="sun-moon"></i> <span data-i18n="set.theme">ธีมสว่าง</span></span>
             <input type="checkbox" id="set-theme" class="switch" />
           </label>
           <label class="setting-row" for="set-notif">
-            <span class="setting-label"><i data-lucide="bell"></i> แจ้งเตือนเมื่อถึงตา <span class="setting-sub">(เสียง / สั่น)</span></span>
+            <span class="setting-label"><i data-lucide="bell"></i> <span data-i18n="set.notif">แจ้งเตือนเมื่อถึงตา</span> <span class="setting-sub" data-i18n="set.notifSub">(เสียง / สั่น)</span></span>
             <input type="checkbox" id="set-notif" class="switch" />
           </label>
-          <p class="settings-sub-label"><i data-lucide="volume-2"></i> เสียงเอฟเฟกต์</p>
+          <p class="settings-sub-label"><i data-lucide="volume-2"></i> <span data-i18n="set.sfx">เสียงเอฟเฟกต์</span></p>
           <label class="setting-row setting-row-sub" for="set-sfx-play">
-            <span class="setting-label"><i data-lucide="play"></i> ลงไพ่ / เคลียร์กอง</span>
+            <span class="setting-label"><i data-lucide="play"></i> <span data-i18n="set.sfxPlay">ลงไพ่ / เคลียร์กอง</span></span>
             <input type="checkbox" id="set-sfx-play" class="switch" />
           </label>
           <label class="setting-row setting-row-sub" for="set-sfx-bomb">
-            <span class="setting-label"><i data-lucide="bomb"></i> บอมบ์</span>
+            <span class="setting-label"><i data-lucide="bomb"></i> <span data-i18n="set.sfxBomb">บอมบ์</span></span>
             <input type="checkbox" id="set-sfx-bomb" class="switch" />
           </label>
           <label class="setting-row setting-row-sub" for="set-sfx-win">
-            <span class="setting-label"><i data-lucide="trophy"></i> ชนะ / แพ้</span>
+            <span class="setting-label"><i data-lucide="trophy"></i> <span data-i18n="set.sfxWin">ชนะ / แพ้</span></span>
             <input type="checkbox" id="set-sfx-win" class="switch" />
           </label>
           <div class="setting-row is-disabled">
-            <span class="setting-label"><i data-lucide="message-circle"></i> แชท</span>
-            <span class="setting-soon">เร็วๆ นี้</span>
+            <span class="setting-label"><i data-lucide="message-circle"></i> <span data-i18n="set.chat">แชท</span></span>
+            <span class="setting-soon" data-i18n="set.soon">เร็วๆ นี้</span>
           </div>
         </div>
-        <button id="logout-btn" class="btn-destructive settings-logout" type="button"><i data-lucide="door-open"></i> ออกจากห้อง</button>
+        <button id="logout-btn" class="btn-destructive settings-logout" type="button"><i data-lucide="door-open"></i> <span data-i18n="set.logout">ออกจากห้อง</span></button>
       </div>
     </div>
 

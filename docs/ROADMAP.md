@@ -49,11 +49,11 @@
 
 | ฟีเจอร์ | รายละเอียด |
 |---|---|
-| 🎨 **Avatar / สีประจำตัว** | เลือกรูป/สีผู้เล่น |
-| 🌗 **ธีม มืด/สว่าง** | สลับธีมได้ |
+| ✅ 🎨 **Avatar / สีประจำตัว** | **(เสร็จ)** เลือกสีประจำตัว (8 สี) → อวตารวงกลม+อักษรแรกบน chip · เก็บ localStorage |
+| ✅ 🌗 **ธีม มืด/สว่าง** | **(เสร็จ — light เป็น first pass)** ตัวแปรธีม + toggle ในตั้งค่า |
 | ✅ 🌐 **PWA** | **(เสร็จ)** manifest + service worker (network-first HTML, cache-first assets, ข้าม socket.io) + apple meta · ปุ่ม "ติดตั้งแอป" บนล็อบบี้ (beforeinstallprompt) · SW เฉพาะ build จริง |
-| 🇹🇭🇬🇧 **i18n** | รองรับ TH / EN |
-| 📡 **Connection status** | แสดงสถานะ "กำลัง reconnect…" ชัดขึ้น |
+| 🟡 🇹🇭🇬🇧 **i18n** | **(UI หลัก TH/EN)** lobby/settings/ปุ่ม/banner แปลแล้ว · กติกาเต็ม + ข้อความเกมจาก server ยังเป็นไทย |
+| ✅ 📡 **Connection status** | **(เสร็จ)** banner บนสุดตอนเน็ตหลุด/กำลังต่อใหม่ |
 
 ---
 

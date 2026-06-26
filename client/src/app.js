@@ -2,6 +2,7 @@
 import { io } from 'socket.io-client';
 import QRCode from 'qrcode';
 import { icon, iconize, refreshIcons } from './icons.js';
+import { t, applyI18n, setLang, getLang } from './i18n.js';
 import { NameSchema, CodeSchema, validateField } from './validation.js';
 import './style.css';
 
@@ -69,6 +70,19 @@ function renderSwatches() {
   });
 }
 renderSwatches();
+
+// ภาษา (TH/EN) — ใส่ข้อความ UI หลักทันทีที่โหลด
+applyI18n();
+function refreshLangUI() {
+  applyI18n();
+  $('sort-toggle').innerHTML = sortLabel();
+  $('lang-seg').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.lang === getLang()));
+  if (myState) render(myState); // อัปเดตข้อความ dynamic (turn-info, ปุ่มเริ่ม ฯลฯ)
+  refreshIcons();
+}
+$('lang-seg').querySelectorAll('button').forEach((b) => {
+  b.onclick = () => { setLang(b.dataset.lang); refreshLangUI(); };
+});
 
 // ธีมมืด/สว่าง (เก็บใน localStorage; ดีฟอลต์ = มืด/เขียว felt)
 let theme = localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
@@ -345,6 +359,7 @@ function syncSettingsUI(s) {
   });
   $('set-notif').checked = notifPref;
   $('set-theme').checked = theme === 'light';
+  $('lang-seg').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.lang === getLang()));
   $('set-sfx-play').checked = sfxPref.play;
   $('set-sfx-bomb').checked = sfxPref.bomb;
   $('set-sfx-win').checked = sfxPref.win;
@@ -609,7 +624,7 @@ function renderPile(s) {
     ti.classList.toggle('your-turn', ex.role === 'winner' && !ex.myDone);
   } else if (s.phase === 'playing') {
     const yours = s.turn === s.youIndex;
-    ti.innerHTML = yours ? `${icon('circle-dot')} ตาคุณแล้ว!` : `${icon('hourglass')} ตาของ ${esc(s.turnName)}`;
+    ti.innerHTML = yours ? `${icon('circle-dot')} ${t('turn.yours')}` : `${icon('hourglass')} ${t('turn.other', { name: esc(s.turnName) })}`;
     ti.classList.toggle('your-turn', yours);
   } else {
     ti.textContent = '';
@@ -693,7 +708,7 @@ function renderLog(s) {
 // โหมดเรียงไพ่ในมือ: 'rank' = ตามเลขปกติ, 'bomb' = ดันไพ่ที่เป็นบอมไปขวาสุด
 let handSort = localStorage.getItem('handSort') === 'bomb' ? 'bomb' : 'rank';
 function sortLabel() {
-  return handSort === 'bomb' ? `${icon('bomb')} ดันบอมไปขวา` : `${icon('list-ordered')} เรียงตามเลข`;
+  return handSort === 'bomb' ? `${icon('bomb')} ${t('game.sortBomb')}` : `${icon('list-ordered')} ${t('game.sortRank')}`;
 }
 function sortedHand(hand) {
   const arr = (hand || []).slice().sort((a, b) => a.r - b.r || a.s - b.s); // เรียงตามเลขก่อนเสมอ
@@ -839,9 +854,9 @@ function renderControls(s) {
   $('remove-bot-btn').disabled = !s.players.some((p) => p.isBot);
   $('shuffle-btn').disabled = s.players.length < 2;
   if (s.phase === 'lobby' && isHost && startBtn.disabled) {
-    startBtn.textContent = 'รออีกอย่างน้อย 2 คน';
+    startBtn.textContent = t('game.waitMore');
   } else {
-    startBtn.textContent = 'เริ่มเกม';
+    startBtn.textContent = t('game.start');
   }
 
   againBtn.classList.toggle('hidden', !(s.phase === 'finished' && isHost));

@@ -86,6 +86,22 @@ svg.lucide {
   display: inline-block; vertical-align: -0.125em; stroke-width: 2;
 }
 
+/* ============ Loading (shadcn) — progress bar + ปุ่มสปินเนอร์ ============ */
+.progress-bar {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0;
+  background: var(--primary);
+  box-shadow: 0 0 10px var(--primary), 0 0 4px var(--primary);
+  border-radius: 0 2px 2px 0;
+  z-index: 2000; opacity: 0; pointer-events: none;
+  transition: width .25s ease, opacity .3s ease;
+}
+.progress-bar.active { opacity: 1; }
+/* ปุ่มกำลังโหลด — คงโทนสว่าง (ไม่จางเหมือน disabled ปกติ) + สปินเนอร์หมุน */
+button.loading { cursor: progress; }
+button.loading:disabled { opacity: 0.92; }
+.spin { animation: spin .7s linear infinite; transform-origin: center; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ============ Lobby (ฟอร์มกระจกเข้ม) ============ */
 #lobby-screen { align-items: center; justify-content: center; padding: 20px; }
 .card-panel {
@@ -187,26 +203,29 @@ svg.lucide {
 .room-code .copy-hint { font-size: 0.85rem; opacity: 0.7; }
 .room-code:active { opacity: 0.6; }
 
-/* Toast (shadcn / Sonner) — การ์ดเล็ก พื้นขาว เงา + ไอคอนนำตามชนิด */
+/* Toast แบบ Sonner (shadcn) — การ์ดพื้นขาว เงานุ่ม ไอคอนนำตามชนิด */
 .toast {
-  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(12px);
-  display: flex; align-items: center; gap: 10px; text-align: left;
-  width: max-content; max-width: min(420px, calc(100vw - 32px));
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(12px);
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  width: max-content; max-width: min(360px, calc(100vw - 32px));
   background: var(--surface); color: var(--foreground); border: 1px solid var(--border);
-  padding: 12px 16px; border-radius: var(--radius-md);
-  font-size: 0.875rem; font-weight: 500; line-height: 1.45; box-shadow: var(--shadow-lg);
+  padding: 14px 16px; border-radius: 12px;
+  font-size: 0.8125rem; font-weight: 500; line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08);
   z-index: 1000; opacity: 0; pointer-events: none;
-  transition: opacity .22s ease, transform .22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity .25s ease, transform .35s cubic-bezier(0.21, 1.02, 0.73, 1);
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .toast.hidden { display: none; }
-.toast.top { top: 24px; bottom: auto; transform: translateX(-50%) translateY(-12px); }
+.toast.top { top: 20px; bottom: auto; transform: translateX(-50%) translateY(-14px); }
 .toast.top.show { transform: translateX(-50%) translateY(0); }
 .toast .toast-ico { flex: none; }
+.toast .toast-ico svg.lucide { width: 18px; height: 18px; }
 .toast .toast-msg { display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-.toast.error { background: #fff1f2; border-color: rgba(225, 29, 72, 0.35); color: #be123c; }   /* destructive */
+/* rich colors ตาม Sonner */
+.toast.error { background: #fff1f2; border-color: rgba(225, 29, 72, 0.30); color: #be123c; }
 .toast.error .toast-ico { color: var(--red); }
-.toast.success { background: #f0fdf4; border-color: rgba(22, 163, 74, 0.35); color: #15803d; }
+.toast.success { background: #f0fdf4; border-color: rgba(22, 163, 74, 0.30); color: #15803d; }
 .toast.success .toast-ico { color: #16a34a; }
 
 /* ชื่อคนที่ต้องลงไพ่ — ใต้กองไพ่ */
@@ -388,6 +407,16 @@ svg.lucide {
 #result-list li.rank-0 { background: var(--primary); color: var(--primary-foreground); border-color: transparent; }
 #result-list li.rank-last { background: rgba(225,29,72,0.10); border-color: rgba(225,29,72,0.35); }
 #result-close { margin-top: 18px; width: 100%; min-height: 2.7rem; }
+
+/* AlertDialog — ยืนยันออกจากห้อง (เนื้อหาชิดซ้าย, ปุ่มชิดขวา) */
+.alert-box { max-width: 400px; text-align: left; }
+.alert-box h2 { padding-right: 0; margin-bottom: 10px; font-size: 1.25rem; }
+.alert-desc { color: var(--muted-foreground); font-size: 0.9rem; line-height: 1.55; margin-bottom: 22px; }
+.alert-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.alert-actions button { min-height: 2.6rem; padding: 0 1.1rem; }
+.btn-secondary:hover { background: var(--surface-2); }
+.btn-destructive { background: var(--red); color: #fff; border-color: transparent; font-weight: 700; }
+.btn-destructive:hover { background: #be123c; }
 
 /* ปุ่มกติกา (ghost) + footer GitHub */
 .ghost-btn {

@@ -13,6 +13,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
+  <!-- progress bar บนสุด (shadcn) — โหลดหน้า / ระหว่างสร้าง-เข้าห้อง -->
+  <div id="progress-bar" class="progress-bar" role="progressbar" aria-hidden="true"></div>
   <div id="app">
     <!-- หน้าเข้าห้อง -->
     <section id="lobby-screen" class="screen">
@@ -124,6 +126,18 @@
           <p>ถ้า<b>สลาฟหมดมือก่อนคิง</b> → คิงตกเป็นสลาฟ จบรอบ แจกใหม่ทันที แล้วแลกไพ่กับคิงใหม่</p>
         </div>
         <button id="rules-close" class="primary" type="button" data-dialog-close>ปิด</button>
+      </div>
+    </div>
+
+    <!-- ยืนยันออกจากห้อง (AlertDialog) -->
+    <div id="leave-modal" class="modal hidden" role="alertdialog" aria-modal="true" aria-labelledby="leave-title" aria-describedby="leave-desc">
+      <div class="modal-box alert-box">
+        <h2 id="leave-title"><i data-lucide="door-open"></i> ออกจากห้อง?</h2>
+        <p id="leave-desc" class="alert-desc"></p>
+        <div class="alert-actions">
+          <button class="btn-secondary" type="button" data-dialog-close>ยกเลิก</button>
+          <button id="leave-confirm" class="btn-destructive" type="button">ออกจากห้อง</button>
+        </div>
       </div>
     </div>
   </div>

@@ -40,12 +40,73 @@ function setFieldError(inputId, errorId, message) {
   }
 }
 
+// ---------- Progress bar บนสุด (shadcn) — ref-count ให้ซ้อน action ได้ ----------
+let _progCount = 0, _progTimer = null, _progVal = 0;
+function _progBegin() {
+  const bar = $('progress-bar');
+  _progVal = 8;
+  bar.classList.add('active');
+  bar.style.width = _progVal + '%';
+  clearInterval(_progTimer);
+  _progTimer = setInterval(() => { // ค่อยๆ ไต่เข้าใกล้ 92% แล้วรอจังหวะ done
+    _progVal += (92 - _progVal) * 0.12;
+    $('progress-bar').style.width = _progVal.toFixed(1) + '%';
+  }, 220);
+}
+function _progEnd() {
+  clearInterval(_progTimer);
+  const bar = $('progress-bar');
+  bar.style.width = '100%';
+  setTimeout(() => { bar.classList.remove('active'); setTimeout(() => { bar.style.width = '0%'; }, 250); }, 180);
+}
+function progStart() { if (++_progCount === 1) _progBegin(); }
+function progDone() { if (_progCount > 0 && --_progCount === 0) _progEnd(); }
+
+// ---------- ปุ่ม loading: สปินเนอร์ + ข้อความ + disabled (shadcn) ----------
+const _btnHTML = new WeakMap();
+function setBtnLoading(btn, loading, label) {
+  if (loading) {
+    if (!_btnHTML.has(btn)) _btnHTML.set(btn, btn.innerHTML); // เก็บ HTML เดิมไว้คืนค่า
+    btn.innerHTML = `${icon('loader-circle', 'spin')} ${esc(label || '')}`;
+    btn.classList.add('loading');
+    btn.disabled = true;
+  } else if (_btnHTML.has(btn)) {
+    btn.innerHTML = _btnHTML.get(btn);
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+  refreshIcons();
+}
+
+// เริ่ม/จบ action ฟอร์มเข้าห้อง — ล็อกฟอร์ม + progress + timeout กันค้างถ้า server เงียบ
+let _lobbyTimer = null, _lobbyBtn = null;
+function startLobbyAction(btn, label) {
+  if (_lobbyBtn) return false; // มี action ค้างอยู่แล้ว
+  _lobbyBtn = btn;
+  setBtnLoading(btn, true, label);
+  $('name-input').disabled = $('code-input').disabled = true;
+  $('create-btn').disabled = $('join-btn').disabled = true;
+  progStart();
+  clearTimeout(_lobbyTimer);
+  _lobbyTimer = setTimeout(() => { endLobbyAction(); showLobbyError('เชื่อมต่อช้า ลองอีกครั้ง'); }, 10000);
+  return true;
+}
+function endLobbyAction() {
+  if (!_lobbyBtn) return;
+  clearTimeout(_lobbyTimer);
+  setBtnLoading(_lobbyBtn, false);
+  _lobbyBtn = null;
+  $('name-input').disabled = $('code-input').disabled = false;
+  $('create-btn').disabled = $('join-btn').disabled = false;
+  progDone();
+}
+
 $('create-btn').onclick = () => {
   const res = validateField(NameSchema, $('name-input').value);
   setFieldError('name-input', 'name-error', res.ok ? null : res.message);
   if (!res.ok) return;
   localStorage.setItem('slaveName', res.value);
-  socket.emit('create', { name: res.value });
+  if (startLobbyAction($('create-btn'), 'กำลังสร้างห้อง...')) socket.emit('create', { name: res.value });
 };
 $('join-btn').onclick = () => {
   const nameRes = validateField(NameSchema, $('name-input').value);
@@ -54,7 +115,7 @@ $('join-btn').onclick = () => {
   setFieldError('code-input', 'code-error', codeRes.ok ? null : codeRes.message);
   if (!nameRes.ok || !codeRes.ok) return;
   localStorage.setItem('slaveName', nameRes.value);
-  socket.emit('join', { code: codeRes.value, name: nameRes.value });
+  if (startLobbyAction($('join-btn'), 'กำลังเข้าห้อง...')) socket.emit('join', { code: codeRes.value, name: nameRes.value });
 };
 
 // ล้าง error ทันทีที่ผู้ใช้แก้ + กด Enter เพื่อ submit
@@ -72,11 +133,18 @@ if (urlRoom) {
   const code = urlRoom.toUpperCase();
   $('code-input').value = code; // เติมรหัสให้ แต่ "หุบ" ช่องไว้
   const name = savedName();
-  if (name) socket.emit('join', { code, name }); // เข้าเลย / reconnect ที่นั่งเดิม
+  // เข้าเลย / reconnect ที่นั่งเดิม — โชว์ loading ที่ปุ่มเข้าห้อง
+  if (name && startLobbyAction($('join-btn'), 'กำลังเข้าห้อง...')) socket.emit('join', { code, name });
 }
 
 // ---------- socket events ----------
+// progress ตอนโหลดหน้า: เริ่มทันที จบเมื่อ socket เชื่อมต่อครั้งแรก
+let _firstConnect = true;
+progStart();
+socket.on('connect', () => { if (_firstConnect) { _firstConnect = false; progDone(); } });
+
 socket.on('joined', ({ code }) => {
+  endLobbyAction();
   $('lobby-screen').classList.add('hidden');
   $('game-screen').classList.remove('hidden');
   $('room-code').textContent = code;
@@ -93,6 +161,7 @@ socket.on('left', () => {
 });
 
 socket.on('errorMsg', (msg) => {
+  endLobbyAction(); // ปลดล็อกฟอร์ม + จบ progress (no-op ถ้าไม่มี action ค้าง)
   if (!$('game-screen').classList.contains('hidden')) {
     showToast(msg, { top: true, error: true, duration: 2500 }); // toast บน-กลางจอ
   } else {
@@ -126,12 +195,15 @@ $('give-btn').onclick = () => {
   socket.emit('give', { cards: [...selected] });
   selected.clear();
 };
-// ออกจากห้อง — ระหว่างเล่นให้ยืนยันก่อน กันกดพลาด
+// ออกจากห้อง — เปิด AlertDialog ยืนยันก่อนเสมอ (กันกดพลาด)
 $('leave-btn').onclick = () => {
   const playing = myState && myState.phase !== 'lobby' && myState.phase !== 'finished';
-  if (playing && !confirm('ออกจากห้องตอนนี้? เกมยังเล่นอยู่ — ที่นั่งของคุณจะถูกพักไว้')) return;
-  socket.emit('leave');
+  $('leave-desc').textContent = playing
+    ? 'เกมยังเล่นอยู่ — ที่นั่งของคุณจะถูกพักไว้ กลับเข้ามาด้วยชื่อเดิมได้'
+    : 'คุณกำลังจะออกจากห้องนี้';
+  openDialog($('leave-modal'));
 };
+$('leave-confirm').onclick = () => { closeDialog($('leave-modal')); socket.emit('leave'); };
 
 // ---------- Dialog (shadcn) — เปิด/ปิดมี animation, ปิดด้วยปุ่ม X / คลิก overlay / Escape ----------
 function openDialog(el) {
@@ -150,9 +222,11 @@ function closeDialog(el) {
 
 $('rules-btn').onclick = () => openDialog($('rules-modal'));
 
-// คลิกพื้นหลัง (overlay) ที่ว่าง = ปิด
+// คลิกพื้นหลัง (overlay) ที่ว่าง = ปิด — ยกเว้น AlertDialog (ต้องเลือกปุ่มเอง ตามแบบ shadcn)
 document.querySelectorAll('.modal').forEach((m) => {
-  m.addEventListener('click', (e) => { if (e.target === m) closeDialog(m); });
+  m.addEventListener('click', (e) => {
+    if (e.target === m && m.getAttribute('role') !== 'alertdialog') closeDialog(m);
+  });
 });
 // ปุ่มปิดทุกตัว (รวมปุ่ม X) ที่ติด data-dialog-close
 document.querySelectorAll('[data-dialog-close]').forEach((btn) => {
@@ -440,7 +514,7 @@ function showToast(msg, opts = {}) {
   // esc กันชื่อผู้เล่นมี HTML, แล้วค่อยแปลง emoji → ไอคอน
   t.innerHTML = `${lead}<span class="toast-msg">${iconize(esc(msg))}</span>`;
   refreshIcons();
-  t.classList.toggle('top', !!opts.top);     // บน-กลางจอ (ไม่งั้น ล่าง-กลาง)
+  t.classList.toggle('top', opts.top !== false); // บน-กลางจอเป็นค่าเริ่มต้น (ส่ง top:false ถ้าอยากล่าง)
   t.classList.toggle('error', !!opts.error); // destructive variant
   t.classList.toggle('success', !!opts.success);
   t.classList.remove('hidden');
@@ -482,7 +556,7 @@ $('room-code-box').onclick = async () => {
   const code = $('room-code').textContent.trim();
   if (!code) return;
   const ok = await copyText(code);
-  showToast(ok ? `คัดลอกรหัสห้องแล้ว ✓ (${code})` : `คัดลอกไม่สำเร็จ — ${code}`);
+  showToast(ok ? `คัดลอกรหัสห้องแล้ว ✓ (${code})` : `คัดลอกไม่สำเร็จ — ${code}`, { top: true });
 };
 
 // แปลงไอคอน static ครั้งแรก (ปุ่มกติกา/ออกจากห้อง, modal กติกา/ผลรอบ, ปุ่มเรียงไพ่)

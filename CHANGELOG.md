@@ -2,6 +2,13 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.11.0](https://github.com/Danglebz/slave-card-game/compare/v1.10.0...v1.11.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **pwa:** installable app — manifest, service worker, install button (phase 3) ([d781104](https://github.com/Danglebz/slave-card-game/commit/d781104f9307387b728d8693fe77203ab6e4e523))
+
 ## [1.10.0](https://github.com/Danglebz/slave-card-game/compare/v1.9.0...v1.10.0) (2026-06-26)
 
 

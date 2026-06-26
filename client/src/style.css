@@ -238,6 +238,13 @@ button.loading:disabled { opacity: 0.92; }
 }
 .settings-group-label:first-child { margin-top: 0; }
 .settings-group-label svg.lucide { width: 0.95em; height: 0.95em; }
+.settings-sub-label {
+  display: flex; align-items: center; gap: 6px;
+  margin: 8px 2px 2px; font-size: 0.86rem; font-weight: 600; color: var(--foreground);
+}
+.settings-sub-label svg.lucide { width: 1em; height: 1em; color: var(--muted-foreground); }
+.setting-row-sub { margin-left: 14px; padding: 8px 12px; }
+.setting-row-sub .setting-label { font-size: 0.88rem; }
 .settings-tag {
   margin-left: auto; padding: 1px 8px; border-radius: 999px; text-transform: none; letter-spacing: 0;
   font-size: 0.68rem; font-weight: 600; color: var(--primary-foreground); background: var(--primary-soft-2);

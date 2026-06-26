@@ -239,13 +239,22 @@ $('set-notif').onchange = () => {
   if (notifPref) { primeAudio(); beep(); navigator.vibrate?.(120); } // ทดสอบให้รู้ว่าเปิดแล้ว
 };
 
-// เสียงเอฟเฟกต์ = ส่วนตัว (เปิดเป็นค่าเริ่มต้น เว้นผู้ใช้ปิดเอง)
-let sfxPref = localStorage.getItem('sfx') !== '0';
-$('set-sfx').onchange = () => {
-  sfxPref = $('set-sfx').checked;
-  localStorage.setItem('sfx', sfxPref ? '1' : '0');
-  if (sfxPref) { primeAudio(); sfx('play'); } // ตัวอย่างเสียง
+// เสียงเอฟเฟกต์ = ส่วนตัว แยก 3 หมวด (เปิดเป็นค่าเริ่มต้น เว้นผู้ใช้ปิดเอง)
+const sfxPref = {
+  play: localStorage.getItem('sfx.play') !== '0', // ลงไพ่ / เคลียร์กอง
+  bomb: localStorage.getItem('sfx.bomb') !== '0', // บอมบ์
+  win: localStorage.getItem('sfx.win') !== '0',   // ชนะ / แพ้
 };
+function bindSfxToggle(id, key, demo) {
+  $(id).onchange = () => {
+    sfxPref[key] = $(id).checked;
+    localStorage.setItem(`sfx.${key}`, sfxPref[key] ? '1' : '0');
+    if (sfxPref[key]) { primeAudio(); sfx(demo); } // ตัวอย่างเสียง
+  };
+}
+bindSfxToggle('set-sfx-play', 'play', 'play');
+bindSfxToggle('set-sfx-bomb', 'bomb', 'bomb');
+bindSfxToggle('set-sfx-win', 'win', 'win');
 
 // ตั้งค่าห้อง (timer / auto-pass) = หัวห้องคุม → ส่งไป server
 $('set-timer').onchange = emitSettings;
@@ -263,7 +272,9 @@ function syncSettingsUI(s) {
   $('set-timer').disabled = !isHost;
   $('set-autopass').disabled = !isHost || st.timer === false; // ปิด timer แล้ว auto-pass ไม่มีผล
   $('set-notif').checked = notifPref;
-  $('set-sfx').checked = sfxPref;
+  $('set-sfx-play').checked = sfxPref.play;
+  $('set-sfx-bomb').checked = sfxPref.bomb;
+  $('set-sfx-win').checked = sfxPref.win;
   $('settings-host-tag').classList.toggle('hidden', isHost);
 }
 
@@ -302,9 +313,10 @@ function tone(freq, delay, dur, { type = 'sine', gain = 0.2 } = {}) {
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   o.start(t); o.stop(t + dur + 0.02);
 }
-// เสียงเอฟเฟกต์ตามเหตุการณ์
+// เสียงเอฟเฟกต์ตามเหตุการณ์ (เคลียร์กอง=หมวดลงไพ่, แพ้=หมวดชนะ)
 function sfx(name) {
-  if (!sfxPref) return;
+  const cat = name === 'clear' ? 'play' : name === 'lose' ? 'win' : name;
+  if (!sfxPref[cat]) return;
   primeAudio();
   if (!audioCtx) return;
   try {

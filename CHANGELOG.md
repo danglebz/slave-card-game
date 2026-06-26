@@ -2,6 +2,19 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.5.0](https://github.com/Danglebz/slave-card-game/compare/v1.4.0...v1.5.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **game:** add per-turn timer with auto-pass/auto-play on timeout ([d3f1ace](https://github.com/Danglebz/slave-card-game/commit/d3f1acefbd62e2e0ac4b00d7827423105dc82ebe))
+* **ui:** settings menu (gear) with room + personal options ([cc8411d](https://github.com/Danglebz/slave-card-game/commit/cc8411da7b1308a20b7d879c00de81064ab67646))
+
+
+### 🐛 Bug Fixes
+
+* **icons:** register settings/timer/bell/message-circle/users icons ([275e9ac](https://github.com/Danglebz/slave-card-game/commit/275e9accaef4e28298db13b7157ba98cbc0ec0fa))
+
 ## [1.4.0](https://github.com/Danglebz/slave-card-game/compare/v1.3.0...v1.4.0) (2026-06-26)
 
 

@@ -11,11 +11,12 @@ import { Room } from './room.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
 const SAVE_PATH = join(__dirname, '..', 'rooms.json');
+const CLIENT_DIR = join(__dirname, '..', 'dist'); // client ที่ build จาก Vite
 
 const app = express();
 // ปิด cache ของไฟล์ static (html/css/js) เพื่อให้ทุกเครื่องได้เวอร์ชันล่าสุดเสมอ
 // ป้องกันปัญหา "บางคนเห็นการ์ดเพี้ยน" เพราะเบราว์เซอร์ cache ไฟล์เก่าไว้
-app.use(express.static(join(__dirname, '..', 'public'), {
+app.use(express.static(CLIENT_DIR, {
   etag: false,
   lastModified: false,
   setHeaders: (res) => {

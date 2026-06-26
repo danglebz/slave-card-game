@@ -1,4 +1,7 @@
 // app.js — ฝั่ง client เกมไพ่สลาฟ
+import { io } from 'socket.io-client';
+import './style.css';
+
 const socket = io();
 
 // ︎ = text-presentation selector: บังคับให้ดอกแสดงเป็นตัวอักษร (ไม่ใช่ emoji)

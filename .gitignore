@@ -1,6 +1,9 @@
 # dependencies
 node_modules/
 
+# vite build output
+dist/
+
 # runtime state (ห้องที่เซฟไว้ — ไม่ควรขึ้น repo)
 rooms.json
 
@@ -16,3 +19,6 @@ npm-debug.log*
 # env
 .env
 .env.*
+
+# temp / scratch
+tmp/

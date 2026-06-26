@@ -14,9 +14,12 @@
 ## เริ่มเล่น (เครื่องตัวเอง / LAN)
 
 ```bash
-pnpm install      # ติดตั้งครั้งแรก  (หรือ npm install)
-pnpm start        # รันเซิร์ฟเวอร์    (หรือ npm start)
+pnpm install      # ติดตั้งครั้งแรก
+pnpm build        # build client (Vite → dist/)
+pnpm start        # รันเซิร์ฟเวอร์ (เสิร์ฟ dist/)
 ```
+
+> **โหมด dev (มี hot-reload):** เปิด 2 เทอร์มินัล — `pnpm dev:server` (Express+Socket.IO :3000) และ `pnpm dev` (Vite :5173 พร้อม HMR, proxy WebSocket ให้)
 
 เปิดลิงก์ที่ขึ้นในเทอร์มินัล เช่น:
 
@@ -117,9 +120,14 @@ pnpm start        # รันเซิร์ฟเวอร์    (หรือ 
 server/
   game.js   ตรรกะไพ่ล้วน (สร้าง/แจก/ระบุชุด/เทียบกอง/บอมบ์) — pure functions ทดสอบง่าย
   room.js   สถานะห้อง + รอบเล่น (แลกไพ่/สลับทิศ/คิงตกบัลลังก์/เซฟโหลด)
-  index.js  Express + Socket.IO + เซฟ/โหลด rooms.json
-public/
-  index.html / style.css / app.js   ฝั่งเบราว์เซอร์ (vanilla JS, ไม่มี build step)
+  index.js  Express + Socket.IO + เซฟ/โหลด rooms.json + เสิร์ฟ dist/
+client/                      ฝั่งเบราว์เซอร์ (Vite + Tailwind, vanilla JS)
+  index.html
+  src/app.js                 logic เกม (import socket.io-client)
+  src/style.css              Tailwind + custom CSS
+  public/logo.png            static assets
+vite.config.js               root: client → build ออก dist/
+dist/                        ผลลัพธ์ build (gitignored) — Express เสิร์ฟไฟล์นี้
 ```
 
 ---
@@ -132,7 +140,7 @@ public/
 ### Render (ฟรี ง่ายสุด)
 1. push โค้ดขึ้น GitHub
 2. [render.com](https://render.com) → **New → Web Service** → เลือก repo นี้
-3. Build: `pnpm install` · Start: `pnpm start` · Instance: **Free**
+3. Build: `pnpm install && pnpm build` · Start: `pnpm start` · Instance: **Free**
 4. กด Create → ได้ลิงก์ `https://<ชื่อ>.onrender.com`
 
 > ⚠️ **อย่า**ใช้ Vercel/Netlify (serverless ใช้ Socket.IO ไม่ได้)

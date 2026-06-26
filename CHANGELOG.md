@@ -2,6 +2,42 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.12.0](https://github.com/Danglebz/slave-card-game/compare/v1.11.1...v1.12.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **avatar:** free color picker (any hex) alongside 8 swatches ([65a5f28](https://github.com/Danglebz/slave-card-game/commit/65a5f2836ebf82542feaabe921d4d5315ba2a40d))
+* **avatar:** per-player color identity (phase 3) ([e818df8](https://github.com/Danglebz/slave-card-game/commit/e818df887a92c48a2a2940e56c774c468344de8b))
+* **avatar:** replace native color input with Coloris picker ([434b10c](https://github.com/Danglebz/slave-card-game/commit/434b10c7802d0269cd8f09883303dd0ff3e2aaa5))
+* **i18n:** TH/EN language toggle for core UI (phase 3) ([edbd016](https://github.com/Danglebz/slave-card-game/commit/edbd01646590a0805e7d1c95e6bf677bbbf0088c))
+* **notify:** split turn notification into separate Sound and Vibrate toggles ([08bf388](https://github.com/Danglebz/slave-card-game/commit/08bf388b191c40dad6ad0968217997d934420c87))
+* **theme:** light/dark theme toggle via CSS variables (phase 3) ([06b8992](https://github.com/Danglebz/slave-card-game/commit/06b8992301910ae68cbece9d838efce50c1ca990))
+* **ux:** connection-status banner on disconnect/reconnect (phase 3) ([d7b148d](https://github.com/Danglebz/slave-card-game/commit/d7b148da852513223ffd36e90ff4cdf98ec12dc9))
+
+
+### 🐛 Bug Fixes
+
+* **coloris:** reset leaked global button/input styles inside picker popup ([3ca8c22](https://github.com/Danglebz/slave-card-game/commit/3ca8c22a37e7a19fa9e60a9c61b00c37c106f913))
+
+
+### ♻️ Refactoring
+
+* **avatar:** drop standalone 8-swatch row; Coloris (with its swatches) is the only picker ([07f5a86](https://github.com/Danglebz/slave-card-game/commit/07f5a86fa831e0a3f6473210da93a257a540b4e4))
+
+
+### 💄 Styling
+
+* **chip:** 75% color tint ([6890db8](https://github.com/Danglebz/slave-card-game/commit/6890db8714e6176d7a2f95e20b21b1d01623c7b2))
+* **chip:** color the whole player chip (soft tint) instead of an avatar circle ([c535e45](https://github.com/Danglebz/slave-card-game/commit/c535e454630b4fcd8ab146327179432b13fbb274))
+* **chip:** full player color bg + matching border + auto-contrast text ([d70c61e](https://github.com/Danglebz/slave-card-game/commit/d70c61eddc2ddf960de876faea49fba02f38052f))
+* **chip:** stronger color tint (40%) ([8f41233](https://github.com/Danglebz/slave-card-game/commit/8f4123328db28ff1e7645c8c748510f0ad29007e))
+
+
+### 📝 Documentation
+
+* dedupe sound-effects row in roadmap ([9c56e2d](https://github.com/Danglebz/slave-card-game/commit/9c56e2dc7df0740453528d18414ba79828f61167))
+
 ## [1.11.1](https://github.com/Danglebz/slave-card-game/compare/v1.11.0...v1.11.1) (2026-06-26)
 
 

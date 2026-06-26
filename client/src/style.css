@@ -30,6 +30,39 @@
   --shadow-md: 0 6px 18px rgba(16, 24, 40, 0.12);
   --shadow-lg: 0 20px 50px rgba(16, 24, 40, 0.22);
   --shadow-card: 0 2px 8px rgba(20, 30, 50, 0.22);
+
+  /* ===== ตัวแปรธีม (default = มืด/เขียว felt) ===== */
+  --felt: radial-gradient(circle at 50% 16%, #1f8a52 0%, #0c3f26 72%);
+  --felt-text: #fff;
+  --felt-text-soft: rgba(255,255,255,0.72);
+  --felt-text-faint: rgba(255,255,255,0.5);
+  --felt-line: rgba(255,255,255,0.14);
+  --glass-bg: rgba(0,0,0,0.34);
+  --glass-border: rgba(255,255,255,0.12);
+  --glass-field-bg: rgba(255,255,255,0.08);
+  --glass-field-border: rgba(255,255,255,0.16);
+  --topbar-bg: rgba(0,0,0,0.26);
+  --topbar-border: rgba(255,255,255,0.10);
+  --chip-btn-bg: rgba(255,255,255,0.06);
+  --chip-btn-border: rgba(255,255,255,0.15);
+  --chip-btn-hover: rgba(255,255,255,0.14);
+}
+/* ===== ธีมสว่าง ===== */
+:root[data-theme="light"] {
+  --felt: radial-gradient(circle at 50% 16%, #dcf2e6 0%, #a5d6bd 74%);
+  --felt-text: #103527;
+  --felt-text-soft: rgba(16,53,39,0.66);
+  --felt-text-faint: rgba(16,53,39,0.42);
+  --felt-line: rgba(16,53,39,0.16);
+  --glass-bg: rgba(255,255,255,0.74);
+  --glass-border: rgba(16,53,39,0.12);
+  --glass-field-bg: rgba(255,255,255,0.9);
+  --glass-field-border: rgba(16,53,39,0.16);
+  --topbar-bg: rgba(255,255,255,0.66);
+  --topbar-border: rgba(16,53,39,0.10);
+  --chip-btn-bg: rgba(16,53,39,0.06);
+  --chip-btn-border: rgba(16,53,39,0.14);
+  --chip-btn-hover: rgba(16,53,39,0.12);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
@@ -38,7 +71,7 @@ body {
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: radial-gradient(circle at 50% 16%, #1f8a52 0%, #0c3f26 72%);
+  background: var(--felt);
   color: var(--foreground);
   min-height: 100dvh;
   overflow-x: hidden;
@@ -106,15 +139,15 @@ button.loading:disabled { opacity: 0.92; }
 #lobby-screen { align-items: center; justify-content: center; padding: 20px; }
 .card-panel {
   position: relative;
-  background: rgba(0,0,0,0.34);
+  background: var(--glass-bg);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   padding: 30px 26px;
   width: 100%; max-width: 380px;
   display: flex; flex-direction: column; gap: 12px;
   box-shadow: var(--shadow-lg);
-  color: #fff;
+  color: var(--felt-text);
 }
 
 /* ปุ่มไอคอนมุมฟอร์ม — ติดตั้งแอป (ซ้ายบน) / GitHub (ขวาบน) */
@@ -123,10 +156,10 @@ button.loading:disabled { opacity: 0.92; }
   display: inline-flex; align-items: center; justify-content: center;
   width: 28px; height: 28px; min-height: 0; padding: 0;
   background: none; border: none;
-  color: rgba(255,255,255,0.6); cursor: pointer; text-decoration: none;
+  color: var(--felt-text-soft); cursor: pointer; text-decoration: none;
   transition: color .15s;
 }
-.corner-btn:hover { color: #fff; background: none; }
+.corner-btn:hover { color: var(--felt-text); background: none; }
 .corner-btn:active { transform: none; }
 .corner-btn:focus-visible { box-shadow: none; outline: none; }
 .corner-tl { left: 12px; }
@@ -138,25 +171,25 @@ button.loading:disabled { opacity: 0.92; }
   border-radius: 18px; border: 1px solid rgba(255,255,255,0.15);
   box-shadow: var(--shadow-md);
 }
-.card-panel h1 { text-align: center; font-size: 1.85rem; font-weight: 800; letter-spacing: -0.025em; color: #fff; }
-.card-panel .sub { text-align: center; color: rgba(255,255,255,0.72); font-size: 0.92rem; margin-bottom: 6px; }
+.card-panel h1 { text-align: center; font-size: 1.85rem; font-weight: 800; letter-spacing: -0.025em; color: var(--felt-text); }
+.card-panel .sub { text-align: center; color: var(--felt-text-soft); font-size: 0.92rem; margin-bottom: 6px; }
 
-/* อินพุตในฟอร์ม — โปร่งเข้ม */
-.card-panel input { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.16); color: #fff; }
-.card-panel input::placeholder { color: rgba(255,255,255,0.5); }
-.card-panel input:focus { border-color: var(--primary); background: rgba(255,255,255,0.12); box-shadow: 0 0 0 3px var(--ring); }
-/* ปุ่ม ghost (กติกา) บนฟอร์มเข้ม */
-.card-panel .ghost-btn { color: rgba(255,255,255,0.78); border-color: rgba(255,255,255,0.18); margin-top: 2px; }
-.card-panel .ghost-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
+/* อินพุตในฟอร์ม — โปร่ง */
+.card-panel input { background: var(--glass-field-bg); border-color: var(--glass-field-border); color: var(--felt-text); }
+.card-panel input::placeholder { color: var(--felt-text-faint); }
+.card-panel input:focus { border-color: var(--primary); background: var(--glass-field-bg); box-shadow: 0 0 0 3px var(--ring); }
+/* ปุ่ม ghost (กติกา) บนฟอร์ม */
+.card-panel .ghost-btn { color: var(--felt-text-soft); border-color: var(--glass-field-border); margin-top: 2px; }
+.card-panel .ghost-btn:hover { background: var(--chip-btn-hover); color: var(--felt-text); }
 
-.divider { display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.55); font-size: 0.78rem; margin: 2px 0; }
-.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.14); }
+.divider { display: flex; align-items: center; gap: 10px; color: var(--felt-text-soft); font-size: 0.78rem; margin: 2px 0; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--felt-line); }
 
 /* ช่องอินพุตที่มีไอคอนนำหน้า (ไอคอนซ้าย + ข้อความ center) */
 .input-icon { position: relative; display: flex; }
 .input-icon > svg.lucide {
   position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-  width: 18px; height: 18px; color: rgba(255,255,255,0.5); pointer-events: none; z-index: 1;
+  width: 18px; height: 18px; color: var(--felt-text-faint); pointer-events: none; z-index: 1;
 }
 .input-icon input { flex: 1; padding-left: 42px; padding-right: 42px; }
 
@@ -164,10 +197,10 @@ button.loading:disabled { opacity: 0.92; }
 .input-group { display: flex; align-items: stretch; }
 .input-addon {
   display: inline-flex; align-items: center; justify-content: center; flex: none;
-  padding: 0 12px; color: rgba(255,255,255,0.55);
-  border: 1px solid rgba(255,255,255,0.16); border-right: none;
+  padding: 0 12px; color: var(--felt-text-soft);
+  border: 1px solid var(--glass-field-border); border-right: none;
   border-radius: var(--radius-md) 0 0 var(--radius-md);
-  background: rgba(255,255,255,0.06);
+  background: var(--chip-btn-bg);
 }
 .input-addon svg.lucide { width: 17px; height: 17px; }
 .input-group #code-input {
@@ -182,10 +215,10 @@ button.loading:disabled { opacity: 0.92; }
   display: inline-flex; align-items: center; justify-content: center; gap: 5px;
   align-self: center; margin-top: 2px; padding: 6px 4px;
   background: none; border: none; min-height: 0;
-  color: rgba(255,255,255,0.72); font-size: 0.875rem; font-weight: 500;
+  color: var(--felt-text-soft); font-size: 0.875rem; font-weight: 500;
   text-decoration: none; cursor: pointer;
 }
-.link-btn:hover { color: #fff; text-decoration: underline; }
+.link-btn:hover { color: var(--felt-text); text-decoration: underline; }
 /* ปุ่มติดตั้ง PWA (โผล่เฉพาะตอนติดตั้งได้) */
 .install-btn {
   align-self: center; margin-top: 2px;
@@ -213,16 +246,16 @@ button.loading:disabled { opacity: 0.92; }
 /* ============ Game ============ */
 #topbar {
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  padding: 11px 16px; border-bottom: 1px solid rgba(255,255,255,0.10);
-  background: rgba(0,0,0,0.26);
+  padding: 11px 16px; border-bottom: 1px solid var(--topbar-border);
+  background: var(--topbar-bg);
   -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
 }
 /* ปุ่มไอคอนกลม (เฟืองตั้งค่า) บน topbar */
 .icon-btn {
   min-height: 2.1rem; width: 2.1rem; padding: 0; flex: none;
-  color: rgba(255,255,255,0.78); background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15);
+  color: var(--felt-text-soft); background: var(--chip-btn-bg); border-color: var(--chip-btn-border);
 }
-.icon-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+.icon-btn:hover { background: var(--chip-btn-hover); color: var(--felt-text); }
 .icon-btn svg.lucide { width: 1.15em; height: 1.15em; }
 
 /* ============ กล่องแชร์ห้อง (QR) ============ */
@@ -335,9 +368,9 @@ button.loading:disabled { opacity: 0.92; }
 /* ปุ่มเพิ่ม/ลบบอท (ล็อบบี้) */
 .bot-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; }
 .bot-controls button {
-  color: rgba(255,255,255,0.82); background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.16);
+  color: var(--felt-text-soft); background: var(--chip-btn-bg); border-color: var(--chip-btn-border);
 }
-.bot-controls button:hover:not(:disabled) { background: rgba(255,255,255,0.16); color: #fff; }
+.bot-controls button:hover:not(:disabled) { background: var(--chip-btn-hover); color: var(--felt-text); }
 .bot-ico { color: #7dd3fc; } /* ไอคอนบอทบน chip (ฟ้าอ่อน) */
 
 /* segmented control (เลือกเวลาต่อตา) */
@@ -413,7 +446,7 @@ button.loading:disabled { opacity: 0.92; }
 /* ชื่อคนที่ต้องลงไพ่ — ใต้กองไพ่ */
 #turn-info {
   position: relative; z-index: 1; min-height: 1.4em;
-  color: #fff; font-weight: 700; font-size: 1.05rem; text-align: center;
+  color: var(--felt-text); font-weight: 700; font-size: 1.05rem; text-align: center;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 #turn-info.your-turn { color: var(--primary); animation: pulse 1.2s infinite; }
@@ -484,7 +517,7 @@ button.loading:disabled { opacity: 0.92; }
 }
 #pile-label, #pile-cards { position: relative; z-index: 1; }
 #pile-label {
-  color: rgba(255,255,255,0.72); font-size: 0.78rem; font-weight: 500;
+  color: var(--felt-text-soft); font-size: 0.78rem; font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.06em;
 }
 #pile-cards { display: flex; gap: 8px; min-height: 92px; align-items: center; }
@@ -691,9 +724,9 @@ button.loading:disabled { opacity: 0.92; }
   font-weight: 600;
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--felt-text-faint);
   text-decoration: none;
   transition: color .15s;
 }
-.app-version:hover { color: rgba(255, 255, 255, 0.85); }
+.app-version:hover { color: var(--felt-text); }
 .app-version:empty { display: none; }

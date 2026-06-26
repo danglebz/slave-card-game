@@ -70,6 +70,16 @@ function renderSwatches() {
 }
 renderSwatches();
 
+// ธีมมืด/สว่าง (เก็บใน localStorage; ดีฟอลต์ = มืด/เขียว felt)
+let theme = localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
+function applyTheme() { document.documentElement.setAttribute('data-theme', theme); }
+applyTheme();
+$('set-theme').onchange = () => {
+  theme = $('set-theme').checked ? 'light' : 'dark';
+  localStorage.setItem('theme', theme);
+  applyTheme();
+};
+
 // ---------- หน้าเข้าห้อง ----------
 function savedName() { return localStorage.getItem('slaveName') || ''; }
 $('name-input').value = savedName();
@@ -334,6 +344,7 @@ function syncSettingsUI(s) {
     btn.disabled = !isHost || st.timer === false;
   });
   $('set-notif').checked = notifPref;
+  $('set-theme').checked = theme === 'light';
   $('set-sfx-play').checked = sfxPref.play;
   $('set-sfx-bomb').checked = sfxPref.bomb;
   $('set-sfx-win').checked = sfxPref.win;

@@ -35,6 +35,8 @@ function setConn(down) { document.getElementById('conn-banner').classList.toggle
 socket.on('connect', () => { everConnected = true; setConn(false); });
 socket.on('disconnect', () => { if (everConnected) setConn(true); }); // ไม่โชว์ตอนโหลดครั้งแรก
 socket.io.on('reconnect', () => setConn(false));
+// preview: พิมพ์ demoConn() ใน console เพื่อโชว์แบนเนอร์ชั่วคราว (ดีฟอลต์ 3 วิ)
+window.demoConn = (sec = 3) => { setConn(true); setTimeout(() => setConn(false), sec * 1000); };
 
 // ︎ = text-presentation selector: บังคับให้ดอกแสดงเป็นตัวอักษร (ไม่ใช่ emoji)
 // เพื่อให้สี CSS (.red) มีผลจริงบนมือถือ

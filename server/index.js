@@ -218,6 +218,10 @@ io.on('connection', (socket) => {
     if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องลบบอทได้');
     room.removeBot();
   }));
+  socket.on('shuffleSeats', () => withRoom((room) => {
+    if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องสลับที่นั่งได้');
+    room.shuffleSeats();
+  }));
 
   socket.on('play', ({ cards }) => withRoom((room) => {
     room.play(socket.id, Array.isArray(cards) ? cards : []);

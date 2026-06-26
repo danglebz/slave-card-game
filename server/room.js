@@ -94,6 +94,16 @@ export class Room {
     return this.players.some((p) => p.isBot);
   }
 
+  // สลับลำดับที่นั่ง (เปลี่ยนลำดับการวน) — เฉพาะในล็อบบี้
+  shuffleSeats() {
+    if (this.phase !== 'lobby') throw new Error('สลับที่นั่งได้เฉพาะตอนอยู่ในล็อบบี้');
+    if (this.players.length < 2) throw new Error('ต้องมีอย่างน้อย 2 คน');
+    for (let i = this.players.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.players[i], this.players[j]] = [this.players[j], this.players[i]];
+    }
+  }
+
   // เข้าห้อง → คืน 'player' หรือ 'spectator'
   addPlayer(socketId, name) {
     // reconnect / รีเฟรช: ชื่อซ้ำ → ยึดที่นั่งเดิม (ไม่สนว่า socket เก่า disconnect ทันหรือยัง)

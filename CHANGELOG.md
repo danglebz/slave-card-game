@@ -2,6 +2,18 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.4.0](https://github.com/Danglebz/slave-card-game/compare/v1.3.0...v1.4.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **ui:** players-around-the-table seats layout; fix bomb-sort chaining for overlapping bombs & toast re-trigger ([3493a4d](https://github.com/Danglebz/slave-card-game/commit/3493a4d479f55bc414fb0ed708699d0141788cd6))
+
+
+### 🐛 Bug Fixes
+
+* **game:** clearer play-rejection messages; dethrone (miyako-ochi) exchanges only king↔slave ([5d41f40](https://github.com/Danglebz/slave-card-game/commit/5d41f40b71480fc904f7efabe11549258b2ebcfa))
+
 ## [1.3.0](https://github.com/Danglebz/slave-card-game/compare/v1.2.0...v1.3.0) (2026-06-26)
 
 

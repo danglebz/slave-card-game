@@ -329,9 +329,6 @@ button.loading:disabled { opacity: 0.92; }
 }
 .avatar svg.lucide { width: 0.82em; height: 0.82em; }
 
-/* swatches เลือกสีประจำตัว (ในตั้งค่า) */
-.swatch-wrap { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.swatches { display: flex; gap: 6px; flex-wrap: wrap; }
 /* ช่องเลือกสีเอง (Coloris) */
 .color-custom {
   width: 96px; min-height: 2rem; padding: 0.3rem 0.5rem; padding-left: 30px;
@@ -344,12 +341,6 @@ button.loading:disabled { opacity: 0.92; }
 #clr-picker input { min-height: 0; }
 #clr-picker input:focus { box-shadow: none; }
 #clr-picker .clr-swatches button { border: 0; }
-.swatch {
-  width: 24px; height: 24px; min-height: 0; padding: 0; border-radius: 50%;
-  border: 2px solid transparent; cursor: pointer; transition: transform .1s;
-}
-.swatch:hover { transform: scale(1.1); }
-.swatch.active { border-color: #fff; box-shadow: 0 0 0 2px var(--ring); }
 
 /* สถานะการเชื่อมต่อ (banner บนสุด) */
 .conn-banner {

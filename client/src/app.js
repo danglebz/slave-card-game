@@ -56,25 +56,8 @@ if (!AVATAR_COLORS.includes(avatarColor)) {
   avatarColor = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
   localStorage.setItem('avatarColor', avatarColor);
 }
-function renderSwatches() {
-  const box = $('color-swatches');
-  if (!box) return;
-  box.innerHTML = AVATAR_COLORS.map((c) =>
-    `<button type="button" class="swatch${c === avatarColor ? ' active' : ''}" data-c="${c}" style="background:${c}" aria-label="เลือกสี"></button>`,
-  ).join('');
-  box.querySelectorAll('.swatch').forEach((b) => {
-    b.onclick = () => {
-      avatarColor = b.dataset.c;
-      localStorage.setItem('avatarColor', avatarColor);
-      socket.emit('setColor', { color: avatarColor });
-      renderSwatches();
-    };
-  });
-  const custom = $('color-custom');
-  if (custom) custom.value = /^#[0-9a-f]{6}$/i.test(avatarColor) ? avatarColor : '#3b82f6';
-}
-renderSwatches();
-// เลือกสีเอง — color picker สวยๆ (Coloris): popup โมเดิร์น + swatches + สไลเดอร์
+// สีประจำตัว — color picker (Coloris): popup โมเดิร์น + swatches + สไลเดอร์
+$('color-custom').value = /^#[0-9a-f]{6}$/i.test(avatarColor) ? avatarColor : '#3b82f6';
 Coloris.init();
 Coloris({
   el: '#color-custom',
@@ -84,7 +67,6 @@ Coloris({
 $('color-custom').addEventListener('input', () => { // อัปเดตสดตอนเลือก
   avatarColor = $('color-custom').value;
   localStorage.setItem('avatarColor', avatarColor);
-  renderSwatches();
 });
 $('color-custom').addEventListener('change', () => socket.emit('setColor', { color: avatarColor })); // ส่งตอนปิด picker
 

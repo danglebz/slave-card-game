@@ -2,6 +2,16 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.11.1](https://github.com/Danglebz/slave-card-game/compare/v1.11.0...v1.11.1) (2026-06-26)
+
+
+### 💄 Styling
+
+* **lobby:** corner icons without background/border (icon only) ([0a867fa](https://github.com/Danglebz/slave-card-game/commit/0a867faa050c5f870d5d6ee2f406d8414504668d))
+* **lobby:** move install + GitHub to icon buttons in form's top corners ([b2c30c5](https://github.com/Danglebz/slave-card-game/commit/b2c30c5c92cde1aaae48891b7d11fa97ff87ca6e))
+* **lobby:** nudge logo down below corner icons ([a334103](https://github.com/Danglebz/slave-card-game/commit/a334103a41ec8de61e39c1d237b6d70036a87e23))
+* **lobby:** remove corner icon hover background/focus ring ([1d35625](https://github.com/Danglebz/slave-card-game/commit/1d35625b7bec7769794aef29f5cc50fd31106b14))
+
 ## [1.11.0](https://github.com/Danglebz/slave-card-game/compare/v1.10.0...v1.11.0) (2026-06-26)
 
 

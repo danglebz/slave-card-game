@@ -119,14 +119,14 @@ button.loading:disabled { opacity: 0.92; }
 
 /* ปุ่มไอคอนมุมฟอร์ม — ติดตั้งแอป (ซ้ายบน) / GitHub (ขวาบน) */
 .corner-btn {
-  position: absolute; top: 12px;
+  position: absolute; top: 14px;
   display: inline-flex; align-items: center; justify-content: center;
-  width: 34px; height: 34px; min-height: 0; padding: 0; border-radius: 50%;
-  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16);
-  color: rgba(255,255,255,0.82); cursor: pointer; text-decoration: none;
-  transition: background .15s, color .15s;
+  width: 28px; height: 28px; min-height: 0; padding: 0;
+  background: none; border: none;
+  color: rgba(255,255,255,0.6); cursor: pointer; text-decoration: none;
+  transition: color .15s;
 }
-.corner-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+.corner-btn:hover { color: #fff; }
 .corner-tl { left: 12px; }
 .corner-tr { right: 12px; }
 .corner-btn svg { width: 17px; height: 17px; }

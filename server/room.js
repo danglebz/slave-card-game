@@ -49,6 +49,13 @@ export class Room {
   }
 
   static TURN_SECONDS_CHOICES = [15, 30, 45, 60];
+  static COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#ec4899'];
+
+  // ตั้งสีประจำตัวของผู้เล่น (ตัวเองเท่านั้น)
+  setColor(socketId, color) {
+    const p = this.players.find((x) => x.id === socketId);
+    if (p && Room.COLORS.includes(color)) p.color = color;
+  }
 
   // ปรับตั้งค่าห้อง (เฉพาะค่าที่รู้จัก/ถูกต้อง)
   setSettings(patch) {
@@ -560,6 +567,7 @@ export class Room {
         isHost: p.id === this.hostId,
         isTurn: i === this.turn,
         isBot: !!p.isBot,
+        color: p.color || null,
         title: titleByName[p.name] || null,
       })),
       hand: meIdx >= 0 ? this.players[meIdx].hand.map((c) => ({ ...c, id: cardId(c) })) : [],
@@ -597,7 +605,7 @@ export class Room {
     return {
       code: this.code,
       players: this.players.map((p) => ({
-        id: p.id, name: p.name, connected: p.connected, hand: p.hand, finished: p.finished, isBot: !!p.isBot,
+        id: p.id, name: p.name, connected: p.connected, hand: p.hand, finished: p.finished, isBot: !!p.isBot, color: p.color || null,
       })),
       hostId: this.hostId,
       phase: this.phase,

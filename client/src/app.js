@@ -46,6 +46,30 @@ const $ = (id) => document.getElementById(id);
 let selected = new Set();
 let myState = null;
 
+// สีประจำตัว (ตรงกับ Room.COLORS ฝั่ง server) — เก็บใน localStorage, สุ่มให้ครั้งแรก
+const AVATAR_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#ec4899'];
+let avatarColor = localStorage.getItem('avatarColor');
+if (!AVATAR_COLORS.includes(avatarColor)) {
+  avatarColor = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
+  localStorage.setItem('avatarColor', avatarColor);
+}
+function renderSwatches() {
+  const box = $('color-swatches');
+  if (!box) return;
+  box.innerHTML = AVATAR_COLORS.map((c) =>
+    `<button type="button" class="swatch${c === avatarColor ? ' active' : ''}" data-c="${c}" style="background:${c}" aria-label="เลือกสี"></button>`,
+  ).join('');
+  box.querySelectorAll('.swatch').forEach((b) => {
+    b.onclick = () => {
+      avatarColor = b.dataset.c;
+      localStorage.setItem('avatarColor', avatarColor);
+      socket.emit('setColor', { color: avatarColor });
+      renderSwatches();
+    };
+  });
+}
+renderSwatches();
+
 // ---------- หน้าเข้าห้อง ----------
 function savedName() { return localStorage.getItem('slaveName') || ''; }
 $('name-input').value = savedName();
@@ -129,7 +153,7 @@ $('create-btn').onclick = () => {
   setFieldError('name-input', 'name-error', res.ok ? null : res.message);
   if (!res.ok) return;
   localStorage.setItem('slaveName', res.value);
-  if (startLobbyAction($('create-btn'), 'กำลังสร้างห้อง...')) socket.emit('create', { name: res.value });
+  if (startLobbyAction($('create-btn'), 'กำลังสร้างห้อง...')) socket.emit('create', { name: res.value, color: avatarColor });
 };
 $('join-btn').onclick = () => {
   const nameRes = validateField(NameSchema, $('name-input').value);
@@ -138,7 +162,7 @@ $('join-btn').onclick = () => {
   setFieldError('code-input', 'code-error', codeRes.ok ? null : codeRes.message);
   if (!nameRes.ok || !codeRes.ok) return;
   localStorage.setItem('slaveName', nameRes.value);
-  if (startLobbyAction($('join-btn'), 'กำลังเข้าห้อง...')) socket.emit('join', { code: codeRes.value, name: nameRes.value });
+  if (startLobbyAction($('join-btn'), 'กำลังเข้าห้อง...')) socket.emit('join', { code: codeRes.value, name: nameRes.value, color: avatarColor });
 };
 
 // ล้าง error ทันทีที่ผู้ใช้แก้ + กด Enter เพื่อ submit
@@ -157,7 +181,7 @@ if (urlRoom) {
   $('code-input').value = code; // เติมรหัสให้ แต่ "หุบ" ช่องไว้
   const name = savedName();
   // เข้าเลย / reconnect ที่นั่งเดิม — โชว์ loading ที่ปุ่มเข้าห้อง
-  if (name && startLobbyAction($('join-btn'), 'กำลังเข้าห้อง...')) socket.emit('join', { code, name });
+  if (name && startLobbyAction($('join-btn'), 'กำลังเข้าห้อง...')) socket.emit('join', { code, name, color: avatarColor });
 }
 
 // ---------- socket events ----------
@@ -530,12 +554,17 @@ function chipHTML(p, s) {
   if (p.finished) cls.push('finished');
   if (!p.connected) cls.push('offline');
   if (p.isYou) cls.push('you');
-  const badge = p.isHost ? icon('crown', 'host-ico') + ' ' : (p.isBot ? icon('bot', 'bot-ico') + ' ' : '');
+  const badge = p.isHost ? icon('crown', 'host-ico') + ' ' : '';
   const off = !p.connected ? ' ' + icon('wifi-off', 'off-ico') : '';
   const title = p.title ? `<span class="ptitle">${iconize(esc(p.title))}</span>` : '';
   const count = p.finished ? `${icon('circle-check')} หมดมือ` : p.cardCount + ' ใบ';
+  // อวตาร: วงกลมสีประจำตัว + อักษรแรก (บอท = ไอคอนหุ่นยนต์)
+  const color = p.color || '#64748b';
+  const avatar = p.isBot
+    ? `<span class="avatar" style="--c:${color}">${icon('bot')}</span>`
+    : `<span class="avatar" style="--c:${color}">${esc((p.name || '?').trim().charAt(0).toUpperCase())}</span>`;
   return `<div class="${cls.join(' ')}">
-    <span class="pname">${badge}${esc(p.name)}${p.isYou ? ' (คุณ)' : ''}${off}</span>
+    <span class="pname">${avatar}${badge}${esc(p.name)}${p.isYou ? ' (คุณ)' : ''}${off}</span>
     <span class="pcount">${count}</span>
     ${title}
   </div>`;

@@ -151,7 +151,7 @@ io.on('connection', (socket) => {
 
   const err = (msg) => socket.emit('errorMsg', msg);
 
-  socket.on('create', ({ name }) => {
+  socket.on('create', ({ name, color }) => {
     try {
       name = (name || '').trim();
       if (!name) return err('กรุณาใส่ชื่อ');
@@ -159,6 +159,7 @@ io.on('connection', (socket) => {
       const room = new Room(code);
       rooms.set(code, room);
       room.addPlayer(socket.id, name);
+      room.setColor(socket.id, color);
       joinedCode = code;
       socket.join(code);
       socket.emit('joined', { code });
@@ -168,7 +169,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('join', ({ code, name }) => {
+  socket.on('join', ({ code, name, color }) => {
     try {
       code = (code || '').trim().toUpperCase();
       name = (name || '').trim();
@@ -176,6 +177,7 @@ io.on('connection', (socket) => {
       const room = rooms.get(code);
       if (!room) return err('ไม่พบห้องนี้ (เช็กรหัสห้องอีกที)');
       room.addPlayer(socket.id, name);
+      room.setColor(socket.id, color);
       clearTimeout(room._cleanupTimer); // ยกเลิกการลบห้อง (มีคนกลับเข้ามาแล้ว)
       joinedCode = code;
       socket.join(code);
@@ -222,6 +224,8 @@ io.on('connection', (socket) => {
     if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องสลับที่นั่งได้');
     room.shuffleSeats();
   }));
+  // สีประจำตัว — ตั้งของตัวเองได้ทุกเมื่อ
+  socket.on('setColor', ({ color }) => withRoom((room) => room.setColor(socket.id, color)));
 
   socket.on('play', ({ cards }) => withRoom((room) => {
     room.play(socket.id, Array.isArray(cards) ? cards : []);

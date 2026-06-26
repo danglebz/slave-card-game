@@ -584,21 +584,26 @@ function chipHTML(p, s) {
   const off = !p.connected ? ' ' + icon('wifi-off', 'off-ico') : '';
   const title = p.title ? `<span class="ptitle">${iconize(esc(p.title))}</span>` : '';
   const count = p.finished ? `${icon('circle-check')} หมดมือ` : p.cardCount + ' ใบ';
-  // ทั้งชิปเป็นสีประจำตัว (พื้นอ่อน) — ไม่ตั้ง border เพื่อไม่ทับไฮไลต์ "ถึงตา"
-  const tint = p.color ? ` style="background:${chipTintBg(p.color)}"` : '';
-  return `<div class="${cls.join(' ')}"${tint}>
+  // ทั้งชิปเป็นสีประจำตัว (สีเต็ม) + สลับสีตัวอักษรอัตโนมัติให้อ่านออก
+  const style = p.color ? ` style="${chipStyle(p.color)}"` : '';
+  return `<div class="${cls.join(' ')}"${style}>
     <span class="pname">${badge}${esc(p.name)}${p.isYou ? ' (คุณ)' : ''}${off}</span>
     <span class="pcount">${count}</span>
     ${title}
   </div>`;
 }
 
-// ผสมสีผู้เล่นกับขาวให้ได้พื้นอ่อนๆ (อ่านตัวหนังสือออก) — คืน rgb()
-function chipTintBg(hex) {
-  if (!/^#[0-9a-f]{6}$/i.test(hex)) return 'var(--surface)';
+// พื้นชิป = สีเต็ม + เลือกสีตัวอักษร (ขาว/ดำ) ตามความสว่างของสี ให้อ่านออกเสมอ
+function chipStyle(hex) {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return '';
   const ch = (i) => parseInt(hex.slice(i, i + 2), 16);
-  const mix = (v) => Math.round(v * 0.75 + 255 * 0.25); // 75% สี + 25% ขาว
-  return `rgb(${mix(ch(1))},${mix(ch(3))},${mix(ch(5))})`;
+  const lum = (0.2126 * ch(1) + 0.7152 * ch(3) + 0.0722 * ch(5)) / 255; // ความสว่างสัมพัทธ์
+  const dark = lum < 0.6; // พื้นเข้ม → ตัวอักษรขาว
+  const fg = dark ? '#ffffff' : '#1c1c1f';
+  const soft = dark ? 'rgba(255,255,255,0.82)' : 'rgba(0,0,0,0.58)';
+  const d = (i) => Math.round(ch(i) * 0.78); // ขอบ = สีเดียวกันแต่เข้มกว่า ~22%
+  const border = `rgb(${d(1)},${d(3)},${d(5)})`;
+  return `background:${hex};border-color:${border};--chip-fg:${fg};--chip-fg-soft:${soft}`;
 }
 
 function renderPlayers(s) {

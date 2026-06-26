@@ -1,6 +1,6 @@
 {
   "name": "slave-card-game",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "เกมไพ่สลาฟออนไลน์ (President / Daifugo) เล่นพร้อมกัน 2–4 คนผ่านเบราว์เซอร์ — server-authoritative ด้วย Express + Socket.IO",
   "type": "module",
   "private": true,

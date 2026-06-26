@@ -2,6 +2,19 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.7.0](https://github.com/Danglebz/slave-card-game/compare/v1.6.0...v1.7.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **sfx:** split sound effects into 3 toggles (play/bomb/win) ([b82bc92](https://github.com/Danglebz/slave-card-game/commit/b82bc92a4c6d6e9308d072eacb8e11518a5b8c28))
+* **sfx:** synthesized sound effects; hide QR share button for now ([71ceedf](https://github.com/Danglebz/slave-card-game/commit/71ceedfbf06d0e3aa8f42d55f7b5ff78c625a477))
+
+
+### 💄 Styling
+
+* **settings:** make the 3 sfx rows full-size, matching the notification row ([1b66ed5](https://github.com/Danglebz/slave-card-game/commit/1b66ed5e901ed2025efe66d043782dc55dab6673))
+
 ## [1.6.0](https://github.com/Danglebz/slave-card-game/compare/v1.5.0...v1.6.0) (2026-06-26)
 
 

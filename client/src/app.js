@@ -597,7 +597,7 @@ function chipHTML(p, s) {
 function chipTintBg(hex) {
   if (!/^#[0-9a-f]{6}$/i.test(hex)) return 'var(--surface)';
   const ch = (i) => parseInt(hex.slice(i, i + 2), 16);
-  const mix = (v) => Math.round(v * 0.22 + 255 * 0.78); // 22% สี + 78% ขาว
+  const mix = (v) => Math.round(v * 0.4 + 255 * 0.6); // 40% สี + 60% ขาว
   return `rgb(${mix(ch(1))},${mix(ch(3))},${mix(ch(5))})`;
 }
 

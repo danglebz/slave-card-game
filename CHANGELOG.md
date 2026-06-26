@@ -2,6 +2,13 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.2.0](https://github.com/Danglebz/slave-card-game/compare/v1.1.0...v1.2.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **ui:** Lucide icons, shadcn dialog/toast, Valibot form validation, leave-room button ([4a0c102](https://github.com/Danglebz/slave-card-game/commit/4a0c102639e2213ed3744f2aec4d7d30f1b51f5c))
+
 ## 1.1.0 (2026-06-26)
 
 

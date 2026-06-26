@@ -81,8 +81,12 @@ function clearTurnTimer(room) {
   room._turnSig = null;
 }
 // ตั้ง/รี-เซ็ตเวลาต่อตา — รีเซ็ตเฉพาะตอน "ตาเปลี่ยนจริง" (กัน reconnect มากวนเวลา)
+function humansOnline(room) {
+  return room.players.some((p) => p.connected && !p.isBot);
+}
+
 function armTurnTimer(room) {
-  const anyOnline = room.players.some((p) => p.connected);
+  const anyOnline = humansOnline(room); // มีคนจริงออนไลน์ไหม (บอทไม่นับ)
   const timerOn = room.settings?.timer !== false; // หัวห้องปิด timer ได้
   // เดินเวลาเฉพาะตอนเล่นจริง + มีคนออนไลน์ + เปิด timer
   const sig = room.phase === 'playing' && anyOnline && timerOn ? `${room.turn}:${room.pileOwner}` : null;
@@ -105,10 +109,38 @@ function onTurnTimeout(code) {
   broadcast(room); // จะ arm รอบใหม่ให้เอง
 }
 
+// ----- ให้บอทเดิน (ตอนถึงตาบอท / บอทต้องเลือกไพ่แลก) -----
+function clearBotTimer(room) {
+  clearTimeout(room._botTimer);
+  room._botTimer = null;
+}
+function scheduleBot(room) {
+  clearBotTimer(room);
+  if (!humansOnline(room)) return; // ไม่มีคนจริงดูอยู่ → ไม่ต้องเดินบอท
+  let act = null;
+  if (room.phase === 'playing' && room.players[room.turn]?.isBot) {
+    act = () => room.botAct();
+  } else if (room.phase === 'exchange' && room.giveTasks) {
+    const pending = Object.keys(room.giveTasks).find(
+      (i) => !room.giveTasks[i].cards && room.players[+i]?.isBot,
+    );
+    if (pending != null) act = () => room.botGive(+pending);
+  }
+  if (!act) return;
+  const base = Number(process.env.BOT_MS) || 600;
+  room._botTimer = setTimeout(() => {
+    const r = rooms.get(room.code);
+    if (!r) return;
+    try { act(); } catch (e) { console.error('bot:', e.message); }
+    broadcast(r); // เดินคนถัดไป (อาจเป็นบอทอีกตัว) ต่อเอง
+  }, base + Math.floor(Math.random() * 500)); // หน่วงให้ดูเป็นธรรมชาติ
+}
+
 function broadcast(room) {
   armTurnTimer(room); // ตั้งเวลาก่อนส่ง state เพื่อให้ client ได้ turnRemainingMs ที่ถูกต้อง
+  scheduleBot(room);  // ถ้าถึงตาบอท ตั้งเวลาให้บอทเดิน
   for (const p of room.players) {
-    if (p.connected) io.to(p.id).emit('state', room.stateFor(p.id));
+    if (p.connected && !p.isBot) io.to(p.id).emit('state', room.stateFor(p.id));
   }
   scheduleSave(); // สถานะเปลี่ยน → เซฟ
 }
@@ -176,6 +208,16 @@ io.on('connection', (socket) => {
     room._turnSig = null; // ให้ armTurnTimer ตั้งเวลาใหม่ตามค่าที่เพิ่งเปลี่ยน
   }));
 
+  // เพิ่ม/ลบบอท — เฉพาะหัวห้อง (ในล็อบบี้)
+  socket.on('addBot', () => withRoom((room) => {
+    if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องเพิ่มบอทได้');
+    room.addBot();
+  }));
+  socket.on('removeBot', () => withRoom((room) => {
+    if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องลบบอทได้');
+    room.removeBot();
+  }));
+
   socket.on('play', ({ cards }) => withRoom((room) => {
     room.play(socket.id, Array.isArray(cards) ? cards : []);
   }));
@@ -202,7 +244,7 @@ io.on('connection', (socket) => {
     socket.leave(code);
     room.removePlayer(socket.id);
     if (room.players.length === 0 || room.isEmpty()) {
-      clearTurnTimer(room); // ห้องว่าง → หยุดนาฬิกาต่อตา
+      clearTurnTimer(room); clearBotTimer(room); // ห้องว่าง → หยุดนาฬิกา + บอท
       clearTimeout(room._cleanupTimer);
       room._cleanupTimer = setTimeout(() => {
         const r = rooms.get(code);
@@ -224,7 +266,7 @@ io.on('connection', (socket) => {
     if (room.players.length === 0 || room.isEmpty()) {
       // ห้องว่าง (รวมกรณีรีเฟรช) → รอ grace period เผื่อ reconnect ก่อนค่อยลบ
       const code = joinedCode;
-      clearTurnTimer(room); // ห้องว่าง → หยุดนาฬิกาต่อตา
+      clearTurnTimer(room); clearBotTimer(room); // ห้องว่าง → หยุดนาฬิกา + บอท
       clearTimeout(room._cleanupTimer);
       room._cleanupTimer = setTimeout(() => {
         const r = rooms.get(code);

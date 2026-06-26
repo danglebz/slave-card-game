@@ -262,6 +262,14 @@ button.loading:disabled { opacity: 0.92; }
 }
 .settings-logout { width: 100%; margin-top: 16px; min-height: 2.7rem; }
 
+/* ปุ่มเพิ่ม/ลบบอท (ล็อบบี้) */
+.bot-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; }
+.bot-controls button {
+  color: rgba(255,255,255,0.82); background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.16);
+}
+.bot-controls button:hover:not(:disabled) { background: rgba(255,255,255,0.16); color: #fff; }
+.bot-ico { color: #7dd3fc; } /* ไอคอนบอทบน chip (ฟ้าอ่อน) */
+
 /* segmented control (เลือกเวลาต่อตา) */
 .seg { display: inline-flex; gap: 2px; padding: 2px; border-radius: var(--radius-md); background: var(--border); flex: none; }
 .seg button {

@@ -183,6 +183,8 @@ socket.on('state', (state) => {
 
 // ---------- ปุ่ม ----------
 $('start-btn').onclick = () => socket.emit('start');
+$('add-bot-btn').onclick = () => socket.emit('addBot');
+$('remove-bot-btn').onclick = () => socket.emit('removeBot');
 $('again-btn').onclick = () => { hideModal(); socket.emit('again'); };
 $('pass-btn').onclick = () => { socket.emit('pass'); selected.clear(); };
 $('play-btn').onclick = () => {
@@ -487,7 +489,7 @@ function chipHTML(p, s) {
   if (p.finished) cls.push('finished');
   if (!p.connected) cls.push('offline');
   if (p.isYou) cls.push('you');
-  const badge = p.isHost ? icon('crown', 'host-ico') + ' ' : '';
+  const badge = p.isHost ? icon('crown', 'host-ico') + ' ' : (p.isBot ? icon('bot', 'bot-ico') + ' ' : '');
   const off = !p.connected ? ' ' + icon('wifi-off', 'off-ico') : '';
   const title = p.title ? `<span class="ptitle">${iconize(esc(p.title))}</span>` : '';
   const count = p.finished ? `${icon('circle-check')} หมดมือ` : p.cardCount + ' ใบ';
@@ -748,6 +750,12 @@ function renderControls(s) {
 
   startBtn.classList.toggle('hidden', !(s.phase === 'lobby' && isHost));
   startBtn.disabled = s.players.filter((p) => p.connected).length < 2;
+
+  // ปุ่มเพิ่ม/ลบบอท — เฉพาะหัวห้องในล็อบบี้
+  const botCtl = $('bot-controls');
+  botCtl.classList.toggle('hidden', !(s.phase === 'lobby' && isHost));
+  $('add-bot-btn').disabled = s.players.length >= 4;
+  $('remove-bot-btn').disabled = !s.players.some((p) => p.isBot);
   if (s.phase === 'lobby' && isHost && startBtn.disabled) {
     startBtn.textContent = 'รออีกอย่างน้อย 2 คน';
   } else {

@@ -421,27 +421,19 @@ svg.lucide {
 .rules-content b { color: var(--foreground); font-weight: 700; }
 #rules-close { margin-top: 18px; width: 100%; min-height: 2.7rem; }
 
-/* ============ Badge เลขเวอร์ชัน (มุมล่างขวาของจอ) ============ */
+/* ============ เลขเวอร์ชัน (มุมล่างขวาของจอ) — ตัวเลขล้วน ไม่มีพื้นหลัง ============ */
 .app-version {
   position: fixed;
   right: max(10px, env(safe-area-inset-right));
   bottom: max(8px, env(safe-area-inset-bottom));
   z-index: 50;
-  padding: 2px 8px;
-  border-radius: 999px;
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
-  color: var(--muted-foreground);
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid var(--border);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  color: rgba(255, 255, 255, 0.55);
   text-decoration: none;
-  opacity: 0.55;
-  transition: opacity .15s, color .15s;
-  pointer-events: auto;
+  transition: color .15s;
 }
-.app-version:hover { opacity: 1; color: var(--foreground); }
+.app-version:hover { color: #fff; }
 .app-version:empty { display: none; }

@@ -47,23 +47,6 @@
   --chip-btn-border: rgba(255,255,255,0.15);
   --chip-btn-hover: rgba(255,255,255,0.14);
 }
-/* ===== ธีมสว่าง ===== */
-:root[data-theme="light"] {
-  --felt: radial-gradient(circle at 50% 16%, #dcf2e6 0%, #a5d6bd 74%);
-  --felt-text: #103527;
-  --felt-text-soft: rgba(16,53,39,0.66);
-  --felt-text-faint: rgba(16,53,39,0.42);
-  --felt-line: rgba(16,53,39,0.16);
-  --glass-bg: rgba(255,255,255,0.74);
-  --glass-border: rgba(16,53,39,0.12);
-  --glass-field-bg: rgba(255,255,255,0.9);
-  --glass-field-border: rgba(16,53,39,0.16);
-  --topbar-bg: rgba(255,255,255,0.66);
-  --topbar-border: rgba(16,53,39,0.10);
-  --chip-btn-bg: rgba(16,53,39,0.06);
-  --chip-btn-border: rgba(16,53,39,0.14);
-  --chip-btn-hover: rgba(16,53,39,0.12);
-}
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
 body {

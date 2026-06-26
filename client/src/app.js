@@ -68,8 +68,17 @@ function renderSwatches() {
       renderSwatches();
     };
   });
+  const custom = $('color-custom');
+  if (custom) custom.value = /^#[0-9a-f]{6}$/i.test(avatarColor) ? avatarColor : '#3b82f6';
 }
 renderSwatches();
+// เลือกสีเอง (native color picker) — อัปเดตสดตอนเลื่อน, ส่ง server ตอนปิด picker
+$('color-custom').oninput = () => {
+  avatarColor = $('color-custom').value;
+  localStorage.setItem('avatarColor', avatarColor);
+  renderSwatches();
+};
+$('color-custom').onchange = () => socket.emit('setColor', { color: avatarColor });
 
 // ภาษา (TH/EN) — ใส่ข้อความ UI หลักทันทีที่โหลด
 applyI18n();

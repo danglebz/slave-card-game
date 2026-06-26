@@ -51,10 +51,10 @@ export class Room {
   static TURN_SECONDS_CHOICES = [15, 30, 45, 60];
   static COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#ec4899'];
 
-  // ตั้งสีประจำตัวของผู้เล่น (ตัวเองเท่านั้น)
+  // ตั้งสีประจำตัวของผู้เล่น (ตัวเองเท่านั้น) — รับ hex #rrggbb ใดๆ (validate กัน injection)
   setColor(socketId, color) {
     const p = this.players.find((x) => x.id === socketId);
-    if (p && Room.COLORS.includes(color)) p.color = color;
+    if (p && typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color)) p.color = color.toLowerCase();
   }
 
   // ปรับตั้งค่าห้อง (เฉพาะค่าที่รู้จัก/ถูกต้อง)

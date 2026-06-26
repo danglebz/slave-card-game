@@ -2,6 +2,20 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.8.0](https://github.com/Danglebz/slave-card-game/compare/v1.7.0...v1.8.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **anim:** card-play pile animation (stagger-in + bomb shake) ([7a4cf28](https://github.com/Danglebz/slave-card-game/commit/7a4cf2880792bf99d90454f2c9a61fb7476e5c40))
+* **settings:** host-selectable turn duration (15/30/45/60s) ([bd99857](https://github.com/Danglebz/slave-card-game/commit/bd998574f6a841f3a9b504776df76d78baf90327))
+
+
+### 🐛 Bug Fixes
+
+* **sfx:** bomb sound audible on small speakers (triangle 300->110Hz + click), still soft ([d8624f1](https://github.com/Danglebz/slave-card-game/commit/d8624f1d96f9ceaaa127379193c826d43ea9853d))
+* **sfx:** softer bomb sound (pure sine pitch-drop, lower gain) to avoid harsh/clipping audio ([fdc1a2a](https://github.com/Danglebz/slave-card-game/commit/fdc1a2a4149417d0f9c5ac844625320bd7b47b89))
+
 ## [1.7.0](https://github.com/Danglebz/slave-card-game/compare/v1.6.0...v1.7.0) (2026-06-26)
 
 

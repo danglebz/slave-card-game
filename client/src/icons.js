@@ -6,6 +6,7 @@ import {
   PartyPopper, Medal, Award, Smile, Trophy, Skull, CircleCheck, Gift, Hourglass,
   CircleDot, ListOrdered, WifiOff, RotateCcw, RotateCw, Check, X, CircleAlert,
   User, Plus, Hash, LogIn, SkipForward, LoaderCircle, Copy,
+  Settings, Timer, Bell, MessageCircle, Users,
 } from 'lucide';
 
 // ชุดไอคอนที่ใช้จริง (ให้ createIcons รู้จัก — tree-shake เฉพาะที่ import)
@@ -14,6 +15,7 @@ const ICON_SET = {
   PartyPopper, Medal, Award, Smile, Trophy, Skull, CircleCheck, Gift, Hourglass,
   CircleDot, ListOrdered, WifiOff, RotateCcw, RotateCw, Check, X, CircleAlert,
   User, Plus, Hash, LogIn, SkipForward, LoaderCircle, Copy,
+  Settings, Timer, Bell, MessageCircle, Users,
 };
 
 // emoji → ชื่อไอคอน lucide (kebab-case) สำหรับข้อความที่ฝั่ง server ส่งมา

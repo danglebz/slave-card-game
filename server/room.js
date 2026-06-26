@@ -47,11 +47,15 @@ export class Room {
   }
 
   addPlayer(socketId, name) {
-    // reconnect: ชื่อซ้ำและตัวเดิมหลุด → คืนที่นั่งเดิม
-    const existing = this.players.find((p) => p.name === name && !p.connected);
+    // reconnect / รีเฟรช: ชื่อซ้ำ → ยึดที่นั่งเดิม (ไม่สนว่า socket เก่า disconnect ทันหรือยัง)
+    // กัน race ตอนรีเฟรชที่ socket ใหม่ต่อก่อน socket เก่าจะหลุด
+    const existing = this.players.find((p) => p.name === name);
     if (existing) {
+      const oldId = existing.id;
       existing.id = socketId;
       existing.connected = true;
+      // ย้าย host ตามถ้าคนเดิมคือ host
+      if (this.hostId === oldId) this.hostId = socketId;
       if (!this.players.some((p) => p.id === this.hostId && p.connected)) {
         this.hostId = socketId;
       }
@@ -61,9 +65,6 @@ export class Room {
       throw new Error('เกมเริ่มไปแล้ว เข้าร่วมระหว่างรอบไม่ได้');
     }
     if (this.players.length >= 4) throw new Error('ห้องเต็มแล้ว (สูงสุด 4 คน)');
-    if (this.players.some((p) => p.name === name)) {
-      throw new Error('มีคนใช้ชื่อนี้แล้ว ลองชื่ออื่น');
-    }
     const player = { id: socketId, name, connected: true, hand: [], finished: false };
     this.players.push(player);
     if (!this.hostId) this.hostId = socketId;

@@ -458,12 +458,23 @@ function render(s) {
   renderTurnTimer(s);
   notifyTurn(s);
   playSfx(s);
+  renderSpectator(s);
   if ($('settings-modal').classList.contains('open')) syncSettingsUI(s); // ซิงก์ถ้าเปิดอยู่
 
   if (s.phase === 'finished' && s.result) showResult(s.result);
   else hideModal(); // ออกจากเฟสจบรอบ (เช่นเข้าเฟสแลกไพ่) → ปิด modal
 
   refreshIcons(); // แปลง <i data-lucide> ที่เพิ่ง render เป็น <svg>
+}
+
+// ผู้ชม: โชว์แบนเนอร์ + ซ่อนมือ/ปุ่ม; จำนวนผู้ชมโชว์ให้ทุกคนเห็นบน topbar
+function renderSpectator(s) {
+  const spec = !!s.youAreSpectator;
+  $('spectator-banner').classList.toggle('hidden', !spec);
+  $('hand-area').classList.toggle('hidden', spec); // ผู้ชมไม่มีมือ/ปุ่มเล่น
+  const n = s.spectatorCount || 0;
+  $('spectator-count').classList.toggle('hidden', n === 0);
+  if (n > 0) $('spec-n').textContent = n;
 }
 
 const SEAT_IDS = [

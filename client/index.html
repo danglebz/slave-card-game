@@ -56,9 +56,11 @@
         <button class="room-code" id="room-code-box" type="button" title="คลิกเพื่อคัดลอกรหัสห้อง">
           <i data-lucide="hash"></i><strong id="room-code"></strong><i data-lucide="copy" class="room-copy-ico"></i>
         </button>
+        <span id="spectator-count" class="spec-count hidden" title="ผู้ชม"><i data-lucide="eye"></i> <span id="spec-n">0</span></span>
         <button id="share-btn" class="icon-btn hidden" type="button" title="แชร์ห้อง (QR)" aria-label="แชร์ห้อง"><i data-lucide="qr-code"></i></button>
         <button id="settings-btn" class="icon-btn" type="button" title="ตั้งค่า" aria-label="ตั้งค่า"><i data-lucide="settings"></i></button>
       </header>
+      <div id="spectator-banner" class="spectator-banner hidden"><i data-lucide="eye"></i> คุณกำลังดูอยู่ — จะได้เข้าเล่นรอบถัดไป</div>
 
       <!-- โต๊ะ 3×3: กองไพ่ตรงกลาง (5) ผู้เล่นล้อมรอบ บน(8)/ซ้าย(4)/ขวา(6)/ล่าง(2) -->
       <div id="table">

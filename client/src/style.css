@@ -262,6 +262,22 @@ button.loading:disabled { opacity: 0.92; }
 }
 .settings-logout { width: 100%; margin-top: 16px; min-height: 2.7rem; }
 
+/* ผู้ชม (spectator) */
+.spectator-banner {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 14px; margin: 0; text-align: center;
+  background: rgba(125, 211, 252, 0.16); color: #bae6fd;
+  border-bottom: 1px solid rgba(125, 211, 252, 0.28);
+  font-size: 0.9rem; font-weight: 600;
+}
+.spec-count {
+  display: inline-flex; align-items: center; gap: 4px; flex: none;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 0.78rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: #bae6fd; background: rgba(125, 211, 252, 0.14); border: 1px solid rgba(125, 211, 252, 0.28);
+}
+.spec-count svg.lucide { width: 0.95em; height: 0.95em; }
+
 /* ปุ่มเพิ่ม/ลบบอท (ล็อบบี้) */
 .bot-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; }
 .bot-controls button {

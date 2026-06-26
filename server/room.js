@@ -43,6 +43,7 @@ export class Room {
     this.noticeSeq = 0; // ตัวนับแจ้งเตือนเด้ง (toast) ฝั่ง client
     this.noticeText = null;
     this.turnDeadline = null; // timestamp(ms) ที่ตาปัจจุบันจะหมดเวลา (ตั้งโดย server, ไม่เซฟลงไฟล์)
+    this.spectators = []; // ผู้ชมที่เข้ามากลางรอบ: { id, name } — จะเข้าเล่นรอบหน้า
     // ตั้งค่าห้อง (หัวห้องคุม)
     this.settings = { timer: true, autoPass: true, turnSeconds: Math.max(1, Math.round(Room.TURN_MS / 1000)) };
   }
@@ -93,6 +94,7 @@ export class Room {
     return this.players.some((p) => p.isBot);
   }
 
+  // เข้าห้อง → คืน 'player' หรือ 'spectator'
   addPlayer(socketId, name) {
     // reconnect / รีเฟรช: ชื่อซ้ำ → ยึดที่นั่งเดิม (ไม่สนว่า socket เก่า disconnect ทันหรือยัง)
     // กัน race ตอนรีเฟรชที่ socket ใหม่ต่อก่อน socket เก่าจะหลุด (ไม่นับบอท)
@@ -103,19 +105,39 @@ export class Room {
       existing.connected = true;
       // ย้าย host ตามถ้าคนเดิมคือ host
       if (this.hostId === oldId) this.hostId = socketId;
-      if (!this.players.some((p) => p.id === this.hostId && p.connected)) {
+      if (!this.players.some((p) => p.id === this.hostId && p.connected && !p.isBot)) {
         this.hostId = socketId;
       }
-      return existing;
+      return 'player';
     }
-    if (this.phase !== 'lobby') {
-      throw new Error('เกมเริ่มไปแล้ว เข้าร่วมระหว่างรอบไม่ได้');
+    // reconnect ผู้ชมที่ค้างอยู่
+    const spec = this.spectators.find((s) => s.name === name);
+    if (spec) { spec.id = socketId; return 'spectator'; }
+    // เข้าใหม่ตอนล็อบบี้ = ผู้เล่น
+    if (this.phase === 'lobby') {
+      if (this.players.length >= 4) throw new Error('ห้องเต็มแล้ว (สูงสุด 4 คน)');
+      const player = { id: socketId, name, connected: true, hand: [], finished: false };
+      this.players.push(player);
+      if (!this.hostId) this.hostId = socketId;
+      return 'player';
     }
-    if (this.players.length >= 4) throw new Error('ห้องเต็มแล้ว (สูงสุด 4 คน)');
-    const player = { id: socketId, name, connected: true, hand: [], finished: false };
-    this.players.push(player);
-    if (!this.hostId) this.hostId = socketId;
-    return player;
+    // เข้าระหว่างเกม = ผู้ชม (ดูก่อน เล่นรอบหน้า) — ดูได้แม้ห้องเต็ม
+    this.spectators.push({ id: socketId, name });
+    return 'spectator';
+  }
+
+  removeSpectator(socketId) {
+    const n = this.spectators.length;
+    this.spectators = this.spectators.filter((s) => s.id !== socketId);
+    return this.spectators.length !== n;
+  }
+
+  // ดึงผู้ชมเข้าเป็นผู้เล่น (ตอนเริ่มรอบใหม่) เท่าที่นั่งว่าง
+  promoteSpectators() {
+    while (this.spectators.length && this.players.length < 4) {
+      const s = this.spectators.shift();
+      this.players.push({ id: s.id, name: s.name, connected: true, hand: [], finished: false });
+    }
   }
 
   removePlayer(socketId) {
@@ -142,6 +164,7 @@ export class Room {
   }
 
   start() {
+    this.promoteSpectators(); // ดึงผู้ชมที่รออยู่เข้าเล่นรอบนี้
     if (this.players.length < 2) throw new Error('ต้องมีอย่างน้อย 2 คนถึงจะเริ่มได้');
     const prevOrder = Array.isArray(this.finishOrder) ? this.finishOrder.slice() : [];
     const hands = deal(this.players.length);
@@ -498,6 +521,7 @@ export class Room {
   // มุมมองที่ส่งให้ผู้เล่นแต่ละคน (เห็นไพ่ตัวเองเท่านั้น)
   stateFor(socketId) {
     const meIdx = this.indexOf(socketId);
+    const isSpectator = meIdx < 0 && this.spectators.some((s) => s.id === socketId);
     const titleByName = {}; // ยศจากรอบก่อน
     for (const r of this.lastResult || []) titleByName[r.name] = r.title;
     return {
@@ -506,6 +530,8 @@ export class Room {
       hostId: this.hostId,
       youAreHost: this.hostId === socketId,
       youIndex: meIdx,
+      youAreSpectator: isSpectator,
+      spectatorCount: this.spectators.length,
       turn: this.turn,
       turnName: this.players[this.turn]?.name ?? null,
       turnRemainingMs: this.phase === 'playing' && this.turnDeadline
@@ -592,6 +618,7 @@ export class Room {
     room._prevOrder = data._prevOrder || null;
     room.roundOrder = data.roundOrder || null;
     room.settings = { timer: true, autoPass: true, turnSeconds: Math.max(1, Math.round(Room.TURN_MS / 1000)), ...(data.settings || {}) };
+    room.spectators = []; // ผู้ชมเป็น socket สดๆ ไม่กู้คืนหลัง restart
     room.everPlayed = data.everPlayed ?? (data.phase !== 'lobby');
     // socket หายหมดตอน restart → คนจริงออฟไลน์จนกว่าจะ reconnect; บอทออนไลน์เสมอ
     room.players.forEach((p) => { p.connected = !!p.isBot; });

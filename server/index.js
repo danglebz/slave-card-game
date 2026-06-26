@@ -142,6 +142,7 @@ function broadcast(room) {
   for (const p of room.players) {
     if (p.connected && !p.isBot) io.to(p.id).emit('state', room.stateFor(p.id));
   }
+  for (const s of room.spectators) io.to(s.id).emit('state', room.stateFor(s.id)); // ผู้ชม
   scheduleSave(); // สถานะเปลี่ยน → เซฟ
 }
 
@@ -242,6 +243,7 @@ io.on('connection', (socket) => {
     const code = joinedCode;
     joinedCode = null;
     socket.leave(code);
+    room.removeSpectator(socket.id); // เผื่อเป็นผู้ชม
     room.removePlayer(socket.id);
     if (room.players.length === 0 || room.isEmpty()) {
       clearTurnTimer(room); clearBotTimer(room); // ห้องว่าง → หยุดนาฬิกา + บอท
@@ -262,6 +264,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     const room = rooms.get(joinedCode);
     if (!room) return;
+    room.removeSpectator(socket.id); // เผื่อเป็นผู้ชม
     room.removePlayer(socket.id);
     if (room.players.length === 0 || room.isEmpty()) {
       // ห้องว่าง (รวมกรณีรีเฟรช) → รอ grace period เผื่อ reconnect ก่อนค่อยลบ

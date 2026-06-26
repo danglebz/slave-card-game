@@ -196,14 +196,90 @@ $('give-btn').onclick = () => {
   selected.clear();
 };
 // ออกจากห้อง — เปิด AlertDialog ยืนยันก่อนเสมอ (กันกดพลาด)
-$('leave-btn').onclick = () => {
+function openLeaveConfirm() {
   const playing = myState && myState.phase !== 'lobby' && myState.phase !== 'finished';
   $('leave-desc').textContent = playing
     ? 'เกมยังเล่นอยู่ — ที่นั่งของคุณจะถูกพักไว้ กลับเข้ามาด้วยชื่อเดิมได้'
     : 'คุณกำลังจะออกจากห้องนี้';
   openDialog($('leave-modal'));
-};
+}
 $('leave-confirm').onclick = () => { closeDialog($('leave-modal')); socket.emit('leave'); };
+
+// ---------- ตั้งค่า (เฟือง) ----------
+$('settings-btn').onclick = () => { syncSettingsUI(myState); openDialog($('settings-modal')); };
+$('logout-btn').onclick = () => { closeDialog($('settings-modal')); openLeaveConfirm(); };
+
+// แจ้งเตือนถึงตา = ส่วนตัว (เก็บใน localStorage)
+let notifPref = localStorage.getItem('notif') === '1';
+$('set-notif').onchange = () => {
+  notifPref = $('set-notif').checked;
+  localStorage.setItem('notif', notifPref ? '1' : '0');
+  if (notifPref) { primeAudio(); beep(); navigator.vibrate?.(120); } // ทดสอบให้รู้ว่าเปิดแล้ว
+};
+
+// ตั้งค่าห้อง (timer / auto-pass) = หัวห้องคุม → ส่งไป server
+$('set-timer').onchange = emitSettings;
+$('set-autopass').onchange = emitSettings;
+function emitSettings() {
+  if (!myState?.youAreHost) return;
+  socket.emit('settings', { timer: $('set-timer').checked, autoPass: $('set-autopass').checked });
+}
+// อัปเดตหน้าตา settings ให้ตรงกับ state ปัจจุบัน + สิทธิ์หัวห้อง
+function syncSettingsUI(s) {
+  const st = (s && s.settings) || { timer: true, autoPass: true };
+  const isHost = !!(s && s.youAreHost);
+  $('set-timer').checked = st.timer !== false;
+  $('set-autopass').checked = st.autoPass !== false;
+  $('set-timer').disabled = !isHost;
+  $('set-autopass').disabled = !isHost || st.timer === false; // ปิด timer แล้ว auto-pass ไม่มีผล
+  $('set-notif').checked = notifPref;
+  $('settings-host-tag').classList.toggle('hidden', isHost);
+}
+
+// ---------- เสียง/สั่น/แฟลช title เมื่อถึงตา ----------
+let audioCtx = null;
+function primeAudio() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) { /* ไม่รองรับ → เงียบ */ }
+}
+document.addEventListener('click', primeAudio, { once: true }); // ปลดล็อก autoplay ด้วย gesture แรก
+function beep() {
+  if (!audioCtx) return;
+  try {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'sine'; o.frequency.value = 880;
+    o.connect(g); g.connect(audioCtx.destination);
+    const t = audioCtx.currentTime;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.22, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+    o.start(t); o.stop(t + 0.3);
+  } catch (e) { /* ข้าม */ }
+}
+const baseTitle = document.title;
+let titleFlash = null;
+function flashTitle() {
+  if (titleFlash) return;
+  let on = false;
+  titleFlash = setInterval(() => { document.title = (on = !on) ? '🔔 ถึงตาคุณ!' : baseTitle; }, 800);
+}
+function stopFlash() { clearInterval(titleFlash); titleFlash = null; document.title = baseTitle; }
+window.addEventListener('focus', stopFlash);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) stopFlash(); });
+
+let prevMyTurn = false;
+function notifyTurn(s) {
+  const myTurn = s.phase === 'playing' && s.turn === s.youIndex;
+  if (myTurn && !prevMyTurn && notifPref) { // เพิ่งถึงตาเรา
+    primeAudio(); beep();
+    navigator.vibrate?.(200);
+    if (document.hidden) flashTitle(); // อยู่แท็บอื่น → แฟลชชื่อแท็บ
+  }
+  if (!myTurn) stopFlash();
+  prevMyTurn = myTurn;
+}
 
 // ---------- Dialog (shadcn) — เปิด/ปิดมี animation, ปิดด้วยปุ่ม X / คลิก overlay / Escape ----------
 function openDialog(el) {
@@ -248,6 +324,8 @@ function render(s) {
   renderCombos(s);
   renderControls(s);
   renderTurnTimer(s);
+  notifyTurn(s);
+  if ($('settings-modal').classList.contains('open')) syncSettingsUI(s); // ซิงก์ถ้าเปิดอยู่
 
   if (s.phase === 'finished' && s.result) showResult(s.result);
   else hideModal(); // ออกจากเฟสจบรอบ (เช่นเข้าเฟสแลกไพ่) → ปิด modal

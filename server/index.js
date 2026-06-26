@@ -83,14 +83,19 @@ function clearTurnTimer(room) {
 // ตั้ง/รี-เซ็ตเวลาต่อตา — รีเซ็ตเฉพาะตอน "ตาเปลี่ยนจริง" (กัน reconnect มากวนเวลา)
 function armTurnTimer(room) {
   const anyOnline = room.players.some((p) => p.connected);
-  // เดินเวลาเฉพาะตอนเล่นจริง + มีคนออนไลน์อย่างน้อยหนึ่งคน
-  const sig = room.phase === 'playing' && anyOnline ? `${room.turn}:${room.pileOwner}` : null;
+  const timerOn = room.settings?.timer !== false; // หัวห้องปิด timer ได้
+  // เดินเวลาเฉพาะตอนเล่นจริง + มีคนออนไลน์ + เปิด timer
+  const sig = room.phase === 'playing' && anyOnline && timerOn ? `${room.turn}:${room.pileOwner}` : null;
   if (sig === null) { clearTurnTimer(room); return; }
-  if (sig === room._turnSig && room._turnTimer) return; // ตาเดิม → เดินเวลาต่อ
+  if (sig === room._turnSig) return; // ตาเดิม → เดินเวลาต่อ (ไม่รีเซ็ต)
   clearTimeout(room._turnTimer);
+  room._turnTimer = null;
   room._turnSig = sig;
   room.turnDeadline = Date.now() + Room.TURN_MS;
-  room._turnTimer = setTimeout(() => onTurnTimeout(room.code), Room.TURN_MS);
+  // ตั้ง auto-act เฉพาะตอนเปิด auto-pass; ถ้าปิด = โชว์ countdown เฉยๆ ไม่บังคับ
+  if (room.settings?.autoPass !== false) {
+    room._turnTimer = setTimeout(() => onTurnTimeout(room.code), Room.TURN_MS);
+  }
 }
 function onTurnTimeout(code) {
   const room = rooms.get(code);
@@ -161,6 +166,13 @@ io.on('connection', (socket) => {
   socket.on('start', () => withRoom((room) => {
     if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องเริ่มเกมได้');
     room.start();
+  }));
+
+  // ตั้งค่าห้อง (timer / auto-pass) — เฉพาะหัวห้อง
+  socket.on('settings', (patch) => withRoom((room) => {
+    if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องปรับตั้งค่าได้');
+    room.setSettings(patch || {});
+    room._turnSig = null; // ให้ armTurnTimer ตั้งเวลาใหม่ตามค่าที่เพิ่งเปลี่ยน
   }));
 
   socket.on('play', ({ cards }) => withRoom((room) => {

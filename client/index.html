@@ -56,7 +56,7 @@
         <button class="room-code" id="room-code-box" type="button" title="คลิกเพื่อคัดลอกรหัสห้อง">
           <i data-lucide="hash"></i><strong id="room-code"></strong><i data-lucide="copy" class="room-copy-ico"></i>
         </button>
-        <button id="leave-btn" class="leave-btn" type="button" title="ออกจากห้อง"><i data-lucide="door-open"></i> ออกจากห้อง</button>
+        <button id="settings-btn" class="icon-btn" type="button" title="ตั้งค่า" aria-label="ตั้งค่า"><i data-lucide="settings"></i></button>
       </header>
 
       <!-- โต๊ะ 3×3: กองไพ่ตรงกลาง (5) ผู้เล่นล้อมรอบ บน(8)/ซ้าย(4)/ขวา(6)/ล่าง(2) -->
@@ -138,6 +138,36 @@
           <p>ถ้า<b>สลาฟหมดมือก่อนคิง</b> → คิงตกเป็นสลาฟ จบรอบ แจกใหม่ทันที แล้วแลกไพ่กับคิงใหม่</p>
         </div>
         <button id="rules-close" class="primary" type="button" data-dialog-close>ปิด</button>
+      </div>
+    </div>
+
+    <!-- ตั้งค่า -->
+    <div id="settings-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="modal-box settings-box">
+        <button class="dialog-close" type="button" data-dialog-close aria-label="ปิด"><i data-lucide="x"></i></button>
+        <h2 id="settings-title"><i data-lucide="settings"></i> ตั้งค่า</h2>
+        <div class="settings-list">
+          <p class="settings-group-label"><i data-lucide="users"></i> ทั้งห้อง <span id="settings-host-tag" class="settings-tag hidden">หัวห้องปรับได้</span></p>
+          <label class="setting-row" for="set-timer">
+            <span class="setting-label"><i data-lucide="timer"></i> จับเวลาต่อตา</span>
+            <input type="checkbox" id="set-timer" class="switch" />
+          </label>
+          <label class="setting-row" for="set-autopass">
+            <span class="setting-label"><i data-lucide="skip-forward"></i> ผ่านอัตโนมัติเมื่อหมดเวลา</span>
+            <input type="checkbox" id="set-autopass" class="switch" />
+          </label>
+
+          <p class="settings-group-label"><i data-lucide="user"></i> ส่วนตัว</p>
+          <label class="setting-row" for="set-notif">
+            <span class="setting-label"><i data-lucide="bell"></i> แจ้งเตือนเมื่อถึงตา <span class="setting-sub">(เสียง / สั่น)</span></span>
+            <input type="checkbox" id="set-notif" class="switch" />
+          </label>
+          <div class="setting-row is-disabled">
+            <span class="setting-label"><i data-lucide="message-circle"></i> แชท</span>
+            <span class="setting-soon">เร็วๆ นี้</span>
+          </div>
+        </div>
+        <button id="logout-btn" class="btn-destructive settings-logout" type="button"><i data-lucide="door-open"></i> ออกจากห้อง</button>
       </div>
     </div>
 

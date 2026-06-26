@@ -42,6 +42,13 @@ export class Room {
     this.noticeSeq = 0; // ตัวนับแจ้งเตือนเด้ง (toast) ฝั่ง client
     this.noticeText = null;
     this.turnDeadline = null; // timestamp(ms) ที่ตาปัจจุบันจะหมดเวลา (ตั้งโดย server, ไม่เซฟลงไฟล์)
+    this.settings = { timer: true, autoPass: true }; // ตั้งค่าห้อง (หัวห้องคุม)
+  }
+
+  // ปรับตั้งค่าห้อง (เฉพาะค่า boolean ที่รู้จัก)
+  setSettings(patch) {
+    if (patch && typeof patch.timer === 'boolean') this.settings.timer = patch.timer;
+    if (patch && typeof patch.autoPass === 'boolean') this.settings.autoPass = patch.autoPass;
   }
 
   addHistory(entry) {
@@ -440,6 +447,7 @@ export class Room {
       turnRemainingMs: this.phase === 'playing' && this.turnDeadline
         ? Math.max(0, this.turnDeadline - Date.now()) : null,
       turnMs: Room.TURN_MS,
+      settings: this.settings,
       dir: this.dir,
       pile: this.pile,
       pileCards: this._lastPileCards || null,
@@ -506,6 +514,7 @@ export class Room {
       giveTasks: this.giveTasks,
       _prevOrder: this._prevOrder,
       roundOrder: this.roundOrder,
+      settings: this.settings,
     };
   }
 
@@ -517,6 +526,7 @@ export class Room {
     room.giveTasks = data.giveTasks || null;
     room._prevOrder = data._prevOrder || null;
     room.roundOrder = data.roundOrder || null;
+    room.settings = data.settings || { timer: true, autoPass: true };
     room.everPlayed = data.everPlayed ?? (data.phase !== 'lobby');
     // socket หายหมดตอน restart → ทุกคนออฟไลน์จนกว่าจะ reconnect ด้วยชื่อเดิม
     room.players.forEach((p) => { p.connected = false; });

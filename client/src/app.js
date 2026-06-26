@@ -7,6 +7,21 @@ import './style.css';
 
 const socket = io();
 
+// ---------- PWA: ลงทะเบียน service worker (เฉพาะ build จริง) + ปุ่มติดตั้ง ----------
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault(); // กัน prompt อัตโนมัติ เก็บไว้ให้ผู้ใช้กดปุ่มเอง
+  deferredInstall = e;
+  document.getElementById('install-btn')?.classList.remove('hidden');
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstall = null;
+  document.getElementById('install-btn')?.classList.add('hidden');
+});
+
 // เลขเวอร์ชัน (Vite แทนค่า __APP_VERSION__ จาก package.json ตอน build)
 const appVersionEl = document.getElementById('app-version');
 if (appVersionEl) appVersionEl.textContent = `v${__APP_VERSION__}`;
@@ -430,6 +445,13 @@ function closeDialog(el) {
 }
 
 $('rules-btn').onclick = () => openDialog($('rules-modal'));
+$('install-btn').onclick = async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  await deferredInstall.userChoice;
+  deferredInstall = null;
+  $('install-btn').classList.add('hidden');
+};
 
 // คลิกพื้นหลัง (overlay) ที่ว่าง = ปิด — ยกเว้น AlertDialog (ต้องเลือกปุ่มเอง ตามแบบ shadcn)
 document.querySelectorAll('.modal').forEach((m) => {

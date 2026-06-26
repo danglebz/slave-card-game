@@ -51,7 +51,7 @@
 |---|---|
 | 🎨 **Avatar / สีประจำตัว** | เลือกรูป/สีผู้เล่น |
 | 🌗 **ธีม มืด/สว่าง** | สลับธีมได้ |
-| 🌐 **PWA** | ติดตั้งลงจอ home บนมือถือ เปิดเหมือนแอป |
+| ✅ 🌐 **PWA** | **(เสร็จ)** manifest + service worker (network-first HTML, cache-first assets, ข้าม socket.io) + apple meta · ปุ่ม "ติดตั้งแอป" บนล็อบบี้ (beforeinstallprompt) · SW เฉพาะ build จริง |
 | 🇹🇭🇬🇧 **i18n** | รองรับ TH / EN |
 | 📡 **Connection status** | แสดงสถานะ "กำลัง reconnect…" ชัดขึ้น |
 

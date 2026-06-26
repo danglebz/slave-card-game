@@ -338,17 +338,18 @@ function sfx(name) {
         tone(660, 0, 0.09, { type: 'triangle', gain: 0.18 });
         tone(990, 0.04, 0.08, { type: 'triangle', gain: 0.12 });
         break;
-      case 'bomb': { // บอมบ์ — บูมนุ่ม (sine กวาดความถี่ลง เกนเบา ไม่แสบลำโพง)
+      case 'bomb': { // บอมบ์ — ทุ้มนุ่มแต่ได้ยินบนลำโพงเล็ก (triangle กวาดความถี่ลง เกนพอดี)
         const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-        o.type = 'sine';
+        o.type = 'triangle';
         const t = audioCtx.currentTime;
-        o.frequency.setValueAtTime(170, t);
-        o.frequency.exponentialRampToValueAtTime(55, t + 0.28);
+        o.frequency.setValueAtTime(300, t);
+        o.frequency.exponentialRampToValueAtTime(110, t + 0.25);
         g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.15, t + 0.025); // peak เบากว่าเดิมราวครึ่ง
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+        g.gain.exponentialRampToValueAtTime(0.2, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.36);
         o.connect(g); g.connect(audioCtx.destination);
-        o.start(t); o.stop(t + 0.42);
+        o.start(t); o.stop(t + 0.38);
+        tone(520, 0, 0.05, { type: 'triangle', gain: 0.12 }); // หัวเสียงคลิกสั้นๆ ให้มีจังหวะ
         break;
       }
       case 'clear': // เคลียร์กอง — สวูชเบาๆ

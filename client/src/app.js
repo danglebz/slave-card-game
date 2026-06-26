@@ -338,10 +338,19 @@ function sfx(name) {
         tone(660, 0, 0.09, { type: 'triangle', gain: 0.18 });
         tone(990, 0.04, 0.08, { type: 'triangle', gain: 0.12 });
         break;
-      case 'bomb': // บอมบ์ — บูมต่ำหนักๆ
-        tone(140, 0, 0.32, { type: 'sawtooth', gain: 0.28 });
-        tone(70, 0.02, 0.38, { type: 'sine', gain: 0.3 });
+      case 'bomb': { // บอมบ์ — บูมนุ่ม (sine กวาดความถี่ลง เกนเบา ไม่แสบลำโพง)
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine';
+        const t = audioCtx.currentTime;
+        o.frequency.setValueAtTime(170, t);
+        o.frequency.exponentialRampToValueAtTime(55, t + 0.28);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.15, t + 0.025); // peak เบากว่าเดิมราวครึ่ง
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(t); o.stop(t + 0.42);
         break;
+      }
       case 'clear': // เคลียร์กอง — สวูชเบาๆ
         tone(420, 0, 0.12, { type: 'sine', gain: 0.12 });
         tone(300, 0.06, 0.14, { type: 'sine', gain: 0.1 });

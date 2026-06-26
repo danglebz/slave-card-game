@@ -2,6 +2,14 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.10.0](https://github.com/Danglebz/slave-card-game/compare/v1.9.0...v1.10.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **lobby:** shuffle seats button (host) to randomize turn order ([9bb7b23](https://github.com/Danglebz/slave-card-game/commit/9bb7b2332c9a9f1352d61141a62aaec92fcb19c8))
+* **spectator:** watch mid-game, auto-join next round (phase 2) ([868b80a](https://github.com/Danglebz/slave-card-game/commit/868b80a2295f3cb5363d244bb33c4b9a8b706637))
+
 ## [1.9.0](https://github.com/Danglebz/slave-card-game/compare/v1.8.0...v1.9.0) (2026-06-26)
 
 

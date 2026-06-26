@@ -246,3 +246,25 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 #result-list li.rank-0 { background: var(--gold); }
 #result-list li.rank-last { background: #ffd0d0; }
 #result-close { margin-top: 16px; background: var(--green); color: #fff; width: 100%; }
+
+/* ปุ่มกติกา (ghost) + footer ลิงก์ในหน้า lobby */
+.ghost-btn {
+  background: transparent; border: 1px solid rgba(255,255,255,0.3);
+  color: #fff; font-size: 0.95rem; margin-top: 4px;
+}
+.ghost-btn:active { background: rgba(255,255,255,0.1); }
+.lobby-foot { margin-top: 16px; text-align: center; }
+.lobby-foot a { color: rgba(255,255,255,0.75); font-size: 0.85rem; text-decoration: none; }
+.lobby-foot a:hover { color: var(--gold); text-decoration: underline; }
+
+/* กล่องกติกา — เลื่อนอ่านได้ */
+.rules-box { max-width: 440px; text-align: left; }
+.rules-content {
+  max-height: 60vh; overflow-y: auto; margin: 4px -4px 0; padding: 0 8px;
+  font-size: 0.9rem; line-height: 1.5;
+}
+.rules-content h3 { margin: 14px 0 4px; font-size: 0.95rem; color: var(--green); }
+.rules-content h3:first-child { margin-top: 0; }
+.rules-content p { margin: 0; color: #333; }
+.rules-content b { color: var(--ink); }
+#rules-close { margin-top: 16px; width: 100%; }

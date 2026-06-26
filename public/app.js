@@ -97,6 +97,11 @@ $('give-btn').onclick = () => {
 };
 $('result-close').onclick = hideModal;
 
+// กติกา (modal)
+$('rules-btn').onclick = () => $('rules-modal').classList.remove('hidden');
+$('rules-close').onclick = () => $('rules-modal').classList.add('hidden');
+$('rules-modal').onclick = (e) => { if (e.target.id === 'rules-modal') $('rules-modal').classList.add('hidden'); };
+
 // ---------- render ----------
 function render(s) {
   renderPlayers(s);

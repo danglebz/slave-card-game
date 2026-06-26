@@ -207,9 +207,14 @@
             <span class="setting-label"><i data-lucide="palette"></i> <span data-i18n="set.color">สีประจำตัว</span></span>
             <input type="text" id="color-custom" class="coloris color-custom" value="#3b82f6" title="เลือกสีเอง" readonly />
           </div>
-          <label class="setting-row" for="set-notif">
-            <span class="setting-label"><i data-lucide="bell"></i> <span data-i18n="set.notif">แจ้งเตือนเมื่อถึงตา</span> <span class="setting-sub" data-i18n="set.notifSub">(เสียง / สั่น)</span></span>
-            <input type="checkbox" id="set-notif" class="switch" />
+          <p class="settings-sub-label"><i data-lucide="bell"></i> <span data-i18n="set.notif">แจ้งเตือนเมื่อถึงตา</span></p>
+          <label class="setting-row setting-row-sub" for="set-notif-sound">
+            <span class="setting-label"><i data-lucide="volume-2"></i> <span data-i18n="set.notifSound">เสียง</span></span>
+            <input type="checkbox" id="set-notif-sound" class="switch" />
+          </label>
+          <label class="setting-row setting-row-sub" for="set-notif-vibrate">
+            <span class="setting-label"><i data-lucide="vibrate"></i> <span data-i18n="set.notifVibrate">สั่น</span></span>
+            <input type="checkbox" id="set-notif-vibrate" class="switch" />
           </label>
           <p class="settings-sub-label"><i data-lucide="volume-2"></i> <span data-i18n="set.sfx">เสียงเอฟเฟกต์</span></p>
           <label class="setting-row setting-row-sub" for="set-sfx-play">

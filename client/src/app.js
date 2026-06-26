@@ -296,12 +296,21 @@ $('share-link').onclick = async () => {
 $('settings-btn').onclick = () => { syncSettingsUI(myState); openDialog($('settings-modal')); };
 $('logout-btn').onclick = () => { closeDialog($('settings-modal')); openLeaveConfirm(); };
 
-// แจ้งเตือนถึงตา = ส่วนตัว (เก็บใน localStorage)
-let notifPref = localStorage.getItem('notif') === '1';
-$('set-notif').onchange = () => {
-  notifPref = $('set-notif').checked;
-  localStorage.setItem('notif', notifPref ? '1' : '0');
-  if (notifPref) { primeAudio(); beep(); navigator.vibrate?.(120); } // ทดสอบให้รู้ว่าเปิดแล้ว
+// แจ้งเตือนถึงตา = ส่วนตัว แยก เสียง/สั่น (migrate จากคีย์เดิม 'notif')
+const _oldNotif = localStorage.getItem('notif');
+let notifSound = localStorage.getItem('notifSound') ?? _oldNotif;
+let notifVibrate = localStorage.getItem('notifVibrate') ?? _oldNotif;
+notifSound = notifSound === '1';
+notifVibrate = notifVibrate === '1';
+$('set-notif-sound').onchange = () => {
+  notifSound = $('set-notif-sound').checked;
+  localStorage.setItem('notifSound', notifSound ? '1' : '0');
+  if (notifSound) { primeAudio(); beep(); } // ทดสอบ
+};
+$('set-notif-vibrate').onchange = () => {
+  notifVibrate = $('set-notif-vibrate').checked;
+  localStorage.setItem('notifVibrate', notifVibrate ? '1' : '0');
+  if (notifVibrate) navigator.vibrate?.(120); // ทดสอบ
 };
 
 // เสียงเอฟเฟกต์ = ส่วนตัว แยก 3 หมวด (เปิดเป็นค่าเริ่มต้น เว้นผู้ใช้ปิดเอง)
@@ -349,7 +358,8 @@ function syncSettingsUI(s) {
     btn.classList.toggle('active', Number(btn.dataset.sec) === curSec);
     btn.disabled = !isHost || st.timer === false;
   });
-  $('set-notif').checked = notifPref;
+  $('set-notif-sound').checked = notifSound;
+  $('set-notif-vibrate').checked = notifVibrate;
   $('lang-seg').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.lang === getLang()));
   $('set-sfx-play').checked = sfxPref.play;
   $('set-sfx-bomb').checked = sfxPref.bomb;
@@ -468,10 +478,10 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) stop
 let prevMyTurn = false;
 function notifyTurn(s) {
   const myTurn = s.phase === 'playing' && s.turn === s.youIndex;
-  if (myTurn && !prevMyTurn && notifPref) { // เพิ่งถึงตาเรา
-    primeAudio(); beep();
-    navigator.vibrate?.(200);
-    if (document.hidden) flashTitle(); // อยู่แท็บอื่น → แฟลชชื่อแท็บ
+  if (myTurn && !prevMyTurn) { // เพิ่งถึงตาเรา
+    if (notifSound) { primeAudio(); beep(); }
+    if (notifVibrate) navigator.vibrate?.(200);
+    if ((notifSound || notifVibrate) && document.hidden) flashTitle(); // อยู่แท็บอื่น → แฟลชชื่อแท็บ
   }
   if (!myTurn) stopFlash();
   prevMyTurn = myTurn;

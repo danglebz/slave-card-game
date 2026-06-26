@@ -2,6 +2,13 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.9.0](https://github.com/Danglebz/slave-card-game/compare/v1.8.0...v1.9.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **bot:** AI players to fill seats (phase 2) ([b6824b1](https://github.com/Danglebz/slave-card-game/commit/b6824b1c38462237e00921e0c4271db1b6a655e2))
+
 ## [1.8.0](https://github.com/Danglebz/slave-card-game/compare/v1.7.0...v1.8.0) (2026-06-26)
 
 

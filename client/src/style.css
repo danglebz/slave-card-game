@@ -332,14 +332,13 @@ button.loading:disabled { opacity: 0.92; }
 /* swatches เลือกสีประจำตัว (ในตั้งค่า) */
 .swatch-wrap { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .swatches { display: flex; gap: 6px; flex-wrap: wrap; }
+/* ช่องเลือกสีเอง (Coloris) */
 .color-custom {
-  -webkit-appearance: none; appearance: none;
-  width: 24px; height: 24px; padding: 0; min-height: 0; cursor: pointer;
-  border: 2px dashed var(--border); border-radius: 50%; background: none;
+  width: 96px; min-height: 2rem; padding: 0.3rem 0.5rem; padding-left: 30px;
+  font-size: 0.76rem; font-weight: 700; font-variant-numeric: tabular-nums; text-transform: uppercase;
+  border-radius: var(--radius-sm); cursor: pointer;
 }
-.color-custom::-webkit-color-swatch-wrapper { padding: 0; }
-.color-custom::-webkit-color-swatch { border: none; border-radius: 50%; }
-.color-custom::-moz-color-swatch { border: none; border-radius: 50%; }
+.clr-field button { width: 18px; height: 18px; left: 6px; border-radius: 5px; }
 .swatch {
   width: 24px; height: 24px; min-height: 0; padding: 0; border-radius: 50%;
   border: 2px solid transparent; cursor: pointer; transition: transform .1s;

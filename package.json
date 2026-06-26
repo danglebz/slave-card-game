@@ -45,6 +45,7 @@
     "release:dry": "commit-and-tag-version --dry-run"
   },
   "dependencies": {
+    "@melloware/coloris": "^0.25.0",
     "express": "^4.21.2",
     "lucide": "^1.21.0",
     "qrcode": "^1.5.4",

@@ -1,6 +1,8 @@
 // app.js — ฝั่ง client เกมไพ่สลาฟ
 import { io } from 'socket.io-client';
 import QRCode from 'qrcode';
+import '@melloware/coloris/dist/coloris.css';
+import Coloris from '@melloware/coloris';
 import { icon, iconize, refreshIcons } from './icons.js';
 import { t, applyI18n, setLang, getLang } from './i18n.js';
 import { NameSchema, CodeSchema, validateField } from './validation.js';
@@ -72,13 +74,19 @@ function renderSwatches() {
   if (custom) custom.value = /^#[0-9a-f]{6}$/i.test(avatarColor) ? avatarColor : '#3b82f6';
 }
 renderSwatches();
-// เลือกสีเอง (native color picker) — อัปเดตสดตอนเลื่อน, ส่ง server ตอนปิด picker
-$('color-custom').oninput = () => {
+// เลือกสีเอง — color picker สวยๆ (Coloris): popup โมเดิร์น + swatches + สไลเดอร์
+Coloris.init();
+Coloris({
+  el: '#color-custom',
+  theme: 'pill', themeMode: 'dark', format: 'hex', alpha: false,
+  swatches: AVATAR_COLORS,
+});
+$('color-custom').addEventListener('input', () => { // อัปเดตสดตอนเลือก
   avatarColor = $('color-custom').value;
   localStorage.setItem('avatarColor', avatarColor);
   renderSwatches();
-};
-$('color-custom').onchange = () => socket.emit('setColor', { color: avatarColor });
+});
+$('color-custom').addEventListener('change', () => socket.emit('setColor', { color: avatarColor })); // ส่งตอนปิด picker
 
 // ภาษา (TH/EN) — ใส่ข้อความ UI หลักทันทีที่โหลด
 applyI18n();

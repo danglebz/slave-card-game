@@ -579,20 +579,26 @@ function chipHTML(p, s) {
   if (p.finished) cls.push('finished');
   if (!p.connected) cls.push('offline');
   if (p.isYou) cls.push('you');
-  const badge = p.isHost ? icon('crown', 'host-ico') + ' ' : '';
+  // หัวห้อง = มงกุฎ, บอท = ไอคอนหุ่นยนต์
+  const badge = p.isHost ? icon('crown', 'host-ico') + ' ' : (p.isBot ? icon('bot', 'bot-ico') + ' ' : '');
   const off = !p.connected ? ' ' + icon('wifi-off', 'off-ico') : '';
   const title = p.title ? `<span class="ptitle">${iconize(esc(p.title))}</span>` : '';
   const count = p.finished ? `${icon('circle-check')} หมดมือ` : p.cardCount + ' ใบ';
-  // อวตาร: วงกลมสีประจำตัว + อักษรแรก (บอท = ไอคอนหุ่นยนต์)
-  const color = p.color || '#64748b';
-  const avatar = p.isBot
-    ? `<span class="avatar" style="--c:${color}">${icon('bot')}</span>`
-    : `<span class="avatar" style="--c:${color}">${esc((p.name || '?').trim().charAt(0).toUpperCase())}</span>`;
-  return `<div class="${cls.join(' ')}">
-    <span class="pname">${avatar}${badge}${esc(p.name)}${p.isYou ? ' (คุณ)' : ''}${off}</span>
+  // ทั้งชิปเป็นสีประจำตัว (พื้นอ่อน) — ไม่ตั้ง border เพื่อไม่ทับไฮไลต์ "ถึงตา"
+  const tint = p.color ? ` style="background:${chipTintBg(p.color)}"` : '';
+  return `<div class="${cls.join(' ')}"${tint}>
+    <span class="pname">${badge}${esc(p.name)}${p.isYou ? ' (คุณ)' : ''}${off}</span>
     <span class="pcount">${count}</span>
     ${title}
   </div>`;
+}
+
+// ผสมสีผู้เล่นกับขาวให้ได้พื้นอ่อนๆ (อ่านตัวหนังสือออก) — คืน rgb()
+function chipTintBg(hex) {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return 'var(--surface)';
+  const ch = (i) => parseInt(hex.slice(i, i + 2), 16);
+  const mix = (v) => Math.round(v * 0.22 + 255 * 0.78); // 22% สี + 78% ขาว
+  return `rgb(${mix(ch(1))},${mix(ch(3))},${mix(ch(5))})`;
 }
 
 function renderPlayers(s) {

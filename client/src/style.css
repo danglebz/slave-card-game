@@ -319,16 +319,6 @@ button.loading:disabled { opacity: 0.92; }
 }
 .settings-logout { width: 100%; margin-top: 16px; min-height: 2.7rem; }
 
-/* อวตาร (วงกลมสีประจำตัว + อักษรแรก) บน chip */
-.avatar {
-  display: inline-flex; align-items: center; justify-content: center; flex: none;
-  width: 20px; height: 20px; margin-right: 5px; border-radius: 50%;
-  background: var(--c, #64748b); color: #fff;
-  font-size: 0.66rem; font-weight: 800; line-height: 1; vertical-align: -0.28em;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
-}
-.avatar svg.lucide { width: 0.82em; height: 0.82em; }
-
 /* ช่องเลือกสีเอง (Coloris) */
 .color-custom {
   width: 96px; min-height: 2rem; padding: 0.3rem 0.5rem; padding-left: 30px;

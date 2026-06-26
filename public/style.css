@@ -1,0 +1,248 @@
+:root {
+  --green: #0f5132;
+  --green-light: #157347;
+  --felt: #15803d;
+  --gold: #f5c542;
+  --red: #d6336c;
+  --ink: #1a1a2e;
+  --paper: #fff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: 'Sarabun', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  background: radial-gradient(circle at 50% 20%, #1c7d4a, #0b3d24 70%);
+  color: #fff;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+.screen { min-height: 100dvh; display: flex; flex-direction: column; position: relative; }
+.hidden { display: none !important; }
+
+/* ---------- Lobby ---------- */
+#lobby-screen { align-items: center; justify-content: center; padding: 20px; }
+.card-panel {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 20px;
+  padding: 32px 24px;
+  width: 100%; max-width: 360px;
+  display: flex; flex-direction: column; gap: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.card-panel h1 { text-align: center; font-size: 2.2rem; }
+.sub { text-align: center; opacity: 0.8; margin-bottom: 8px; }
+input {
+  padding: 14px 16px; border-radius: 12px; border: none;
+  font-size: 1.05rem; font-family: inherit; background: #fff; color: var(--ink);
+}
+input:focus { outline: 3px solid var(--gold); }
+button {
+  padding: 14px 16px; border-radius: 12px; border: none; cursor: pointer;
+  font-size: 1.05rem; font-weight: 700; font-family: inherit;
+  background: rgba(255,255,255,0.15); color: #fff; transition: transform .08s, background .15s;
+}
+button:active { transform: scale(0.97); }
+button.primary { background: var(--gold); color: var(--ink); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+.divider { display: flex; align-items: center; gap: 10px; opacity: 0.6; margin: 4px 0; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.3); }
+
+/* ปุ่มสร้างห้อง / เข้าห้อง วางคู่กัน */
+.lobby-actions { display: flex; gap: 10px; }
+.lobby-actions button { flex: 1; }
+/* ไฮไลต์ปุ่ม "เข้าห้อง" ตอนเปิดช่องรหัสอยู่ */
+#join-toggle-btn.active {
+  background: rgba(245,197,66,0.15); color: var(--gold);
+  box-shadow: inset 0 0 0 2px var(--gold);
+}
+
+/* ช่องรหัสห้อง — สไลด์เผยตอนกด "เข้าห้อง" */
+#join-section {
+  display: grid; gap: 10px;
+  grid-template-rows: 0fr; opacity: 0;
+  overflow: hidden; transition: grid-template-rows .28s ease, opacity .28s ease, margin-top .28s ease;
+}
+#join-section.open {
+  grid-template-rows: 1fr; opacity: 1; margin-top: 8px;
+}
+#join-section > * { min-height: 0; }
+#join-section:not(.open) > * { visibility: hidden; }
+/* ช่องรหัสห้องให้ดูเป็น "โค้ด" */
+#code-input {
+  text-transform: uppercase; text-align: center;
+  letter-spacing: 6px; font-weight: 800; font-size: 1.3rem;
+}
+#code-input::placeholder { letter-spacing: normal; font-weight: 400; font-size: 0.95rem; }
+.error { color: #ffd0d0; text-align: center; min-height: 1.2em; font-size: 0.9rem; }
+
+/* ---------- Game ---------- */
+#topbar {
+  display: flex; justify-content: center; align-items: center;
+  padding: 10px 16px; background: rgba(0,0,0,0.25);
+}
+.room-code { font-size: 0.95rem; opacity: 0.9; cursor: pointer; -webkit-user-select: none; user-select: none; }
+.room-code strong { color: var(--gold); letter-spacing: 2px; font-size: 1.1rem; }
+.room-code .copy-hint { font-size: 0.85rem; opacity: 0.7; }
+.room-code:active { opacity: 0.6; }
+
+/* Toast แจ้งเตือนชั่วคราว */
+.toast {
+  position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%) translateY(10px);
+  background: var(--ink); color: #fff; padding: 12px 22px; border-radius: 24px;
+  font-size: 0.95rem; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  z-index: 1000; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.hidden { display: none; }
+/* ตำแหน่งบน-กลางจอ */
+.toast.top { top: 24px; bottom: auto; transform: translateX(-50%) translateY(-10px); }
+.toast.top.show { transform: translateX(-50%) translateY(0); }
+/* สีแดงสำหรับ error */
+.toast.error { background: var(--red); color: #fff; }
+/* ชื่อคนที่ต้องลงไพ่ — ใต้กองไพ่ */
+#turn-info {
+  position: relative; z-index: 1; min-height: 1.4em;
+  font-weight: 800; font-size: 1.05rem; text-align: center;
+}
+#turn-info.your-turn { color: var(--gold); animation: pulse 1.2s infinite; }
+@keyframes pulse { 50% { opacity: 0.5; } }
+
+#players {
+  display: flex; gap: 8px; padding: 12px 16px; flex-wrap: wrap; justify-content: center;
+}
+.player-chip {
+  background: rgba(255,255,255,0.1); border-radius: 14px; padding: 8px 12px;
+  display: flex; flex-direction: column; align-items: center; min-width: 76px;
+  border: 2px solid transparent; transition: border-color .2s;
+}
+.player-chip.turn { border-color: var(--gold); box-shadow: 0 0 16px rgba(245,197,66,0.5); }
+.player-chip.finished { opacity: 0.55; }
+.player-chip .pname { font-weight: 700; font-size: 0.9rem; }
+.player-chip .pcount { font-size: 0.8rem; opacity: 0.85; }
+.player-chip .badge { font-size: 0.7rem; color: var(--gold); }
+.player-chip .ptitle {
+  margin-top: 3px; font-size: 0.72rem; font-weight: 700;
+  padding: 1px 8px; border-radius: 10px;
+  background: rgba(245,197,66,0.18); color: var(--gold);
+}
+.player-chip.offline .pname::after { content: ' 📴'; }
+
+
+#table {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 16px; min-height: 160px; position: relative;
+}
+/* ไอคอนทิศทาง — ลายน้ำใหญ่ อยู่ "หลังไพ่" บนโต๊ะ */
+#dir-indicator {
+  position: absolute; top: 50%; left: 52.5%; transform: translate(-50%, -50%) rotate(90deg);
+  font-size: clamp(140px, 32vh, 300px); line-height: 1; font-weight: 400;
+  color: #fff; opacity: 0.07; pointer-events: none; z-index: 0;
+  -webkit-user-select: none; user-select: none;
+}
+#pile-label, #pile-cards { position: relative; z-index: 1; }
+#pile-label { opacity: 0.6; font-size: 0.85rem; }
+#pile-cards { display: flex; gap: 6px; min-height: 92px; align-items: center; }
+
+/* ประวัติการลงไพ่ — แถวแนวนอน เลื่อนซ้าย-ขวา */
+#log {
+  display: flex; align-items: center; gap: 10px;
+  justify-content: safe center;
+  font-size: 0.8rem; padding: 8px 16px;
+  white-space: nowrap; overflow-x: auto; overflow-y: hidden;
+}
+.log-item { flex: none; display: inline-flex; align-items: center; gap: 3px; }
+.log-name { opacity: 0.65; font-size: 0.72rem; margin-right: 2px; }
+.log-event { opacity: 0.6; font-size: 0.72rem; }
+.log-pass { opacity: 0.5; }
+.mini-card {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff; color: var(--ink); border-radius: 4px;
+  padding: 2px 5px; font-size: 0.72rem; font-weight: 800; line-height: 1;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.mini-card.red { color: var(--red); }
+
+/* ---------- Cards ---------- */
+.playing-card {
+  width: 62px; height: 88px; border-radius: 9px; background: var(--paper);
+  color: var(--ink); position: relative; flex-shrink: 0;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.35); font-weight: 800;
+  display: flex; align-items: center; justify-content: center; -webkit-user-select: none; user-select: none;
+}
+.playing-card.red { color: var(--red); }
+.playing-card .corner { position: absolute; font-size: 0.85rem; line-height: 1; white-space: nowrap; }
+.playing-card .tl { top: 5px; left: 6px; }
+.playing-card .br { bottom: 5px; right: 6px; transform: rotate(180deg); }
+.playing-card .pip { font-size: 1.7rem; }
+
+#hand-area {
+  background: rgba(0,0,0,0.3);
+  padding: 10px 10px max(10px, env(safe-area-inset-bottom));
+  margin-top: auto; /* ดันชิดขอบล่างสุดของจอ */
+}
+#combo-hints {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center;
+  padding: 4px 4px 8px; overflow-x: auto;
+}
+#combo-hints.hidden { display: none; }
+.combo-hints-label { font-size: 0.78rem; opacity: 0.8; white-space: nowrap; }
+.combo-chip {
+  flex: none; width: auto; font-size: 0.8rem; font-weight: 700;
+  padding: 5px 10px; border-radius: 14px; border: 1px solid var(--gold);
+  background: rgba(245,197,66,0.15); color: var(--gold);
+  cursor: pointer; white-space: nowrap; transition: background .12s;
+}
+.combo-chip:active { background: rgba(245,197,66,0.35); }
+.combo-chip.active { background: var(--gold); color: var(--ink); }
+/* ปุ่มสลับโหมดเรียงไพ่ */
+#sort-toggle {
+  display: block; margin: 0 auto 6px; width: auto; flex: none;
+  font-size: 0.78rem; font-weight: 700; padding: 6px 14px; border-radius: 14px;
+  background: rgba(255,255,255,0.12);
+}
+#hand {
+  display: flex; gap: 0; overflow-x: auto; overflow-y: visible;
+  padding: 30px 12px 12px;
+  justify-content: safe center; min-height: 132px;
+}
+#hand .playing-card {
+  margin-left: -14px; cursor: pointer; transition: transform .12s;
+  width: 58px; height: 84px;
+}
+#hand .playing-card:first-child { margin-left: 0; }
+#hand .playing-card.selected { transform: translateY(-18px); box-shadow: 0 8px 16px rgba(0,0,0,0.5); outline: 3px solid var(--gold); }
+#actions { display: flex; gap: 10px; padding: 0 8px; }
+#actions button { flex: 1; }
+
+/* ปุ่ม เริ่มเกม / เล่นรอบใหม่ — ลอยอยู่กลางหน้าจอ ไม่เต็มความกว้าง */
+#start-btn:not(.hidden),
+#again-btn:not(.hidden) {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  flex: none; width: auto; min-width: 240px; max-width: 80vw;
+  padding: 18px 44px; font-size: 1.25rem;
+  border-radius: 16px; z-index: 20;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+}
+#start-btn:not(.hidden):active,
+#again-btn:not(.hidden):active {
+  transform: translate(-50%, -50%) scale(0.97);
+}
+
+/* ---------- Modal ---------- */
+.modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50;
+}
+.modal-box {
+  background: #fff; color: var(--ink); border-radius: 20px; padding: 28px;
+  width: 100%; max-width: 340px; text-align: center;
+}
+.modal-box h2 { margin-bottom: 16px; }
+#result-list { text-align: left; list-style: none; }
+#result-list li { padding: 10px 14px; margin: 6px 0; border-radius: 10px; background: #f0f0f5; font-weight: 700; }
+#result-list li.rank-0 { background: var(--gold); }
+#result-list li.rank-last { background: #ffd0d0; }
+#result-close { margin-top: 16px; background: var(--green); color: #fff; width: 100%; }

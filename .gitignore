@@ -1,0 +1,18 @@
+# dependencies
+node_modules/
+
+# runtime state (ห้องที่เซฟไว้ — ไม่ควรขึ้น repo)
+rooms.json
+
+# logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# env
+.env
+.env.*

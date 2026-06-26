@@ -1,0 +1,205 @@
+// index.js — เว็บเซิร์ฟเวอร์ + WebSocket สำหรับเกมไพ่สลาฟ
+import express from 'express';
+import { createServer } from 'node:http';
+import { Server } from 'socket.io';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { networkInterfaces } from 'node:os';
+import fs from 'node:fs';
+import { Room } from './room.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PORT = process.env.PORT || 3000;
+const SAVE_PATH = join(__dirname, '..', 'rooms.json');
+
+const app = express();
+// ปิด cache ของไฟล์ static (html/css/js) เพื่อให้ทุกเครื่องได้เวอร์ชันล่าสุดเสมอ
+// ป้องกันปัญหา "บางคนเห็นการ์ดเพี้ยน" เพราะเบราว์เซอร์ cache ไฟล์เก่าไว้
+app.use(express.static(join(__dirname, '..', 'public'), {
+  etag: false,
+  lastModified: false,
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'no-store, must-revalidate');
+  },
+}));
+
+const server = createServer(app);
+const io = new Server(server);
+
+/** @type {Map<string, Room>} */
+const rooms = new Map();
+
+// ----- เซฟ/โหลดสถานะห้องลงไฟล์ (กัน server restart แล้วเกมหาย) -----
+let saveTimer = null;
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveRooms, 400); // debounce กันเขียนถี่เกิน
+}
+function saveRooms() {
+  clearTimeout(saveTimer);
+  saveTimer = null;
+  try {
+    const data = { rooms: [...rooms.values()].map((r) => r.toState()) };
+    fs.writeFileSync(SAVE_PATH, JSON.stringify(data));
+  } catch (e) {
+    console.error('เซฟห้องไม่สำเร็จ:', e.message);
+  }
+}
+function loadRooms() {
+  try {
+    if (!fs.existsSync(SAVE_PATH)) return;
+    const data = JSON.parse(fs.readFileSync(SAVE_PATH, 'utf8'));
+    for (const rs of data.rooms || []) {
+      const room = Room.fromState(rs);
+      rooms.set(room.code, room);
+      // ทุกคนออฟไลน์ตอนโหลด → ตั้งเวลาเก็บกวาดถ้าไม่มีใคร reconnect ใน 10 นาที
+      room._cleanupTimer = setTimeout(() => {
+        if (rooms.get(room.code)?.isEmpty()) rooms.delete(room.code);
+      }, 600000);
+    }
+    if (rooms.size) console.log(`↩️  โหลดห้องที่ค้างไว้ ${rooms.size} ห้อง`);
+  } catch (e) {
+    console.error('โหลดห้องไม่สำเร็จ:', e.message);
+  }
+}
+
+function makeCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code;
+  do {
+    code = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  } while (rooms.has(code));
+  return code;
+}
+
+function broadcast(room) {
+  for (const p of room.players) {
+    if (p.connected) io.to(p.id).emit('state', room.stateFor(p.id));
+  }
+  scheduleSave(); // สถานะเปลี่ยน → เซฟ
+}
+
+io.on('connection', (socket) => {
+  let joinedCode = null;
+
+  const err = (msg) => socket.emit('errorMsg', msg);
+
+  socket.on('create', ({ name }) => {
+    try {
+      name = (name || '').trim();
+      if (!name) return err('กรุณาใส่ชื่อ');
+      const code = makeCode();
+      const room = new Room(code);
+      rooms.set(code, room);
+      room.addPlayer(socket.id, name);
+      joinedCode = code;
+      socket.join(code);
+      socket.emit('joined', { code });
+      broadcast(room);
+    } catch (e) {
+      err(e.message);
+    }
+  });
+
+  socket.on('join', ({ code, name }) => {
+    try {
+      code = (code || '').trim().toUpperCase();
+      name = (name || '').trim();
+      if (!name) return err('กรุณาใส่ชื่อ');
+      const room = rooms.get(code);
+      if (!room) return err('ไม่พบห้องนี้ (เช็กรหัสห้องอีกที)');
+      room.addPlayer(socket.id, name);
+      clearTimeout(room._cleanupTimer); // ยกเลิกการลบห้อง (มีคนกลับเข้ามาแล้ว)
+      joinedCode = code;
+      socket.join(code);
+      socket.emit('joined', { code });
+      broadcast(room);
+    } catch (e) {
+      err(e.message);
+    }
+  });
+
+  const withRoom = (fn) => {
+    const room = rooms.get(joinedCode);
+    if (!room) return err('คุณยังไม่ได้อยู่ในห้อง');
+    try {
+      fn(room);
+      broadcast(room);
+    } catch (e) {
+      err(e.message);
+    }
+  };
+
+  socket.on('start', () => withRoom((room) => {
+    if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องเริ่มเกมได้');
+    room.start();
+  }));
+
+  socket.on('play', ({ cards }) => withRoom((room) => {
+    room.play(socket.id, Array.isArray(cards) ? cards : []);
+  }));
+
+  socket.on('pass', () => withRoom((room) => room.pass(socket.id)));
+
+  socket.on('give', ({ cards }) => withRoom((room) => {
+    room.giveCards(socket.id, Array.isArray(cards) ? cards : []);
+  }));
+
+  socket.on('again', () => withRoom((room) => {
+    if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องเริ่มรอบใหม่ได้');
+    room.resetToLobby();
+    room.start();
+  }));
+
+  socket.on('disconnect', () => {
+    const room = rooms.get(joinedCode);
+    if (!room) return;
+    room.removePlayer(socket.id);
+    if (room.players.length === 0 || room.isEmpty()) {
+      // ห้องว่าง (รวมกรณีรีเฟรช) → รอ grace period เผื่อ reconnect ก่อนค่อยลบ
+      const code = joinedCode;
+      clearTimeout(room._cleanupTimer);
+      room._cleanupTimer = setTimeout(() => {
+        const r = rooms.get(code);
+        if (r && (r.players.length === 0 || r.isEmpty())) {
+          rooms.delete(code);
+          saveRooms();
+        }
+      }, 60000);
+      scheduleSave(); // บันทึกสถานะ connected=false
+    } else {
+      broadcast(room);
+    }
+  });
+});
+
+function lanAddresses() {
+  const out = [];
+  for (const ifaces of Object.values(networkInterfaces())) {
+    for (const i of ifaces || []) {
+      if (i.family === 'IPv4' && !i.internal) out.push(i.address);
+    }
+  }
+  return out;
+}
+
+loadRooms(); // โหลดห้องที่ค้างไว้ก่อนเปิดรับ connection
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log('\n🃏  เกมไพ่สลาฟ พร้อมเล่นแล้ว!\n');
+  console.log(`   เครื่องนี้:   http://localhost:${PORT}`);
+  for (const ip of lanAddresses()) {
+    console.log(`   ในออฟฟิศ:   http://${ip}:${PORT}   ← ส่งลิงก์นี้ให้เพื่อน`);
+  }
+  console.log('');
+});
+
+// เซฟทันทีตอนปิด server (Ctrl+C / kill / nodemon restart) เพื่อเก็บสถานะล่าสุด
+let shuttingDown = false;
+function shutdown() {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  saveRooms();
+  process.exit(0);
+}
+['SIGINT', 'SIGTERM', 'SIGUSR2'].forEach((sig) => process.on(sig, shutdown));

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#0f5132" />
+  <title>ไพ่สลาฟ 🃏</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- หน้าเข้าห้อง -->
+    <section id="lobby-screen" class="screen">
+      <div class="card-panel">
+        <h1>🃏 ไพ่สลาฟ</h1>
+        <p class="sub">เล่นกันในออฟฟิศ 2–4 คน</p>
+        <input id="name-input" maxlength="16" placeholder="ใส่ชื่อของคุณ" autocomplete="off" />
+        <div class="lobby-actions">
+          <button id="create-btn" class="primary">สร้างห้อง</button>
+          <button id="join-toggle-btn">เข้าห้อง</button>
+        </div>
+        <div id="join-section">
+          <input id="code-input" maxlength="4" placeholder="ใส่รหัสห้อง 4 ตัว" autocomplete="off" />
+          <button id="join-btn" class="primary">เข้าห้อง</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- หน้าโต๊ะเล่น -->
+    <section id="game-screen" class="screen hidden">
+      <header id="topbar">
+        <div class="room-code" id="room-code-box" title="แตะเพื่อคัดลอกรหัสห้อง">ห้อง <strong id="room-code"></strong></div>
+      </header>
+
+      <div id="players"></div>
+
+      <div id="table">
+        <div id="dir-indicator"></div>
+        <div id="pile-label">กองบนโต๊ะ</div>
+        <div id="pile-cards"></div>
+        <div id="turn-info"></div>
+      </div>
+
+      <div id="log"></div>
+
+      <div id="hand-area">
+        <div id="combo-hints" class="hidden"></div>
+        <button id="sort-toggle" type="button">🔢 เรียงตามเลข</button>
+        <div id="hand"></div>
+        <div id="actions">
+          <button id="play-btn" class="primary" disabled>ลงไพ่</button>
+          <button id="pass-btn" disabled>ผ่าน</button>
+          <button id="give-btn" class="primary hidden" disabled>ส่งไพ่แลก</button>
+          <button id="start-btn" class="primary hidden">เริ่มเกม</button>
+          <button id="again-btn" class="primary hidden">เล่นรอบใหม่</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ผลรอบ -->
+    <div id="result-modal" class="modal hidden">
+      <div class="modal-box">
+        <h2>🎉 จบรอบ!</h2>
+        <ol id="result-list"></ol>
+        <button id="result-close">ปิด</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -3,28 +3,32 @@
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
-/* ---------- ธีม shadcn (dark / zinc) ---------- */
+/* ---------- ธีม shadcn (light / violet) ---------- */
 :root {
-  --background: #0a0a0b;
-  --surface: #161618;       /* card */
-  --surface-2: #202024;     /* nested / hover */
-  --border: #2a2a30;
-  --foreground: #fafafa;
-  --muted-foreground: #a1a1aa;
-  --primary: #f5c542;       /* gold accent */
-  --primary-foreground: #18181b;
-  --primary-hover: #e6b933;
-  --ring: rgba(245, 197, 66, 0.45);
-  --red: #ef4444;           /* แดง (ดอกไพ่ + error) */
-  --paper: #fafafa;         /* หน้าไพ่ */
-  --ink: #18181b;           /* ตัวเลขบนไพ่ */
+  --background: #f5f4f8;     /* พื้นหลังสว่าง (เทา-ม่วงอ่อน) */
+  --surface: #ffffff;        /* card / panel */
+  --surface-2: #f4f4f5;      /* muted / hover อ่อน */
+  --hover: #f0eefb;          /* hover ปุ่ม secondary (ม่วงจางๆ) */
+  --border: #e4e4e7;
+  --foreground: #18181b;     /* ตัวหนังสือหลัก (เข้ม) */
+  --muted-foreground: #71717a;
+  --primary: #7c3aed;        /* violet-600 */
+  --primary-foreground: #ffffff;
+  --primary-hover: #6d28d9;  /* violet-700 */
+  --primary-soft: rgba(124, 58, 237, 0.10);
+  --primary-soft-2: rgba(124, 58, 237, 0.18);
+  --primary-border: rgba(124, 58, 237, 0.40);
+  --ring: rgba(124, 58, 237, 0.35);
+  --red: #e11d48;            /* แดง (ดอกไพ่ + error) */
+  --paper: #ffffff;          /* หน้าไพ่ */
+  --ink: #18181b;            /* ตัวเลขบนไพ่ */
   --radius: 12px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
 body {
   font-family: 'Sarabun', -apple-system, 'Segoe UI', system-ui, sans-serif;
-  background: radial-gradient(circle at 50% -10%, #15241d 0%, var(--background) 62%);
+  background: radial-gradient(circle at 50% -10%, #ede9fe 0%, var(--background) 55%);
   color: var(--foreground);
   min-height: 100dvh;
   overflow-x: hidden;
@@ -37,7 +41,7 @@ input {
   padding: 10px 14px; border-radius: 8px;
   border: 1px solid var(--border);
   font-size: 0.95rem; font-family: inherit;
-  background: var(--background); color: var(--foreground);
+  background: var(--surface); color: var(--foreground);
   transition: border-color .15s, box-shadow .15s;
 }
 input::placeholder { color: var(--muted-foreground); }
@@ -45,10 +49,10 @@ input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px
 button {
   padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border);
   font-size: 0.9rem; font-weight: 600; font-family: inherit; cursor: pointer;
-  background: var(--surface-2); color: var(--foreground);
+  background: var(--surface); color: var(--foreground);
   transition: background .15s, border-color .15s, transform .06s, box-shadow .15s;
 }
-button:hover { background: #2a2a30; }
+button:hover { background: var(--hover); }
 button:active { transform: scale(0.98); }
 button:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
 button.primary { background: var(--primary); color: var(--primary-foreground); border-color: transparent; font-weight: 700; }
@@ -64,12 +68,12 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   padding: 28px 24px;
   width: 100%; max-width: 380px;
   display: flex; flex-direction: column; gap: 12px;
-  box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+  box-shadow: 0 12px 36px rgba(80,60,140,0.12);
 }
 .project-logo {
   width: 88px; height: 88px; object-fit: cover; align-self: center;
   border-radius: 18px; border: 1px solid var(--border);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 22px rgba(80,60,140,0.18);
 }
 .card-panel h1 { text-align: center; font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; }
 .sub { text-align: center; color: var(--muted-foreground); font-size: 0.9rem; margin-bottom: 8px; }
@@ -81,7 +85,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .lobby-actions button { flex: 1; }
 /* ไฮไลต์ปุ่ม "เข้าห้อง" ตอนเปิดช่องรหัสอยู่ */
 #join-toggle-btn.active {
-  background: rgba(245,197,66,0.12); color: var(--primary); border-color: var(--primary);
+  background: var(--primary-soft); color: var(--primary); border-color: var(--primary);
 }
 
 /* ช่องรหัสห้อง — สไลด์เผยตอนกด "เข้าห้อง" */
@@ -118,7 +122,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%) translateY(10px);
   background: var(--surface); color: var(--foreground); border: 1px solid var(--border);
   padding: 12px 20px; border-radius: 10px;
-  font-size: 0.9rem; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+  font-size: 0.9rem; font-weight: 600; box-shadow: 0 12px 32px rgba(80,60,140,0.25);
   z-index: 1000; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -144,7 +148,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   display: flex; flex-direction: column; align-items: center; min-width: 76px;
   border: 1px solid var(--border); transition: border-color .2s, box-shadow .2s;
 }
-.player-chip.turn { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary), 0 0 18px rgba(245,197,66,0.25); }
+.player-chip.turn { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary), 0 0 18px var(--primary-soft-2); }
 .player-chip.finished { opacity: 0.5; }
 .player-chip .pname { font-weight: 600; font-size: 0.9rem; }
 .player-chip .pcount { font-size: 0.8rem; color: var(--muted-foreground); }
@@ -152,7 +156,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .player-chip .ptitle {
   margin-top: 3px; font-size: 0.72rem; font-weight: 700;
   padding: 1px 8px; border-radius: 999px;
-  background: rgba(245,197,66,0.15); color: var(--primary); border: 1px solid rgba(245,197,66,0.3);
+  background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary-border);
 }
 .player-chip.offline .pname::after { content: ' 📴'; }
 
@@ -164,7 +168,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 #dir-indicator {
   position: absolute; top: 50%; left: 52.5%; transform: translate(-50%, -50%) rotate(90deg);
   font-size: clamp(140px, 32vh, 300px); line-height: 1; font-weight: 400;
-  color: #fff; opacity: 0.05; pointer-events: none; z-index: 0;
+  color: var(--primary); opacity: 0.08; pointer-events: none; z-index: 0;
   -webkit-user-select: none; user-select: none;
 }
 #pile-label, #pile-cards { position: relative; z-index: 1; }
@@ -186,7 +190,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--paper); color: var(--ink); border-radius: 4px;
   padding: 2px 5px; font-size: 0.72rem; font-weight: 800; line-height: 1;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.12);
 }
 .mini-card.red { color: var(--red); }
 
@@ -194,8 +198,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .playing-card {
   width: 62px; height: 88px; border-radius: 8px; background: var(--paper);
   color: var(--ink); position: relative; flex-shrink: 0;
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.45); font-weight: 800;
+  border: 1px solid #e2e2e6;
+  box-shadow: 0 3px 10px rgba(40,30,70,0.18); font-weight: 800;
   display: flex; align-items: center; justify-content: center; -webkit-user-select: none; user-select: none;
 }
 .playing-card.red { color: var(--red); }
@@ -217,11 +221,11 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .combo-hints-label { font-size: 0.78rem; color: var(--muted-foreground); white-space: nowrap; }
 .combo-chip {
   flex: none; width: auto; font-size: 0.8rem; font-weight: 600;
-  padding: 5px 12px; border-radius: 999px; border: 1px solid rgba(245,197,66,0.4);
-  background: rgba(245,197,66,0.1); color: var(--primary);
+  padding: 5px 12px; border-radius: 999px; border: 1px solid var(--primary-border);
+  background: var(--primary-soft); color: var(--primary);
   cursor: pointer; white-space: nowrap; transition: background .12s, color .12s;
 }
-.combo-chip:active { background: rgba(245,197,66,0.25); }
+.combo-chip:active { background: var(--primary-soft-2); }
 .combo-chip.active { background: var(--primary); color: var(--primary-foreground); border-color: transparent; }
 /* ปุ่มสลับโหมดเรียงไพ่ */
 #sort-toggle {
@@ -238,7 +242,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   width: 58px; height: 84px;
 }
 #hand .playing-card:first-child { margin-left: 0; }
-#hand .playing-card.selected { transform: translateY(-18px); box-shadow: 0 10px 20px rgba(0,0,0,0.55); outline: 2px solid var(--primary); outline-offset: 1px; }
+#hand .playing-card.selected { transform: translateY(-18px); box-shadow: 0 10px 22px rgba(40,30,70,0.30); outline: 2px solid var(--primary); outline-offset: 1px; }
 #actions { display: flex; gap: 10px; padding: 0 8px; }
 #actions button { flex: 1; }
 
@@ -250,7 +254,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   flex: none; width: auto; min-width: 240px; max-width: 80vw;
   padding: 16px 44px; font-size: 1.15rem;
   border-radius: 12px; z-index: 20;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+  box-shadow: 0 16px 40px rgba(124,58,237,0.35);
 }
 #start-btn:not(.hidden):active,
 #again-btn:not(.hidden):active {
@@ -259,14 +263,15 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ---------- Modal (shadcn dialog) ---------- */
 .modal {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+  position: fixed; inset: 0; background: rgba(20,10,40,0.45);
   display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50;
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
 }
 .modal-box {
   background: var(--surface); color: var(--foreground);
   border: 1px solid var(--border); border-radius: var(--radius); padding: 24px;
   width: 100%; max-width: 360px; text-align: center;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  box-shadow: 0 24px 60px rgba(40,20,80,0.30);
 }
 .modal-box h2 { margin-bottom: 16px; font-weight: 800; }
 #result-list { text-align: left; list-style: none; }
@@ -275,7 +280,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   background: var(--surface-2); border: 1px solid var(--border); color: var(--foreground); font-weight: 700;
 }
 #result-list li.rank-0 { background: var(--primary); color: var(--primary-foreground); border-color: transparent; }
-#result-list li.rank-last { background: rgba(239,68,68,0.16); border-color: rgba(239,68,68,0.4); }
+#result-list li.rank-last { background: rgba(225,29,72,0.10); border-color: rgba(225,29,72,0.35); }
 #result-close { margin-top: 16px; width: 100%; }
 
 /* ปุ่มกติกา (ghost) + footer ลิงก์ในหน้า lobby */
@@ -284,9 +289,16 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   color: var(--muted-foreground); font-size: 0.9rem; margin-top: 4px;
 }
 .ghost-btn:hover { background: var(--surface-2); color: var(--foreground); }
-.lobby-foot { margin-top: 16px; text-align: center; }
-.lobby-foot a { color: var(--muted-foreground); font-size: 0.85rem; text-decoration: none; }
-.lobby-foot a:hover { color: var(--primary); text-decoration: underline; }
+.lobby-foot { margin-top: 16px; display: flex; justify-content: center; }
+.github-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 9px 16px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--foreground);
+  font-size: 0.88rem; font-weight: 600; text-decoration: none;
+  transition: background .15s, border-color .15s;
+}
+.github-btn:hover { background: var(--surface-2); border-color: var(--muted-foreground); }
+.github-btn svg { flex: none; }
 
 /* กล่องกติกา — เลื่อนอ่านได้ */
 .rules-box { max-width: 460px; text-align: left; }

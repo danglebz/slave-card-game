@@ -2,6 +2,24 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.3.0](https://github.com/Danglebz/slave-card-game/compare/v1.2.0...v1.3.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **ui:** leave-room confirm AlertDialog, loading states (progress bar + button spinner), Sonner toast top-center ([106da9b](https://github.com/Danglebz/slave-card-game/commit/106da9b2cba939cdcea8230041f8132f26d2fe97))
+
+
+### 💄 Styling
+
+* move version label next to GitHub button in lobby footer ([4db5ddf](https://github.com/Danglebz/slave-card-game/commit/4db5ddfcfa39158e535d6856063e5c2f3c5c67a3))
+* version label as plain text, remove badge background ([627ca3b](https://github.com/Danglebz/slave-card-game/commit/627ca3b6cb9697852ebc9f95e417fda96138be94))
+
+
+### 📝 Documentation
+
+* add feature roadmap (planned pages, features, phases) ([f779a45](https://github.com/Danglebz/slave-card-game/commit/f779a45285747d5a9300023456f79322f3f15f96))
+
 ## [1.2.0](https://github.com/Danglebz/slave-card-game/compare/v1.1.0...v1.2.0) (2026-06-26)
 
 

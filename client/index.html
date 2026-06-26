@@ -53,17 +53,28 @@
     <!-- หน้าโต๊ะเล่น -->
     <section id="game-screen" class="screen hidden">
       <header id="topbar">
-        <div class="room-code" id="room-code-box" title="แตะเพื่อคัดลอกรหัสห้อง">ห้อง <strong id="room-code"></strong></div>
+        <button class="room-code" id="room-code-box" type="button" title="คลิกเพื่อคัดลอกรหัสห้อง">
+          <i data-lucide="hash"></i><strong id="room-code"></strong><i data-lucide="copy" class="room-copy-ico"></i>
+        </button>
         <button id="leave-btn" class="leave-btn" type="button" title="ออกจากห้อง"><i data-lucide="door-open"></i> ออกจากห้อง</button>
       </header>
 
-      <div id="players"></div>
-
+      <!-- โต๊ะ 3×3: กองไพ่ตรงกลาง (5) ผู้เล่นล้อมรอบ บน(8)/ซ้าย(4)/ขวา(6)/ล่าง(2) -->
       <div id="table">
         <div id="dir-indicator"></div>
-        <div id="pile-label">กองบนโต๊ะ</div>
-        <div id="pile-cards"></div>
-        <div id="turn-info"></div>
+        <div class="seat" id="seat-tl"></div>
+        <div class="seat" id="seat-top"></div>
+        <div class="seat" id="seat-tr"></div>
+        <div class="seat" id="seat-left"></div>
+        <div class="pile-center">
+          <div id="pile-label">กองบนโต๊ะ</div>
+          <div id="pile-cards"></div>
+          <div id="turn-info"></div>
+        </div>
+        <div class="seat" id="seat-right"></div>
+        <div class="seat" id="seat-bl"></div>
+        <div class="seat" id="seat-bottom"></div>
+        <div class="seat" id="seat-br"></div>
       </div>
 
       <div id="log"></div>

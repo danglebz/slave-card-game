@@ -254,22 +254,48 @@ function render(s) {
   refreshIcons(); // แปลง <i data-lucide> ที่เพิ่ง render เป็น <svg>
 }
 
+const SEAT_IDS = [
+  'seat-tl', 'seat-top', 'seat-tr', 'seat-left',
+  'seat-right', 'seat-bl', 'seat-bottom', 'seat-br',
+];
+
+// ที่นั่งบนตาราง 3×3 ตามตำแหน่งสัมพัทธ์จาก "คุณ" (rel 0 = คุณ)
+function seatFor(rel, n) {
+  if (n === 4) {
+    // 4 คน → ใช้ "มุม" 1/3/9/7: คุณ=ล่างซ้าย(1) แล้วไล่ตามเข็ม
+    return ['seat-bl', 'seat-br', 'seat-tr', 'seat-tl'][rel];
+  }
+  // คุณ = ล่าง (2) เสมอ
+  if (rel === 0) return 'seat-bottom';
+  if (n === 2) return 'seat-top';                            // 2 คน: ตรงข้าม (8)
+  return rel === 1 ? 'seat-tr' : 'seat-tl';                  // 3 คน: มุมบน ขวา(9)/ซ้าย(7)
+}
+
+function chipHTML(p, s) {
+  const cls = ['player-chip'];
+  if (p.isTurn && s.phase === 'playing') cls.push('turn');
+  if (p.finished) cls.push('finished');
+  if (!p.connected) cls.push('offline');
+  if (p.isYou) cls.push('you');
+  const badge = p.isHost ? icon('crown', 'host-ico') + ' ' : '';
+  const off = !p.connected ? ' ' + icon('wifi-off', 'off-ico') : '';
+  const title = p.title ? `<span class="ptitle">${iconize(esc(p.title))}</span>` : '';
+  const count = p.finished ? `${icon('circle-check')} หมดมือ` : p.cardCount + ' ใบ';
+  return `<div class="${cls.join(' ')}">
+    <span class="pname">${badge}${esc(p.name)}${p.isYou ? ' (คุณ)' : ''}${off}</span>
+    <span class="pcount">${count}</span>
+    ${title}
+  </div>`;
+}
+
 function renderPlayers(s) {
-  $('players').innerHTML = s.players.map((p) => {
-    const cls = ['player-chip'];
-    if (p.isTurn && s.phase === 'playing') cls.push('turn');
-    if (p.finished) cls.push('finished');
-    if (!p.connected) cls.push('offline');
-    const badge = p.isHost ? icon('crown', 'host-ico') + ' ' : '';
-    const off = !p.connected ? ' ' + icon('wifi-off', 'off-ico') : '';
-    const title = p.title ? `<span class="ptitle">${iconize(esc(p.title))}</span>` : '';
-    const count = p.finished ? `${icon('circle-check')} หมดมือ` : p.cardCount + ' ใบ';
-    return `<div class="${cls.join(' ')}">
-      <span class="pname">${badge}${esc(p.name)}${p.isYou ? ' (คุณ)' : ''}${off}</span>
-      <span class="pcount">${count}</span>
-      ${title}
-    </div>`;
-  }).join('');
+  SEAT_IDS.forEach((id) => { $(id).innerHTML = ''; }); // เคลียร์ทุกที่นั่งก่อน
+  const n = s.players.length;
+  const you = s.youIndex >= 0 ? s.youIndex : 0;
+  s.players.forEach((p, i) => {
+    const rel = ((i - you) % n + n) % n; // 0 = คุณ, ไล่ตามลำดับรอบโต๊ะ
+    $(seatFor(rel, n)).innerHTML = chipHTML(p, s);
+  });
 }
 
 function renderPile(s) {
@@ -332,16 +358,35 @@ function sortLabel() {
 function sortedHand(hand) {
   const arr = (hand || []).slice().sort((a, b) => a.r - b.r || a.s - b.s); // เรียงตามเลขก่อนเสมอ
   if (handSort !== 'bomb') return arr;
-  // โหมดบอม: แยกไพ่ที่อยู่ในบอม (ตอง/โฟร์/เรียงดอกเดียว) ไปไว้ขวาสุด ที่เหลือคงเรียงเลขเดิม
-  const bombIds = [];
-  const inBomb = new Set();
+  // โหมดบอม: ดันไพ่ที่อยู่ในบอม (ตอง/โฟร์/เรียงดอกเดียว) ไปไว้ขวาสุด ที่เหลือคงเรียงเลขเดิม
+  // บอมบ์ที่ใช้ไพ่ร่วมกันจะ "เชื่อมต่อกัน" โดยใช้ไพ่ร่วมเป็นสะพาน
+  //   เช่น โฟร์ 3♣3♦3♥3♠ + เรียง♥ 3♥4♥5♥ → 3♣ 3♦ 3♠ [3♥] 4♥ 5♥
+  const blocks = [];
+  const idBlock = new Map();
   for (const cb of detectCombos(arr)) {
-    for (const id of cb.ids) if (!inBomb.has(id)) { inBomb.add(id); bombIds.push(id); }
+    const shared = cb.ids.find((id) => idBlock.has(id));
+    if (!shared) {
+      const block = cb.ids.slice();
+      blocks.push(block);
+      block.forEach((id) => idBlock.set(id, block));
+    } else {
+      // ย้ายไพ่ร่วมไปท้ายบล็อก แล้วต่อไพ่ใหม่ของบอมบ์นี้ ให้เรียงต่อเนื่องผ่านไพ่ร่วม
+      const block = idBlock.get(shared);
+      block.splice(block.indexOf(shared), 1);
+      block.push(shared);
+      for (const id of cb.ids) {
+        if (id === shared || idBlock.has(id)) continue;
+        block.push(id);
+        idBlock.set(id, block);
+      }
+    }
   }
+  const bombIds = blocks.flat();
   if (!bombIds.length) return arr;
+  const inBomb = new Set(bombIds);
   const byId = new Map(arr.map((c) => [c.id, c]));
   const left = arr.filter((c) => !inBomb.has(c.id)); // ไม่ใช่บอม → เรียงเลขปกติ (ซ้าย)
-  const right = bombIds.map((id) => byId.get(id)); // บอม → กลุ่มไว้ (ขวา)
+  const right = bombIds.map((id) => byId.get(id)); // บอม → กลุ่ม+เชื่อมต่อ (ขวา)
   return [...left, ...right];
 }
 $('sort-toggle').innerHTML = sortLabel();
@@ -518,8 +563,9 @@ function showToast(msg, opts = {}) {
   t.classList.toggle('error', !!opts.error); // destructive variant
   t.classList.toggle('success', !!opts.success);
   t.classList.remove('hidden');
+  t.classList.remove('show'); // รีเซ็ตก่อน เพื่อให้ animation เล่นซ้ำได้แม้ข้อความเดิม
   clearTimeout(toastHideTimer);
-  void t.offsetWidth; // บังคับ reflow ให้ transition ทำงาน
+  void t.offsetWidth; // บังคับ reflow ให้ transition เล่นใหม่
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
@@ -553,10 +599,25 @@ async function copyText(text) {
 }
 
 $('room-code-box').onclick = async () => {
+  const box = $('room-code-box');
   const code = $('room-code').textContent.trim();
   if (!code) return;
   const ok = await copyText(code);
-  showToast(ok ? `คัดลอกรหัสห้องแล้ว ✓ (${code})` : `คัดลอกไม่สำเร็จ — ${code}`, { top: true });
+  if (ok) {
+    // feedback: ไอคอน copy → เช็คเขียว ชั่วคราว
+    box.classList.add('copied');
+    const ico = box.querySelector('.room-copy-ico');
+    if (ico) ico.outerHTML = icon('check', 'room-copy-ico');
+    refreshIcons();
+    clearTimeout(box._copiedTimer);
+    box._copiedTimer = setTimeout(() => {
+      box.classList.remove('copied');
+      const cur = box.querySelector('.room-copy-ico');
+      if (cur) cur.outerHTML = icon('copy', 'room-copy-ico');
+      refreshIcons();
+    }, 1400);
+  }
+  showToast(ok ? `คัดลอกรหัสห้องแล้ว (${code})` : `คัดลอกไม่สำเร็จ — ${code}`, { top: true });
 };
 
 // แปลงไอคอน static ครั้งแรก (ปุ่มกติกา/ออกจากห้อง, modal กติกา/ผลรอบ, ปุ่มเรียงไพ่)

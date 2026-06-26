@@ -395,7 +395,7 @@ svg.lucide {
   color: var(--muted-foreground); font-size: 0.875rem; margin-top: 2px;
 }
 .ghost-btn:hover { background: var(--surface-2); color: var(--foreground); }
-.lobby-foot { margin-top: 14px; display: flex; justify-content: center; }
+.lobby-foot { margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 12px; }
 /* ปุ่ม GitHub — สไตล์แบรนด์ GitHub (พื้นเข้ม pill ยกเงา) */
 .github-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -421,19 +421,15 @@ svg.lucide {
 .rules-content b { color: var(--foreground); font-weight: 700; }
 #rules-close { margin-top: 18px; width: 100%; min-height: 2.7rem; }
 
-/* ============ เลขเวอร์ชัน (มุมล่างขวาของจอ) — ตัวเลขล้วน ไม่มีพื้นหลัง ============ */
+/* ============ เลขเวอร์ชัน (ข้างปุ่ม GitHub บนหน้าแรก) — ตัวเลขล้วน ============ */
 .app-version {
-  position: fixed;
-  right: max(10px, env(safe-area-inset-right));
-  bottom: max(8px, env(safe-area-inset-bottom));
-  z-index: 50;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.5);
   text-decoration: none;
   transition: color .15s;
 }
-.app-version:hover { color: #fff; }
+.app-version:hover { color: rgba(255, 255, 255, 0.85); }
 .app-version:empty { display: none; }

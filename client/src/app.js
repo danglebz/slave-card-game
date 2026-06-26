@@ -26,6 +26,13 @@ window.addEventListener('appinstalled', () => {
 const appVersionEl = document.getElementById('app-version');
 if (appVersionEl) appVersionEl.textContent = `v${__APP_VERSION__}`;
 
+// ---------- สถานะการเชื่อมต่อ (banner ตอนเน็ตหลุด/กำลังต่อใหม่) ----------
+let everConnected = false;
+function setConn(down) { document.getElementById('conn-banner').classList.toggle('hidden', !down); }
+socket.on('connect', () => { everConnected = true; setConn(false); });
+socket.on('disconnect', () => { if (everConnected) setConn(true); }); // ไม่โชว์ตอนโหลดครั้งแรก
+socket.io.on('reconnect', () => setConn(false));
+
 // ︎ = text-presentation selector: บังคับให้ดอกแสดงเป็นตัวอักษร (ไม่ใช่ emoji)
 // เพื่อให้สี CSS (.red) มีผลจริงบนมือถือ
 const SUITS = ['♣︎', '♦︎', '♥︎', '♠︎'];

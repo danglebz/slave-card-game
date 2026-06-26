@@ -1,20 +1,50 @@
 {
   "name": "slave-card-game",
   "version": "1.0.0",
-  "description": "เกมไพ่สลาฟออนไลน์ เล่นหลายเครื่องในออฟฟิศ (LAN + ออนไลน์)",
+  "description": "เกมไพ่สลาฟออนไลน์ (President / Daifugo) เล่นพร้อมกัน 2–4 คนผ่านเบราว์เซอร์ — server-authoritative ด้วย Express + Socket.IO",
   "type": "module",
+  "private": true,
+  "license": "MIT",
+  "author": "Danglebz <danglebz@hotmail.com>",
+  "homepage": "https://slave-card-game-5les.onrender.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Danglebz/slave-card-game.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Danglebz/slave-card-game/issues"
+  },
+  "keywords": [
+    "card-game",
+    "slave",
+    "president",
+    "daifugo",
+    "multiplayer",
+    "realtime",
+    "socket.io",
+    "websocket",
+    "express",
+    "vite",
+    "tailwindcss",
+    "game"
+  ],
   "engines": {
     "node": ">=22"
   },
+  "packageManager": "pnpm@10.34.4",
+  "main": "server/index.js",
   "scripts": {
     "dev": "vite",
     "dev:server": "node --watch server/index.js",
     "build": "vite build",
+    "preview": "vite preview",
     "start": "node server/index.js"
   },
   "dependencies": {
     "express": "^4.21.2",
-    "socket.io": "^4.8.1"
+    "lucide": "^1.21.0",
+    "socket.io": "^4.8.1",
+    "valibot": "^1.4.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.1",

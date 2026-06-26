@@ -2,6 +2,13 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.6.0](https://github.com/Danglebz/slave-card-game/compare/v1.5.0...v1.6.0) (2026-06-26)
+
+
+### ✨ Features
+
+* **share:** QR code room invite (phase 2) ([845540c](https://github.com/Danglebz/slave-card-game/commit/845540ca3e4fbc984db6531a682ceed66893ab27))
+
 ## [1.5.0](https://github.com/Danglebz/slave-card-game/compare/v1.4.0...v1.5.0) (2026-06-26)
 
 

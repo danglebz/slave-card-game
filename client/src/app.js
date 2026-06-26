@@ -239,6 +239,14 @@ $('set-notif').onchange = () => {
   if (notifPref) { primeAudio(); beep(); navigator.vibrate?.(120); } // ทดสอบให้รู้ว่าเปิดแล้ว
 };
 
+// เสียงเอฟเฟกต์ = ส่วนตัว (เปิดเป็นค่าเริ่มต้น เว้นผู้ใช้ปิดเอง)
+let sfxPref = localStorage.getItem('sfx') !== '0';
+$('set-sfx').onchange = () => {
+  sfxPref = $('set-sfx').checked;
+  localStorage.setItem('sfx', sfxPref ? '1' : '0');
+  if (sfxPref) { primeAudio(); sfx('play'); } // ตัวอย่างเสียง
+};
+
 // ตั้งค่าห้อง (timer / auto-pass) = หัวห้องคุม → ส่งไป server
 $('set-timer').onchange = emitSettings;
 $('set-autopass').onchange = emitSettings;
@@ -255,6 +263,7 @@ function syncSettingsUI(s) {
   $('set-timer').disabled = !isHost;
   $('set-autopass').disabled = !isHost || st.timer === false; // ปิด timer แล้ว auto-pass ไม่มีผล
   $('set-notif').checked = notifPref;
+  $('set-sfx').checked = sfxPref;
   $('settings-host-tag').classList.toggle('hidden', isHost);
 }
 
@@ -279,6 +288,70 @@ function beep() {
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
     o.start(t); o.stop(t + 0.3);
   } catch (e) { /* ข้าม */ }
+}
+
+// โน้ตเดี่ยว (สังเคราะห์สด ไม่ต้องโหลดไฟล์เสียง)
+function tone(freq, delay, dur, { type = 'sine', gain = 0.2 } = {}) {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = type; o.frequency.value = freq;
+  o.connect(g); g.connect(audioCtx.destination);
+  const t = audioCtx.currentTime + delay;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(gain, t + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.start(t); o.stop(t + dur + 0.02);
+}
+// เสียงเอฟเฟกต์ตามเหตุการณ์
+function sfx(name) {
+  if (!sfxPref) return;
+  primeAudio();
+  if (!audioCtx) return;
+  try {
+    switch (name) {
+      case 'play': // ลงไพ่ — คลิกสั้นๆ สดใส
+        tone(660, 0, 0.09, { type: 'triangle', gain: 0.18 });
+        tone(990, 0.04, 0.08, { type: 'triangle', gain: 0.12 });
+        break;
+      case 'bomb': // บอมบ์ — บูมต่ำหนักๆ
+        tone(140, 0, 0.32, { type: 'sawtooth', gain: 0.28 });
+        tone(70, 0.02, 0.38, { type: 'sine', gain: 0.3 });
+        break;
+      case 'clear': // เคลียร์กอง — สวูชเบาๆ
+        tone(420, 0, 0.12, { type: 'sine', gain: 0.12 });
+        tone(300, 0.06, 0.14, { type: 'sine', gain: 0.1 });
+        break;
+      case 'win': // ชนะ — อาร์เพจจิโอขึ้น
+        [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.1, 0.18, { type: 'triangle', gain: 0.2 }));
+        break;
+      case 'lose': // แพ้ — โน้ตลง
+        [392, 330, 262].forEach((f, i) => tone(f, i * 0.12, 0.2, { type: 'sine', gain: 0.18 }));
+        break;
+    }
+  } catch (e) { /* ข้าม */ }
+}
+
+// ตรวจจับเหตุการณ์จาก state เพื่อเล่นเสียง (กองเปลี่ยน / เคลียร์ / จบรอบ)
+let prevPileKey = null;   // null = ยังไม่ตั้ง baseline (กันเล่นเสียงตอนเข้าเกมครั้งแรก/reconnect)
+let prevPhaseSfx = null;
+function playSfx(s) {
+  const key = (s.pileCards && s.pileCards.length) ? s.pileCards.map((c) => c.id).join(',') : '';
+  if (prevPileKey !== null && s.phase === 'playing') {
+    if (key && key !== prevPileKey) {
+      sfx(s.pile && s.pile.mode === 'bomb' ? 'bomb' : 'play'); // มีไพ่ลงใหม่
+    } else if (!key && prevPileKey) {
+      sfx('clear'); // กองถูกเคลียร์
+    }
+  }
+  prevPileKey = key;
+  // จบรอบ → ชนะ/แพ้ ตามอันดับเรา
+  if (s.phase === 'finished' && prevPhaseSfx !== 'finished' && Array.isArray(s.result)) {
+    const me = s.players.find((p) => p.isYou);
+    const rank = me ? s.result.findIndex((r) => r.name === me.name) : -1;
+    if (rank === 0) sfx('win');
+    else if (rank === s.result.length - 1) sfx('lose');
+  }
+  prevPhaseSfx = s.phase;
 }
 const baseTitle = document.title;
 let titleFlash = null;
@@ -347,6 +420,7 @@ function render(s) {
   renderControls(s);
   renderTurnTimer(s);
   notifyTurn(s);
+  playSfx(s);
   if ($('settings-modal').classList.contains('open')) syncSettingsUI(s); // ซิงก์ถ้าเปิดอยู่
 
   if (s.phase === 'finished' && s.result) showResult(s.result);

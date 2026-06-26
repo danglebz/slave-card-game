@@ -56,7 +56,7 @@
         <button class="room-code" id="room-code-box" type="button" title="คลิกเพื่อคัดลอกรหัสห้อง">
           <i data-lucide="hash"></i><strong id="room-code"></strong><i data-lucide="copy" class="room-copy-ico"></i>
         </button>
-        <button id="share-btn" class="icon-btn" type="button" title="แชร์ห้อง (QR)" aria-label="แชร์ห้อง"><i data-lucide="qr-code"></i></button>
+        <button id="share-btn" class="icon-btn hidden" type="button" title="แชร์ห้อง (QR)" aria-label="แชร์ห้อง"><i data-lucide="qr-code"></i></button>
         <button id="settings-btn" class="icon-btn" type="button" title="ตั้งค่า" aria-label="ตั้งค่า"><i data-lucide="settings"></i></button>
       </header>
 
@@ -176,6 +176,10 @@
           <label class="setting-row" for="set-notif">
             <span class="setting-label"><i data-lucide="bell"></i> แจ้งเตือนเมื่อถึงตา <span class="setting-sub">(เสียง / สั่น)</span></span>
             <input type="checkbox" id="set-notif" class="switch" />
+          </label>
+          <label class="setting-row" for="set-sfx">
+            <span class="setting-label"><i data-lucide="volume-2"></i> เสียงเอฟเฟกต์ <span class="setting-sub">(ลงไพ่ / บอมบ์ / ชนะ)</span></span>
+            <input type="checkbox" id="set-sfx" class="switch" />
           </label>
           <div class="setting-row is-disabled">
             <span class="setting-label"><i data-lucide="message-circle"></i> แชท</span>

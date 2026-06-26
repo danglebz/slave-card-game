@@ -518,6 +518,23 @@ function renderPile(s) {
     el.innerHTML = '';
     $('pile-label').textContent = s.phase === 'playing' ? 'โต๊ะว่าง — ลงไพ่ได้เลย' : 'กองบนโต๊ะ';
   }
+  animatePile(s); // เล่นอนิเมชันเฉพาะตอนกองเปลี่ยนจริง
+}
+
+// อนิเมชันไพ่ลงกอง (เด้งเข้า + เขย่าถ้าเป็นบอมบ์) — เล่นเมื่อกองเปลี่ยนเท่านั้น
+let animPileKey = null;
+function animatePile(s) {
+  const el = $('pile-cards');
+  const key = (s.pileCards && s.pileCards.length) ? s.pileCards.map((c) => c.id).join(',') : '';
+  if (key && key !== animPileKey) {
+    el.classList.remove('deal', 'bomb-hit');
+    void el.offsetWidth; // reflow ให้ animation เล่นซ้ำได้
+    el.classList.add('deal');
+    if (s.pile && s.pile.mode === 'bomb') el.classList.add('bomb-hit');
+  } else if (!key) {
+    el.classList.remove('deal', 'bomb-hit');
+  }
+  animPileKey = key;
 }
 
 // ---------- นาฬิกานับถอยหลังต่อตา ----------

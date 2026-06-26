@@ -1,8 +1,14 @@
 // app.js — ฝั่ง client เกมไพ่สลาฟ
 import { io } from 'socket.io-client';
+import { icon, iconize, refreshIcons } from './icons.js';
+import { NameSchema, CodeSchema, validateField } from './validation.js';
 import './style.css';
 
 const socket = io();
+
+// เลขเวอร์ชัน (Vite แทนค่า __APP_VERSION__ จาก package.json ตอน build)
+const appVersionEl = document.getElementById('app-version');
+if (appVersionEl) appVersionEl.textContent = `v${__APP_VERSION__}`;
 
 // ︎ = text-presentation selector: บังคับให้ดอกแสดงเป็นตัวอักษร (ไม่ใช่ emoji)
 // เพื่อให้สี CSS (.red) มีผลจริงบนมือถือ
@@ -21,30 +27,43 @@ let myState = null;
 function savedName() { return localStorage.getItem('slaveName') || ''; }
 $('name-input').value = savedName();
 
+// แสดง/ล้าง error ใต้ฟิลด์ (shadcn FormMessage) + ตั้ง aria-invalid
+function setFieldError(inputId, errorId, message) {
+  const input = $(inputId), err = $(errorId);
+  if (message) {
+    err.innerHTML = `${icon('circle-alert')} ${esc(message)}`;
+    input.setAttribute('aria-invalid', 'true');
+    refreshIcons();
+  } else {
+    err.textContent = '';
+    input.removeAttribute('aria-invalid');
+  }
+}
+
 $('create-btn').onclick = () => {
-  const name = $('name-input').value.trim();
-  if (!name) return showLobbyError('กรุณาใส่ชื่อก่อน');
-  localStorage.setItem('slaveName', name);
-  socket.emit('create', { name });
-};
-// ปุ่ม "เข้าห้อง" ด้านบน = สไลด์เผยช่องรหัสห้อง (ต้องมีชื่อก่อน)
-$('join-toggle-btn').onclick = () => {
-  const name = $('name-input').value.trim();
-  if (!name) return showLobbyError('กรุณาใส่ชื่อก่อน');
-  const opened = $('join-section').classList.toggle('open');
-  $('join-toggle-btn').classList.toggle('active', opened);
-  if (opened) setTimeout(() => $('code-input').focus(), 60);
+  const res = validateField(NameSchema, $('name-input').value);
+  setFieldError('name-input', 'name-error', res.ok ? null : res.message);
+  if (!res.ok) return;
+  localStorage.setItem('slaveName', res.value);
+  socket.emit('create', { name: res.value });
 };
 $('join-btn').onclick = () => {
-  const name = $('name-input').value.trim();
-  const code = $('code-input').value.trim().toUpperCase();
-  if (!name) return showLobbyError('กรุณาใส่ชื่อก่อน');
-  if (!code) return showLobbyError('กรุณาใส่รหัสห้อง');
-  localStorage.setItem('slaveName', name);
-  socket.emit('join', { code, name });
+  const nameRes = validateField(NameSchema, $('name-input').value);
+  const codeRes = validateField(CodeSchema, $('code-input').value);
+  setFieldError('name-input', 'name-error', nameRes.ok ? null : nameRes.message);
+  setFieldError('code-input', 'code-error', codeRes.ok ? null : codeRes.message);
+  if (!nameRes.ok || !codeRes.ok) return;
+  localStorage.setItem('slaveName', nameRes.value);
+  socket.emit('join', { code: codeRes.value, name: nameRes.value });
 };
 
-// validate / error ของ lobby → ใช้ Toast (บน-กลางจอ สีแดง)
+// ล้าง error ทันทีที่ผู้ใช้แก้ + กด Enter เพื่อ submit
+$('name-input').addEventListener('input', () => setFieldError('name-input', 'name-error', null));
+$('code-input').addEventListener('input', () => setFieldError('code-input', 'code-error', null));
+$('name-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('create-btn').click(); });
+$('code-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('join-btn').click(); });
+
+// error จาก server (เช่น ไม่พบห้อง) → Toast (บน-กลางจอ สีแดง)
 function showLobbyError(msg) { showToast(msg, { top: true, error: true, duration: 2500 }); }
 
 // เข้าห้องผ่าน URL ?room=CODE — ถ้ามีชื่อเก็บไว้แล้ว เข้าห้องอัตโนมัติเลย
@@ -62,6 +81,15 @@ socket.on('joined', ({ code }) => {
   $('game-screen').classList.remove('hidden');
   $('room-code').textContent = code;
   history.replaceState(null, '', `?room=${code}`);
+});
+
+// กลับเข้าหน้าล็อบบี้ (หลังออกจากห้อง)
+socket.on('left', () => {
+  $('game-screen').classList.add('hidden');
+  $('lobby-screen').classList.remove('hidden');
+  selected.clear();
+  myState = null;
+  history.replaceState(null, '', location.pathname); // ลบ ?room=... ออก
 });
 
 socket.on('errorMsg', (msg) => {
@@ -98,12 +126,44 @@ $('give-btn').onclick = () => {
   socket.emit('give', { cards: [...selected] });
   selected.clear();
 };
-$('result-close').onclick = hideModal;
+// ออกจากห้อง — ระหว่างเล่นให้ยืนยันก่อน กันกดพลาด
+$('leave-btn').onclick = () => {
+  const playing = myState && myState.phase !== 'lobby' && myState.phase !== 'finished';
+  if (playing && !confirm('ออกจากห้องตอนนี้? เกมยังเล่นอยู่ — ที่นั่งของคุณจะถูกพักไว้')) return;
+  socket.emit('leave');
+};
 
-// กติกา (modal)
-$('rules-btn').onclick = () => $('rules-modal').classList.remove('hidden');
-$('rules-close').onclick = () => $('rules-modal').classList.add('hidden');
-$('rules-modal').onclick = (e) => { if (e.target.id === 'rules-modal') $('rules-modal').classList.add('hidden'); };
+// ---------- Dialog (shadcn) — เปิด/ปิดมี animation, ปิดด้วยปุ่ม X / คลิก overlay / Escape ----------
+function openDialog(el) {
+  if (el.classList.contains('open')) return; // เปิดอยู่แล้ว ไม่ต้อง re-animate
+  clearTimeout(el._closeTimer);
+  el.classList.remove('hidden');
+  void el.offsetWidth; // reflow ให้ transition เข้าทำงาน
+  el.classList.add('open');
+}
+function closeDialog(el) {
+  if (!el || el.classList.contains('hidden')) return;
+  el.classList.remove('open');
+  clearTimeout(el._closeTimer);
+  el._closeTimer = setTimeout(() => el.classList.add('hidden'), 180); // รอ exit animation จบ
+}
+
+$('rules-btn').onclick = () => openDialog($('rules-modal'));
+
+// คลิกพื้นหลัง (overlay) ที่ว่าง = ปิด
+document.querySelectorAll('.modal').forEach((m) => {
+  m.addEventListener('click', (e) => { if (e.target === m) closeDialog(m); });
+});
+// ปุ่มปิดทุกตัว (รวมปุ่ม X) ที่ติด data-dialog-close
+document.querySelectorAll('[data-dialog-close]').forEach((btn) => {
+  btn.addEventListener('click', () => closeDialog(btn.closest('.modal')));
+});
+// Escape = ปิด dialog ที่เปิดอยู่บนสุด
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const top = [...document.querySelectorAll('.modal.open')].pop();
+  if (top) closeDialog(top);
+});
 
 // ---------- render ----------
 function render(s) {
@@ -116,6 +176,8 @@ function render(s) {
 
   if (s.phase === 'finished' && s.result) showResult(s.result);
   else hideModal(); // ออกจากเฟสจบรอบ (เช่นเข้าเฟสแลกไพ่) → ปิด modal
+
+  refreshIcons(); // แปลง <i data-lucide> ที่เพิ่ง render เป็น <svg>
 }
 
 function renderPlayers(s) {
@@ -124,11 +186,13 @@ function renderPlayers(s) {
     if (p.isTurn && s.phase === 'playing') cls.push('turn');
     if (p.finished) cls.push('finished');
     if (!p.connected) cls.push('offline');
-    const badge = p.isHost ? '👑 ' : '';
-    const title = p.title ? `<span class="ptitle">${esc(p.title)}</span>` : '';
+    const badge = p.isHost ? icon('crown', 'host-ico') + ' ' : '';
+    const off = !p.connected ? ' ' + icon('wifi-off', 'off-ico') : '';
+    const title = p.title ? `<span class="ptitle">${iconize(esc(p.title))}</span>` : '';
+    const count = p.finished ? `${icon('circle-check')} หมดมือ` : p.cardCount + ' ใบ';
     return `<div class="${cls.join(' ')}">
-      <span class="pname">${badge}${esc(p.name)}${p.isYou ? ' (คุณ)' : ''}</span>
-      <span class="pcount">${p.finished ? '✅ หมดมือ' : p.cardCount + ' ใบ'}</span>
+      <span class="pname">${badge}${esc(p.name)}${p.isYou ? ' (คุณ)' : ''}${off}</span>
+      <span class="pcount">${count}</span>
       ${title}
     </div>`;
   }).join('');
@@ -136,23 +200,23 @@ function renderPlayers(s) {
 
 function renderPile(s) {
   // ลายน้ำทิศทาง (หลังไพ่) — โชว์เฉพาะตอนเล่น
-  $('dir-indicator').textContent = s.phase === 'playing' ? (s.dir === -1 ? '↺' : '↻') : '';
+  $('dir-indicator').innerHTML = s.phase === 'playing' ? icon(s.dir === -1 ? 'rotate-ccw' : 'rotate-cw') : '';
 
   // ชื่อคนที่ต้องลงไพ่ — ใต้กองไพ่
   const ti = $('turn-info');
   if (s.phase === 'exchange' && s.exchange) {
     const ex = s.exchange;
     if (ex.role === 'winner' && !ex.myDone) {
-      ti.textContent = `🎁 เลือกไพ่ ${ex.myCount} ใบ คืนให้ ${ex.toName}`;
+      ti.innerHTML = `${icon('gift')} เลือกไพ่ ${ex.myCount} ใบ คืนให้ ${esc(ex.toName)}`;
     } else if (ex.role === 'loser') {
-      ti.textContent = `⛓️ ส่งไพ่สูงสุด ${ex.gaveCount} ใบ ให้ ${ex.fromName} แล้ว · รอรับไพ่คืน...`;
+      ti.innerHTML = `${icon('link')} ส่งไพ่สูงสุด ${ex.gaveCount} ใบ ให้ ${esc(ex.fromName)} แล้ว · รอรับไพ่คืน...`;
     } else {
-      ti.textContent = '⏳ รอผู้เล่นอื่นเลือกไพ่...';
+      ti.innerHTML = `${icon('hourglass')} รอผู้เล่นอื่นเลือกไพ่...`;
     }
     ti.classList.toggle('your-turn', ex.role === 'winner' && !ex.myDone);
   } else if (s.phase === 'playing') {
     const yours = s.turn === s.youIndex;
-    ti.textContent = yours ? '🟢 ตาคุณแล้ว!' : `⏳ ตาของ ${s.turnName}`;
+    ti.innerHTML = yours ? `${icon('circle-dot')} ตาคุณแล้ว!` : `${icon('hourglass')} ตาของ ${esc(s.turnName)}`;
     ti.classList.toggle('your-turn', yours);
   } else {
     ti.textContent = '';
@@ -189,7 +253,7 @@ function renderLog(s) {
 // โหมดเรียงไพ่ในมือ: 'rank' = ตามเลขปกติ, 'bomb' = ดันไพ่ที่เป็นบอมไปขวาสุด
 let handSort = localStorage.getItem('handSort') === 'bomb' ? 'bomb' : 'rank';
 function sortLabel() {
-  return handSort === 'bomb' ? '💣 ดันบอมไปขวา' : '🔢 เรียงตามเลข';
+  return handSort === 'bomb' ? `${icon('bomb')} ดันบอมไปขวา` : `${icon('list-ordered')} เรียงตามเลข`;
 }
 function sortedHand(hand) {
   const arr = (hand || []).slice().sort((a, b) => a.r - b.r || a.s - b.s); // เรียงตามเลขก่อนเสมอ
@@ -206,11 +270,12 @@ function sortedHand(hand) {
   const right = bombIds.map((id) => byId.get(id)); // บอม → กลุ่มไว้ (ขวา)
   return [...left, ...right];
 }
-$('sort-toggle').textContent = sortLabel();
+$('sort-toggle').innerHTML = sortLabel();
 $('sort-toggle').onclick = () => {
   handSort = handSort === 'rank' ? 'bomb' : 'rank';
   localStorage.setItem('handSort', handSort);
-  $('sort-toggle').textContent = sortLabel();
+  $('sort-toggle').innerHTML = sortLabel();
+  refreshIcons();
   if (myState) renderHand(myState);
 };
 
@@ -282,7 +347,7 @@ function renderCombos(s) {
   const isActive = (ids) => selected.size === ids.length && ids.every((id) => selected.has(id));
   box.classList.remove('hidden');
   box.innerHTML =
-    '<span class="combo-hints-label">💣 บอมบ์ในมือ:</span>' +
+    `<span class="combo-hints-label">${icon('bomb')} บอมบ์ในมือ:</span>` +
     combos.map((cb, i) =>
       `<button class="combo-chip${isActive(cb.ids) ? ' active' : ''}" data-i="${i}">${esc(cb.label)}</button>`
     ).join('');
@@ -340,12 +405,12 @@ function updatePlayBtn() {
 function showResult(result) {
   $('result-list').innerHTML = result.map((r, i) => {
     const cls = i === 0 ? 'rank-0' : (i === result.length - 1 ? 'rank-last' : '');
-    const medal = i === 0 ? '🏆 ' : (i === result.length - 1 ? '💀 ' : '');
-    return `<li class="${cls}">${medal}${esc(r.title)} — ${esc(r.name)}</li>`;
+    const medal = i === 0 ? icon('trophy') + ' ' : (i === result.length - 1 ? icon('skull') + ' ' : '');
+    return `<li class="${cls}">${medal}${iconize(esc(r.title))} — ${esc(r.name)}</li>`;
   }).join('');
-  $('result-modal').classList.remove('hidden');
+  openDialog($('result-modal'));
 }
-function hideModal() { $('result-modal').classList.add('hidden'); }
+function hideModal() { closeDialog($('result-modal')); }
 
 // ---------- helpers ----------
 function cardHTML(c, attrs = '', extraClass = '') {
@@ -364,20 +429,28 @@ function esc(str) {
   ));
 }
 
-// ---------- คัดลอกลิงก์ห้อง + toast ----------
-let toastTimer;
+// ---------- คัดลอกลิงก์ห้อง + Toast (shadcn / Sonner) ----------
+let toastTimer, toastHideTimer;
 function showToast(msg, opts = {}) {
   const t = $('toast');
-  t.textContent = msg;
-  t.classList.toggle('top', !!opts.top); // บน-กลางจอ (ไม่งั้น ล่าง-กลาง)
-  t.classList.toggle('error', !!opts.error); // สีแดงสำหรับ error
+  const variant = opts.error ? 'error' : (opts.success ? 'success' : 'default'); // ชนิด toast
+  const lead = variant === 'error' ? icon('circle-alert', 'toast-ico')
+    : variant === 'success' ? icon('circle-check', 'toast-ico')
+      : ''; // default ไม่มีไอคอนนำ (เนื้อหามักมีไอคอนของตัวเองอยู่แล้ว)
+  // esc กันชื่อผู้เล่นมี HTML, แล้วค่อยแปลง emoji → ไอคอน
+  t.innerHTML = `${lead}<span class="toast-msg">${iconize(esc(msg))}</span>`;
+  refreshIcons();
+  t.classList.toggle('top', !!opts.top);     // บน-กลางจอ (ไม่งั้น ล่าง-กลาง)
+  t.classList.toggle('error', !!opts.error); // destructive variant
+  t.classList.toggle('success', !!opts.success);
   t.classList.remove('hidden');
+  clearTimeout(toastHideTimer);
   void t.offsetWidth; // บังคับ reflow ให้ transition ทำงาน
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
     t.classList.remove('show');
-    setTimeout(() => t.classList.add('hidden'), 200);
+    toastHideTimer = setTimeout(() => t.classList.add('hidden'), 200);
   }, opts.duration || 1800);
 }
 
@@ -411,3 +484,6 @@ $('room-code-box').onclick = async () => {
   const ok = await copyText(code);
   showToast(ok ? `คัดลอกรหัสห้องแล้ว ✓ (${code})` : `คัดลอกไม่สำเร็จ — ${code}`);
 };
+
+// แปลงไอคอน static ครั้งแรก (ปุ่มกติกา/ออกจากห้อง, modal กติกา/ผลรอบ, ปุ่มเรียงไพ่)
+refreshIcons();

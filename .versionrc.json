@@ -1,0 +1,18 @@
+{
+  "header": "# Changelog\n\nไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).\n",
+  "types": [
+    { "type": "feat", "section": "✨ Features" },
+    { "type": "fix", "section": "🐛 Bug Fixes" },
+    { "type": "perf", "section": "⚡ Performance" },
+    { "type": "refactor", "section": "♻️ Refactoring" },
+    { "type": "style", "section": "💄 Styling" },
+    { "type": "docs", "section": "📝 Documentation" },
+    { "type": "build", "section": "📦 Build" },
+    { "type": "ci", "section": "🤖 CI", "hidden": true },
+    { "type": "test", "section": "✅ Tests", "hidden": true },
+    { "type": "chore", "section": "🔧 Chores", "hidden": true }
+  ],
+  "commitUrlFormat": "https://github.com/Danglebz/slave-card-game/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/Danglebz/slave-card-game/compare/{{previousTag}}...{{currentTag}}",
+  "issueUrlFormat": "https://github.com/Danglebz/slave-card-game/issues/{{id}}"
+}

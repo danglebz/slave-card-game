@@ -152,6 +152,30 @@ io.on('connection', (socket) => {
     room.start();
   }));
 
+  // ออกจากห้องโดยตั้งใจ (กดปุ่ม) — ลบที่นั่งถ้าอยู่ล็อบบี้, พักที่นั่ง(ออฟไลน์)ถ้ากำลังเล่น
+  socket.on('leave', () => {
+    const room = rooms.get(joinedCode);
+    socket.emit('left'); // ให้ client กลับหน้าล็อบบี้เสมอ
+    if (!room) return;
+    const code = joinedCode;
+    joinedCode = null;
+    socket.leave(code);
+    room.removePlayer(socket.id);
+    if (room.players.length === 0 || room.isEmpty()) {
+      clearTimeout(room._cleanupTimer);
+      room._cleanupTimer = setTimeout(() => {
+        const r = rooms.get(code);
+        if (r && (r.players.length === 0 || r.isEmpty())) {
+          rooms.delete(code);
+          saveRooms();
+        }
+      }, 60000);
+      scheduleSave();
+    } else {
+      broadcast(room);
+    }
+  });
+
   socket.on('disconnect', () => {
     const room = rooms.get(joinedCode);
     if (!room) return;

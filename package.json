@@ -1,6 +1,6 @@
 {
   "name": "slave-card-game",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "เกมไพ่สลาฟออนไลน์ (President / Daifugo) เล่นพร้อมกัน 2–4 คนผ่านเบราว์เซอร์ — server-authoritative ด้วย Express + Socket.IO",
   "type": "module",
   "private": true,
@@ -38,7 +38,11 @@
     "dev:server": "node --watch server/index.js",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node server/index.js"
+    "start": "node server/index.js",
+    "release": "commit-and-tag-version",
+    "release:minor": "commit-and-tag-version --release-as minor",
+    "release:major": "commit-and-tag-version --release-as major",
+    "release:dry": "commit-and-tag-version --dry-run"
   },
   "dependencies": {
     "express": "^4.21.2",
@@ -48,6 +52,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.1",
+    "commit-and-tag-version": "^12.7.3",
     "socket.io-client": "^4.8.3",
     "tailwindcss": "^4.3.1",
     "vite": "^8.1.0"

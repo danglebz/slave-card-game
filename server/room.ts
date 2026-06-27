@@ -123,6 +123,7 @@ export class Room {
     this.settings = {
       timer: true,
       autoPass: true,
+      autoPassStuck: true,
       turnSeconds: Math.max(1, Math.round(Room.TURN_MS / 1000)),
     };
   }
@@ -152,6 +153,7 @@ export class Room {
     if (!patch) return;
     if (typeof patch.timer === 'boolean') this.settings.timer = patch.timer;
     if (typeof patch.autoPass === 'boolean') this.settings.autoPass = patch.autoPass;
+    if (typeof patch.autoPassStuck === 'boolean') this.settings.autoPassStuck = patch.autoPassStuck;
     if (patch.turnSeconds != null && Room.TURN_SECONDS_CHOICES.includes(patch.turnSeconds))
       this.settings.turnSeconds = patch.turnSeconds;
   }
@@ -781,6 +783,7 @@ export class Room {
     room.settings = {
       timer: true,
       autoPass: true,
+      autoPassStuck: true,
       turnSeconds: Math.max(1, Math.round(Room.TURN_MS / 1000)),
       ...(data.settings || {}),
     };

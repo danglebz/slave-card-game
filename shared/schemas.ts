@@ -67,6 +67,7 @@ export const JoinSchema = v.object({
 export const SettingsPatchSchema = v.object({
   timer: v.optional(v.boolean()),
   autoPass: v.optional(v.boolean()),
+  autoPassStuck: v.optional(v.boolean()),
   turnSeconds: v.optional(TurnSecondsSchema),
 });
 

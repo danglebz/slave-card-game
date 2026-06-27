@@ -190,6 +190,7 @@ function clearStuckTimer(room: Room): void {
   room._stuckTimer = null;
 }
 function stuckHere(room: Room): boolean {
+  if (room.settings?.autoPassStuck === false) return false; // หัวห้องปิดฟีเจอร์นี้
   if (room.phase !== 'playing' || !room.pile) return false;
   const cur = room.players[room.turn];
   if (!cur || cur.isBot || cur.finished || !cur.connected) return false;

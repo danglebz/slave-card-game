@@ -56,11 +56,16 @@ export function SettingsModal({
     return /^#[0-9a-f]{6}$/i.test(c) ? c : '#3b82f6';
   });
 
-  const st = s?.settings || { timer: true, autoPass: true, turnSeconds: 30 };
+  const st = s?.settings || { timer: true, autoPass: true, autoPassStuck: true, turnSeconds: 30 };
   const isHost = !!s?.youAreHost;
   const curSec = st.turnSeconds || 30;
 
-  function emitSettings(patch: { timer?: boolean; autoPass?: boolean; turnSeconds?: number }) {
+  function emitSettings(patch: {
+    timer?: boolean;
+    autoPass?: boolean;
+    autoPassStuck?: boolean;
+    turnSeconds?: number;
+  }) {
     if (!s?.youAreHost) return;
     socket.emit('settings', patch);
   }
@@ -125,6 +130,17 @@ export function SettingsModal({
               checked={st.autoPass !== false}
               disabled={!isHost || st.timer === false}
               onCheckedChange={(c) => emitSettings({ timer: st.timer !== false, autoPass: c })}
+            />
+          </label>
+          <label className="setting-row" htmlFor="set-autostuck">
+            <span className="setting-label">
+              <Icon name="skip-forward" /> <span>{t(lang, 'set.autostuck')}</span>
+            </span>
+            <Switch
+              id="set-autostuck"
+              checked={st.autoPassStuck !== false}
+              disabled={!isHost}
+              onCheckedChange={(c) => emitSettings({ autoPassStuck: c })}
             />
           </label>
           <div className="setting-row">

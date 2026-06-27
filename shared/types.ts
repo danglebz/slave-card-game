@@ -36,6 +36,8 @@ export interface Settings {
   timer: boolean;
   autoPass: boolean;
   turnSeconds: number;
+  /** ผ่านอัตโนมัติเมื่อไม่มีไพ่ลงได้ (host ปิดได้) */
+  autoPassStuck: boolean;
 }
 
 // ----- มุมมองผู้เล่นใน state -----

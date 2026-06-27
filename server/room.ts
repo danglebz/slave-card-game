@@ -368,13 +368,15 @@ export class Room {
   setupExchange(order: number[]): void {
     const n = order.length;
     const tiers = Math.floor(n / 2);
-    // คิงตกบัลลังก์ → แลกเฉพาะคู่สุดขั้ว (คิง↔สลาฟ) เท่านั้น; ปกติแลกทุกคู่
+    // คิงตกบัลลังก์ → แลกเฉพาะคู่สุดขั้ว (คิง↔สลาฟ) เท่านั้น
     const onlyKingSlave = this._miyakoExchange;
     this._miyakoExchange = false;
-    const maxTier = onlyKingSlave ? 1 : tiers;
+    // ปกติแลกเฉพาะคู่ "มียศ": คิง/ควีน ↔ สลาฟ/รองสลาฟ — สามัญชนไม่แลก (เช่น 6 คน คู่กลางไม่แลก)
+    const RANKED_TIERS = 2;
+    const maxTier = onlyKingSlave ? 1 : Math.min(tiers, RANKED_TIERS);
     this.giveTasks = {}; // เฉพาะผู้ชนะที่ต้องเลือก: { [winnerIdx]: { to, count, cards|null } }
     for (let i = 0; i < maxTier; i++) {
-      const count = tiers - i; // คู่สุดขั้วแลกมากสุด
+      const count = RANKED_TIERS - i; // ตามสากล: คิง↔สลาฟ 2 ใบ, ควีน↔รองสลาฟ 1 ใบ (คงที่ทุกจำนวนคน)
       const w = order[i]; // ผู้ชนะ
       const l = order[n - 1 - i]; // ผู้แพ้
       // ผู้แพ้ส่งไพ่สูงสุดอัตโนมัติ → ผู้ชนะ
@@ -583,10 +585,19 @@ export class Room {
     const idx = this.turn;
     const bot = this.players[idx];
     if (!bot || !bot.isBot || bot.finished) return false;
-    const move = botChoose(bot.hand, this.pile);
-    if (move) this._play(idx, move);
-    else if (this.pile) this._pass(idx);
-    else this._play(idx, [cardId(sortHand(bot.hand)[0])]); // นำกองต้องลง (กันค้าง)
+    // context ช่วยบอทตัดสินใจ: คู่แข่งเหลือไพ่น้อยสุดกี่ใบ + กองแรกต้องมี 3♣ ไหม
+    const opp = this.players.filter((p, i) => i !== idx && !p.finished);
+    const minOppCards = opp.length ? Math.min(...opp.map((p) => p.hand.length)) : Infinity;
+    const move = botChoose(bot.hand, this.pile, { minOppCards, mustInclude3: !this.everPlayed });
+    try {
+      if (move) this._play(idx, move);
+      else if (this.pile) this._pass(idx);
+      else this._play(idx, [cardId(sortHand(bot.hand)[0])]); // นำกองต้องลง (กันค้าง)
+    } catch {
+      // กันค้าง: ถ้าตาที่บอทเลือกผิดกติกาด้วยเหตุใด ๆ → ผ่าน หรือลงเดี่ยวต่ำสุด
+      if (this.pile) this._pass(idx);
+      else this._play(idx, [cardId(sortHand(bot.hand)[0])]);
+    }
     return true;
   }
 

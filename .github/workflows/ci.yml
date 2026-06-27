@@ -1,0 +1,79 @@
+name: CI
+
+# รันบนทุก push เข้า main และทุก PR ที่เปิดเข้า main
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# ยกเลิก run เก่าของ branch/PR เดียวกันเมื่อมี push ใหม่ (ประหยัด CI)
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ----- lint + format + typecheck + unit/integration/smoke tests -----
+  check:
+    name: Lint · Typecheck · Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4 # อ่านเวอร์ชันจาก field "packageManager" ใน package.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test (vitest)
+        run: pnpm test
+
+  # ----- e2e จริงในเบราว์เซอร์ (build + start server + Playwright) -----
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    needs: check # รันต่อเมื่อ check ผ่าน (กันเสียเวลา build ถ้าโค้ดพังตั้งแต่แรก)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run E2E
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }} # เก็บรายงานไว้ดูแม้เทสต์ fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

@@ -107,6 +107,7 @@ export function Actions({ s }: { s: RoomState }) {
         disabled={startDisabled}
         onClick={() => socket.emit('start')}
       >
+        <Icon name={showStart && startDisabled ? 'users' : 'play'} />{' '}
         <span>{showStart && startDisabled ? t(lang, 'game.waitMore') : t(lang, 'game.start')}</span>
       </button>
       <button

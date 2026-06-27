@@ -1,6 +1,7 @@
 // GameScreen.tsx — หน้าโต๊ะเล่น: topbar, spectator, โต๊ะ, log, มือ + ปุ่ม, modals
 // + เอฟเฟกต์ side: เล่นเสียงตามเหตุการณ์ (playSfx) + แจ้งเตือนถึงตา (notifyTurn) + notice toast
 import { useEffect, useRef, useState } from 'react';
+import confetti from 'canvas-confetti';
 import { useStore } from '@/store';
 import { Icon } from '@/lib/icons';
 import { t } from '@/lib/i18n';
@@ -16,6 +17,21 @@ import { ResultModal } from './ResultModal';
 import { ShareModal } from './ShareModal';
 import { SettingsModal } from './SettingsModal';
 import { LeaveModal } from './LeaveModal';
+
+// เอฟเฟกต์ชนะ — โปรยกระดาษหลายช็อต (เคารพ prefers-reduced-motion)
+function fireWinConfetti(): void {
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  const colors = ['#f5c542', '#ffffff', '#22c55e', '#eab308'];
+  confetti({ particleCount: 90, spread: 75, startVelocity: 45, origin: { y: 0.62 }, colors });
+  setTimeout(
+    () => confetti({ particleCount: 60, angle: 60, spread: 65, origin: { x: 0, y: 0.7 }, colors }),
+    150,
+  );
+  setTimeout(
+    () => confetti({ particleCount: 60, angle: 120, spread: 65, origin: { x: 1, y: 0.7 }, colors }),
+    300,
+  );
+}
 
 export function GameScreen() {
   const s = useStore((st) => st.state);
@@ -34,6 +50,22 @@ export function GameScreen() {
   // รีเซ็ตการปิดผลรอบเมื่อขึ้นรอบใหม่ (phase ออกจาก finished) → รอบหน้าโชว์ผลอีกครั้ง
   useEffect(() => {
     if (s?.phase !== 'finished') setResultDismissed(false);
+  }, [s?.phase]);
+
+  // ---------- animation แจกไพ่: เพิ่ม dealId เมื่อ "เริ่มรอบใหม่จริง" (แจกไพ่สด) ----------
+  // lobby/finished → playing/exchange = แจกไพ่ใหม่ ; exchange → playing (รอบเดียวกัน) ไม่นับ
+  const [dealId, setDealId] = useState(0);
+  const prevPhaseDeal = useRef<string | null>(null);
+  useEffect(() => {
+    const ph = s?.phase;
+    const prev = prevPhaseDeal.current;
+    if (
+      (ph === 'playing' || ph === 'exchange') &&
+      (prev === 'lobby' || prev === 'finished') // prev=null (reconnect กลางเกม) → ไม่เล่น animation
+    ) {
+      setDealId((d) => d + 1);
+    }
+    prevPhaseDeal.current = ph ?? null;
   }, [s?.phase]);
 
   const code = s?.code || roomCode;
@@ -59,8 +91,10 @@ export function GameScreen() {
     if (s.phase === 'finished' && prevPhaseSfx.current !== 'finished' && Array.isArray(s.result)) {
       const me = s.players.find((p) => p.isYou);
       const rank = me ? s.result.findIndex((r) => r.name === me.name) : -1;
-      if (rank === 0) sfx('win');
-      else if (rank === s.result.length - 1) sfx('lose');
+      if (rank === 0) {
+        sfx('win');
+        fireWinConfetti(); // เอฟเฟกต์ชนะ (เฉพาะคิง)
+      } else if (rank === s.result.length - 1) sfx('lose');
     }
     prevPhaseSfx.current = s.phase;
 
@@ -192,7 +226,7 @@ export function GameScreen() {
             </>
           )}
         </button>
-        <Hand s={s} handSort={handSort} />
+        <Hand s={s} handSort={handSort} dealId={dealId} />
         <Actions s={s} />
       </div>
 
@@ -240,7 +274,7 @@ function GameShell({
         <div id="hand" />
         <div id="actions">
           <button id="start-btn" className="primary hidden">
-            <span>{t(lang, 'game.start')}</span>
+            <Icon name="play" /> <span>{t(lang, 'game.start')}</span>
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 // PlayingCard.tsx — ไพ่หนึ่งใบ (port cardHTML) + MiniCard (port miniCardHTML)
+import type { CSSProperties } from 'react';
 import type { CardWithId } from '@shared/types';
 import { SUITS, RED, rankLabel } from '@/lib/gameLogic';
 
@@ -6,9 +7,10 @@ interface PlayingCardProps {
   card: CardWithId;
   selected?: boolean;
   onClick?: () => void;
+  style?: CSSProperties;
 }
 
-export function PlayingCard({ card, selected, onClick }: PlayingCardProps) {
+export function PlayingCard({ card, selected, onClick, style }: PlayingCardProps) {
   const red = RED.has(card.s) ? ' red' : '';
   const r = rankLabel(card.r);
   const suit = SUITS[card.s];
@@ -16,6 +18,7 @@ export function PlayingCard({ card, selected, onClick }: PlayingCardProps) {
     <div
       className={`playing-card${red}${selected ? ' selected' : ''}`}
       data-id={card.id}
+      style={style}
       onClick={onClick}
     >
       <span className="corner tl">

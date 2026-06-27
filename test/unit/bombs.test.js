@@ -1,7 +1,7 @@
 // Unit: ระบบบอมบ์ — เมทริกซ์ "อะไรกินอะไร" (ตรรกะซับซ้อนที่สุดในเกม)
 // บอมบ์ = คอมโบพิเศษกินกองเล็กได้โดยไม่สนแต้ม + มีลำดับความแรงข้ามชนิด
 import { describe, it, expect } from 'vitest';
-import { identifyCombo, bombPower, canBeat, playMode } from '../../server/game.js';
+import { identifyCombo, bombPower, canBeat, playMode } from '../../server/game';
 
 // helpers สร้างคอมโบจากสเปคสั้น ๆ
 const single = (r, s = 0) => identifyCombo([{ r, s }]);

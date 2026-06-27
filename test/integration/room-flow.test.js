@@ -1,8 +1,8 @@
 // Integration: Room + game.js ทำงานร่วมกันตลอดหนึ่งรอบ (ไม่ผ่าน socket)
 // ตั้งมือไพ่เองให้ deterministic แล้วไล่เล่นจริงผ่าน play()/pass()
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Room } from '../../server/room.js';
-import { cardId } from '../../server/game.js';
+import { Room } from '../../server/room';
+import { cardId } from '../../server/game';
 
 // helper: สร้างห้อง 2 คน เริ่มเกม แล้วเซ็ตมือไพ่แบบกำหนดเอง
 function twoPlayerRoom() {

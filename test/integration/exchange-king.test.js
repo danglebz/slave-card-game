@@ -1,8 +1,8 @@
 // Integration: เฟสแลกไพ่ + กฎ "คิงตกบัลลังก์" (miyakoOchi)
 // กติกาซับซ้อนที่ข้าม Room หลายเมธอด — เทสกันพังตอนแก้
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Room } from '../../server/room.js';
-import { cardId } from '../../server/game.js';
+import { Room } from '../../server/room';
+import { cardId } from '../../server/game';
 
 const totalCards = (room) => room.players.reduce((sum, p) => sum + p.hand.length, 0);
 

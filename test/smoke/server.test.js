@@ -9,14 +9,14 @@ import { dirname, join } from 'node:path';
 import { io as ioClient } from 'socket.io-client';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const SERVER = join(__dirname, '..', '..', 'server', 'index.js');
+const SERVER = join(__dirname, '..', '..', 'server', 'index.ts');
 const PORT = 3199; // พอร์ตเฉพาะเทส กันชนกับ dev server (3000)
 const URL = `http://localhost:${PORT}`;
 
 let child;
 
 beforeAll(async () => {
-  child = spawn('node', [SERVER], {
+  child = spawn('node', ['--import', 'tsx', SERVER], {
     env: {
       ...process.env,
       PORT: String(PORT),

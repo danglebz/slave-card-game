@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     // ตรรกะเกมเป็น pure module ฝั่ง server → รันใน node
     environment: 'node',
-    include: ['test/**/*.test.js'],
+    include: ['test/**/*.test.{js,ts}'],
     globals: true,
   },
 });

@@ -10,7 +10,7 @@ import {
   canBeat,
   playMode,
   findStarter,
-} from '../../server/game.js';
+} from '../../server/game';
 
 describe('createDeck', () => {
   it('สร้างสำรับ 52 ใบไม่ซ้ำ', () => {

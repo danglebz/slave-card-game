@@ -13,6 +13,11 @@
     "resolveJsonModule": true,
     "types": ["vitest/globals"]
   },
-  "include": ["server/**/*.js", "*.config.js", "test/**/*.js"],
+  "include": [
+    "server/**/*.ts",
+    "shared/**/*.ts",
+    "test/**/*.{js,ts}",
+    "*.config.{js,ts}"
+  ],
   "exclude": ["node_modules", "dist", "tmp"]
 }

@@ -1,15 +1,19 @@
-// observability.js — logging, metrics, และ Sentry (ออปชัน)
+// observability.ts — logging, metrics, และ Sentry (ออปชัน)
 // - logger: log มีระดับ + timestamp (ตั้ง LOG_LEVEL=error|warn|info|debug)
 // - metrics: ตัวนับสะสม + snapshot จำนวนห้อง/ผู้เล่นแบบเรียลไทม์
 // - Sentry: เปิดเฉพาะเมื่อมี SENTRY_DSN (ต้องติดตั้ง @sentry/node เพิ่ม) — ไม่งั้น no-op
 
-let Sentry = null;
+import type { Room } from './room';
+
+type LogLevel = 'error' | 'warn' | 'info' | 'debug';
+
+let Sentry: any = null;
 
 // ----- logging -----
-const LEVELS = { error: 0, warn: 1, info: 2, debug: 3 };
-const THRESHOLD = LEVELS[process.env.LOG_LEVEL] ?? LEVELS.info;
+const LEVELS: Record<LogLevel, number> = { error: 0, warn: 1, info: 2, debug: 3 };
+const THRESHOLD = LEVELS[process.env.LOG_LEVEL as LogLevel] ?? LEVELS.info;
 
-export function log(level, msg, meta) {
+export function log(level: LogLevel, msg: string, meta?: unknown): void {
   if ((LEVELS[level] ?? LEVELS.info) > THRESHOLD) return;
   const line = `${new Date().toISOString()} [${level.toUpperCase()}] ${msg}`;
   const out = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log;
@@ -24,20 +28,20 @@ export function log(level, msg, meta) {
 }
 
 export const logger = {
-  info: (m, meta) => log('info', m, meta),
-  warn: (m, meta) => log('warn', m, meta),
-  error: (m, meta) => log('error', m, meta),
-  debug: (m, meta) => log('debug', m, meta),
+  info: (m: string, meta?: unknown) => log('info', m, meta),
+  warn: (m: string, meta?: unknown) => log('warn', m, meta),
+  error: (m: string, meta?: unknown) => log('error', m, meta),
+  debug: (m: string, meta?: unknown) => log('debug', m, meta),
 };
 
 /** log error + ส่งเข้า Sentry (ถ้าเปิดอยู่) */
-export function captureError(err, context) {
-  logger.error(err?.message || String(err), context);
+export function captureError(err: unknown, context?: Record<string, unknown>): void {
+  logger.error((err as Error)?.message || String(err), context);
   if (Sentry) Sentry.captureException(err, context ? { extra: context } : undefined);
 }
 
 // ----- Sentry (ออปชัน) -----
-export async function initSentry() {
+export async function initSentry(): Promise<void> {
   const dsn = process.env.SENTRY_DSN;
   if (!dsn) {
     logger.info('Sentry: ปิดอยู่ (ไม่ได้ตั้ง SENTRY_DSN)');
@@ -59,7 +63,7 @@ export async function initSentry() {
     logger.warn(
       'Sentry: ตั้ง SENTRY_DSN ไว้ แต่ยังไม่ได้ติดตั้งแพ็กเกจ — รัน `pnpm add @sentry/node`',
       {
-        err: e.message,
+        err: (e as Error).message,
       },
     );
   }
@@ -76,7 +80,7 @@ export const metrics = {
 };
 
 /** สรุปสถานะปัจจุบันจาก rooms Map (จำนวนห้อง/ผู้เล่น/ผู้ชม ฯลฯ) */
-export function snapshot(rooms) {
+export function snapshot(rooms: Map<string, Room>) {
   let players = 0;
   let bots = 0;
   let spectators = 0;

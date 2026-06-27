@@ -1,6 +1,6 @@
 // Unit: token-bucket rate limiter (กันสแปม)
 import { describe, it, expect } from 'vitest';
-import { TokenBucket, createSocketLimiter } from '../../server/ratelimit.js';
+import { TokenBucket, createSocketLimiter } from '../../server/ratelimit';
 
 describe('TokenBucket', () => {
   it('ใช้ token ได้จนหมด capacity แล้วถูกตัด', () => {

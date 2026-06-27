@@ -10,7 +10,13 @@ import {
   canBeat,
   playMode,
   findStarter,
+  anyLegalMove,
 } from '../../server/game';
+import type { Card, Combo } from '../../shared/types';
+
+// ช่วยสร้างไพ่/ชุดจาก id "r.s"
+const H = (...ids: string[]): Card[] => ids.map(cardFromId);
+const PILE = (...ids: string[]): Combo => identifyCombo(ids.map(cardFromId))!;
 
 describe('createDeck', () => {
   it('สร้างสำรับ 52 ใบไม่ซ้ำ', () => {
@@ -191,5 +197,36 @@ describe('findStarter', () => {
 
   it('ไม่มีใครถือ 3♣ → คืน 0', () => {
     expect(findStarter([[{ r: 5, s: 0 }]])).toBe(0);
+  });
+});
+
+describe('anyLegalMove — เช็คว่ามีไพ่ลงได้ไหม (คุม auto-pass)', () => {
+  it('นำกอง (pile=null) → ลงได้เสมอ', () => {
+    expect(anyLegalMove(H('3.0'), null)).toBe(true);
+  });
+
+  it('กองเดี่ยว: มีใบสูงกว่า → ลงได้', () => {
+    // กอง 5♣ ; มือมี 9♠ → ชนะได้
+    expect(anyLegalMove(H('9.3', '4.0'), PILE('5.0'))).toBe(true);
+  });
+
+  it('กองเดี่ยว: มีแต่ใบต่ำกว่า ไม่มีบอมบ์ → ลงไม่ได้', () => {
+    // กอง 13♣ (K) ; มือ 4♣ 7♦ 9♥ ล้วนต่ำกว่า ไม่มีคู่/ตอง/เรียง
+    expect(anyLegalMove(H('4.0', '7.1', '9.2'), PILE('13.0'))).toBe(false);
+  });
+
+  it('กองเดี่ยว: ทุบด้วยบอมบ์ (ตอง) ได้แม้ไม่มีใบเดี่ยวสูงกว่า', () => {
+    // กอง 15♠ (2 สูงสุด) ใบเดี่ยวชนะไม่ได้ แต่มีตอง 4 → บอมบ์กินเดี่ยวได้
+    expect(anyLegalMove(H('4.0', '4.1', '4.2'), PILE('15.3'))).toBe(true);
+  });
+
+  it('กองคู่: มีคู่สูงกว่า → ลงได้ ; มีแต่คู่ต่ำ → ลงไม่ได้', () => {
+    expect(anyLegalMove(H('10.0', '10.1'), PILE('7.2', '7.3'))).toBe(true);
+    expect(anyLegalMove(H('4.0', '4.1'), PILE('9.2', '9.3'))).toBe(false);
+  });
+
+  it('กองเรียง 3 ใบ: มีเรียงดอกเดียวสูงกว่า → ลงได้', () => {
+    // กอง 4-5-6 ♦ ; มือมี 7-8-9 ♣ (เรียงดอกเดียว ยาว 3) → ชนะ
+    expect(anyLegalMove(H('7.0', '8.0', '9.0', '2.1'), PILE('4.1', '5.1', '6.1'))).toBe(true);
   });
 });

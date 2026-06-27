@@ -8,6 +8,7 @@ import { dirname, join } from 'node:path';
 import { networkInterfaces } from 'node:os';
 import fs from 'node:fs';
 import { Room } from './room';
+import { anyLegalMove } from './game';
 import { createSocketLimiter } from './ratelimit';
 import { initSentry, logger, captureError, metrics, snapshot } from './observability';
 import * as v from 'valibot';
@@ -180,9 +181,40 @@ function scheduleBot(room: Room): void {
   ); // หน่วงให้ดูเป็นธรรมชาติ
 }
 
+// ----- ผ่านอัตโนมัติเมื่อ "ลงอะไรไม่ได้เลย" -----
+// ถึงตาคนจริง + มีกองอยู่ + ไม่มีชุดใดในมือชนะกองได้ → ยังไงก็ต้องผ่าน เลยผ่านให้อัตโนมัติ
+// (หน่วงสั้น ๆ ให้ผู้เล่นเห็นกองก่อน) — ทำเสมอ ไม่ผูกกับตั้งค่า timer/autoPass
+const STUCK_MS = Number(process.env.STUCK_MS) || 1200;
+function clearStuckTimer(room: Room): void {
+  if (room._stuckTimer) clearTimeout(room._stuckTimer);
+  room._stuckTimer = null;
+}
+function stuckHere(room: Room): boolean {
+  if (room.phase !== 'playing' || !room.pile) return false;
+  const cur = room.players[room.turn];
+  if (!cur || cur.isBot || cur.finished || !cur.connected) return false;
+  return !anyLegalMove(cur.hand, room.pile); // ไม่มีไพ่ลงได้ = ติด
+}
+function scheduleStuckPass(room: Room): void {
+  clearStuckTimer(room);
+  if (!humansOnline(room) || !stuckHere(room)) return;
+  const turnAt = room.turn;
+  room._stuckTimer = setTimeout(() => {
+    const r = rooms.get(room.code);
+    if (!r || r.turn !== turnAt || !stuckHere(r)) return; // ตาเปลี่ยน/เล่นได้แล้ว → ยกเลิก
+    try {
+      r._pass(r.turn, true, 'ไม่มีไพ่ลงได้');
+    } catch (e) {
+      captureError(e, { where: 'stuckPass', code: r.code });
+    }
+    broadcast(r);
+  }, STUCK_MS);
+}
+
 function broadcast(room: Room): void {
   armTurnTimer(room); // ตั้งเวลาก่อนส่ง state เพื่อให้ client ได้ turnRemainingMs ที่ถูกต้อง
   scheduleBot(room); // ถ้าถึงตาบอท ตั้งเวลาให้บอทเดิน
+  scheduleStuckPass(room); // ถ้าถึงตาคนจริงแต่ลงอะไรไม่ได้ ผ่านให้อัตโนมัติ
   for (const p of room.players) {
     if (p.connected && !p.isBot) io.to(p.id).emit('state', room.stateFor(p.id));
   }
@@ -347,6 +379,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     if (room.players.length === 0 || room.isEmpty()) {
       clearTurnTimer(room);
       clearBotTimer(room); // ห้องว่าง → หยุดนาฬิกา + บอท
+      clearStuckTimer(room);
       if (room._cleanupTimer) clearTimeout(room._cleanupTimer);
       room._cleanupTimer = setTimeout(() => {
         const r = rooms.get(code);
@@ -371,6 +404,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       const code = joinedCode!;
       clearTurnTimer(room);
       clearBotTimer(room); // ห้องว่าง → หยุดนาฬิกา + บอท
+      clearStuckTimer(room);
       if (room._cleanupTimer) clearTimeout(room._cleanupTimer);
       room._cleanupTimer = setTimeout(() => {
         const r = rooms.get(code);

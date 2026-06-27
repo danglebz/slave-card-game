@@ -92,6 +92,7 @@ export class Room {
   _turnTimer?: ReturnType<typeof setTimeout> | null;
   _turnSig?: string | null;
   _botTimer?: ReturnType<typeof setTimeout> | null;
+  _stuckTimer?: ReturnType<typeof setTimeout> | null;
 
   constructor(code: string) {
     this.code = code;
@@ -549,14 +550,14 @@ export class Room {
     return this._pass(this.indexOf(socketId));
   }
 
-  _pass(idx: number, auto = false): { ok: true } {
+  _pass(idx: number, auto = false, reason = 'หมดเวลา'): { ok: true } {
     if (this.phase !== 'playing') throw new Error('ยังไม่ถึงเวลาเล่น');
     if (idx !== this.turn) throw new Error('ยังไม่ถึงตาของคุณ');
     if (!this.pile) throw new Error('คุณเป็นคนนำกอง ต้องลงไพ่ (pass ไม่ได้)');
 
     // ผ่านแล้ว = ออกจากกองนี้ ถูกข้ามจนกว่ากองจะเคลียร์
     this.passed.add(idx);
-    this.log.push(`${this.players[idx].name} ผ่าน${auto ? ' (หมดเวลา)' : ''}`);
+    this.log.push(`${this.players[idx].name} ผ่าน${auto ? ` (${reason})` : ''}`);
     this.addHistory({ name: this.players[idx].name, pass: true, auto });
     this.advanceTurn();
     return { ok: true };

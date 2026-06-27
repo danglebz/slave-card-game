@@ -190,4 +190,51 @@ export function findStarter(hands: Card[][]): number {
   return 0;
 }
 
+/**
+ * มีชุดไพ่ใด ๆ ในมือที่ลงทับกองปัจจุบันได้ไหม (รวมบอมบ์ ตอง โฟร์ เรียง)
+ * ใช้ตัดสินว่าควร auto-pass ไหม — นำกอง (pile=null) = ลงได้เสมอ
+ */
+export function anyLegalMove(hand: Card[], pile: Combo | null): boolean {
+  if (!pile) return true;
+  const beats = (cards: Card[]): boolean => {
+    const combo = identifyCombo(cards);
+    return !!combo && canBeat(pile, combo);
+  };
+  // จัดกลุ่มตามอันดับ (เดี่ยว/คู่/ตอง/โฟร์)
+  const groups = new Map<number, Card[]>();
+  for (const c of hand) {
+    const g = groups.get(c.r);
+    if (g) g.push(c);
+    else groups.set(c.r, [c]);
+  }
+  for (const c of hand) if (beats([c])) return true; // เดี่ยว
+  for (const cs of groups.values()) {
+    const hi = cs.slice().sort((a, b) => b.s - a.s); // ดอกสูงสุดก่อน → value มากสุดของอันดับนั้น
+    if (hi.length >= 2 && beats(hi.slice(0, 2))) return true;
+    if (hi.length >= 3 && beats(hi.slice(0, 3))) return true;
+    if (hi.length >= 4 && beats(hi.slice(0, 4))) return true;
+  }
+  // เรียงดอกเดียว ยาว 3–6 (ห้ามมีไพ่ 2 / r=15)
+  const bySuit = new Map<number, number[]>();
+  for (const c of hand) {
+    if (c.r >= 15) continue;
+    const g = bySuit.get(c.s);
+    if (g) g.push(c.r);
+    else bySuit.set(c.s, [c.r]);
+  }
+  for (const [s, ranks] of bySuit) {
+    const uniq = [...new Set(ranks)].sort((a, b) => a - b);
+    for (let i = 0; i < uniq.length; i++) {
+      let run = 1;
+      while (i + run < uniq.length && uniq[i + run] === uniq[i + run - 1] + 1) run++;
+      for (let L = 3; L <= run; L++) {
+        const cards: Card[] = [];
+        for (let k = 0; k < L; k++) cards.push({ r: uniq[i + k], s });
+        if (beats(cards)) return true;
+      }
+    }
+  }
+  return false;
+}
+
 export type { ComboType };

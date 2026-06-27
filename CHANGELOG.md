@@ -2,6 +2,24 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.15.0](https://github.com/Danglebz/slave-card-game/compare/v1.14.0...v1.15.0) (2026-06-27)
+
+
+### ✨ Features
+
+* **client:** rewrite vanilla JS to React 19 + TypeScript ([26d6450](https://github.com/Danglebz/slave-card-game/commit/26d6450eed9c364afccebb259c69374258a187a4))
+
+
+### 🐛 Bug Fixes
+
+* **client:** replace Coloris color picker with react-colorful ([54023cc](https://github.com/Danglebz/slave-card-game/commit/54023cc3ee5324f49f9ecc1723d43b59d1139cb6))
+* **client:** result modal dismiss + color swatch shows color only ([c9e404b](https://github.com/Danglebz/slave-card-game/commit/c9e404bb82b96b7004896366ed55ac011ce0a5f4))
+
+
+### ♻️ Refactoring
+
+* **server:** migrate Express+JS to Fastify 5 + TypeScript ([254a92e](https://github.com/Danglebz/slave-card-game/commit/254a92ec14053a99d7d1b0e2f39dcf7f66785a87))
+
 ## [1.14.0](https://github.com/Danglebz/slave-card-game/compare/v1.13.0...v1.14.0) (2026-06-27)
 
 

@@ -1,7 +1,7 @@
 // TurnInfo.tsx — ชื่อคนที่ต้องลงไพ่ / ข้อความเฟสแลกไพ่ (port turn-info ใน renderPile)
 import type { RoomState } from '@shared/types';
 import { Icon } from '@/lib/icons';
-import { t } from '@/lib/i18n';
+import { t, displayName } from '@/lib/i18n';
 import { useStore } from '@/store';
 
 export function TurnInfo({ s }: { s: RoomState }) {
@@ -16,7 +16,7 @@ export function TurnInfo({ s }: { s: RoomState }) {
       content = (
         <>
           <Icon name="gift" />{' '}
-          {t(lang, 'exchange.pick', { n: ex.myCount, name: ex.toName ?? '' })}
+          {t(lang, 'exchange.pick', { n: ex.myCount, name: displayName(ex.toName ?? '', lang) })}
         </>
       );
       yourTurn = true;
@@ -24,7 +24,7 @@ export function TurnInfo({ s }: { s: RoomState }) {
       content = (
         <>
           <Icon name="link" />{' '}
-          {t(lang, 'exchange.gave', { n: ex.gaveCount, name: ex.fromName ?? '' })}
+          {t(lang, 'exchange.gave', { n: ex.gaveCount, name: displayName(ex.fromName ?? '', lang) })}
         </>
       );
     } else {
@@ -42,7 +42,7 @@ export function TurnInfo({ s }: { s: RoomState }) {
       </>
     ) : (
       <>
-        <Icon name="hourglass" /> {t(lang, 'turn.other', { name: s.turnName ?? '' })}
+        <Icon name="hourglass" /> {t(lang, 'turn.other', { name: displayName(s.turnName ?? '', lang) })}
       </>
     );
   }

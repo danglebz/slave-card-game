@@ -112,16 +112,14 @@ describe('Room: จบรอบและจัดอันดับ', () => {
 });
 
 describe('Room: บอท', () => {
-  it('เพิ่ม/ลบบอทได้เฉพาะในล็อบบี้ และจำกัด 4 คน', () => {
+  it('เพิ่ม/ลบบอทได้เฉพาะในล็อบบี้ และจำกัด 6 คน', () => {
     const room = new Room('BOTS');
     room.addPlayer('h', 'Host');
-    room.addBot();
-    room.addBot();
-    room.addBot();
-    expect(room.players).toHaveLength(4);
+    for (let i = 0; i < 5; i++) room.addBot();
+    expect(room.players).toHaveLength(6);
     expect(room.hasBots()).toBe(true);
     expect(() => room.addBot()).toThrow(); // เต็มแล้ว
     room.removeBot();
-    expect(room.players).toHaveLength(3);
+    expect(room.players).toHaveLength(5);
   });
 });

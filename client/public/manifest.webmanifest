@@ -1,7 +1,7 @@
 {
   "name": "ไพ่สลาฟ — เกมไพ่ออนไลน์",
   "short_name": "ไพ่สลาฟ",
-  "description": "เกมไพ่สลาฟ (President / Daifugo) เล่นพร้อมกัน 2–4 คนผ่านเบราว์เซอร์",
+  "description": "เกมไพ่สลาฟ (President / Daifugo) เล่นพร้อมกัน 2–6 คนผ่านเบราว์เซอร์",
   "lang": "th",
   "start_url": "/",
   "scope": "/",

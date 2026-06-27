@@ -17,7 +17,18 @@ if (__SENTRY_DSN__) {
         dsn: __SENTRY_DSN__,
         release: __APP_VERSION__,
         environment: import.meta.env.MODE,
-        tracesSampleRate: 0,
+        integrations: [
+          Sentry.browserTracingIntegration(),
+          Sentry.replayIntegration(),
+          // ส่ง console.warn/error เข้า Sentry Logs (ไม่เอา log/info เพื่อประหยัด quota)
+          Sentry.consoleLoggingIntegration({ levels: ['warn', 'error'] }),
+        ],
+        enableLogs: true, // เปิด Sentry Logs
+        // performance tracing — sample จาก env ตอน build (ดีฟอลต์ 10% เพื่อประหยัด quota)
+        tracesSampleRate: __SENTRY_TRACES_RATE__,
+        // Session Replay — ไม่อัดทุก session, อัดเฉพาะ session ที่เกิด error (คุ้ม quota สุด)
+        replaysSessionSampleRate: 0,
+        replaysOnErrorSampleRate: 1.0,
       });
     })
     .catch(() => {});
@@ -714,16 +725,17 @@ const SEAT_IDS = [
   'seat-br',
 ];
 
-// ที่นั่งบนตาราง 3×3 ตามตำแหน่งสัมพัทธ์จาก "คุณ" (rel 0 = คุณ)
+// ที่นั่งบนตาราง 3×3 ตามตำแหน่งสัมพัทธ์จาก "คุณ" (rel 0 = คุณ) — รองรับ 2–6 คน
+const SEAT_LAYOUTS = {
+  2: ['seat-bottom', 'seat-top'],
+  3: ['seat-bottom', 'seat-tr', 'seat-tl'],
+  4: ['seat-bl', 'seat-br', 'seat-tr', 'seat-tl'], // เดิม: คุณ=ล่างซ้าย
+  5: ['seat-bottom', 'seat-br', 'seat-tr', 'seat-tl', 'seat-bl'],
+  6: ['seat-bottom', 'seat-br', 'seat-tr', 'seat-top', 'seat-tl', 'seat-bl'],
+};
 function seatFor(rel, n) {
-  if (n === 4) {
-    // 4 คน → ใช้ "มุม" 1/3/9/7: คุณ=ล่างซ้าย(1) แล้วไล่ตามเข็ม
-    return ['seat-bl', 'seat-br', 'seat-tr', 'seat-tl'][rel];
-  }
-  // คุณ = ล่าง (2) เสมอ
-  if (rel === 0) return 'seat-bottom';
-  if (n === 2) return 'seat-top'; // 2 คน: ตรงข้าม (8)
-  return rel === 1 ? 'seat-tr' : 'seat-tl'; // 3 คน: มุมบน ขวา(9)/ซ้าย(7)
+  const layout = SEAT_LAYOUTS[n] || SEAT_LAYOUTS[6];
+  return layout[rel] || 'seat-top';
 }
 
 function chipHTML(p, s) {
@@ -1045,7 +1057,7 @@ function renderControls(s) {
   // ปุ่มเพิ่ม/ลบบอท — เฉพาะหัวห้องในล็อบบี้
   const botCtl = $('bot-controls');
   botCtl.classList.toggle('hidden', !(s.phase === 'lobby' && isHost));
-  $('add-bot-btn').disabled = s.players.length >= 4;
+  $('add-bot-btn').disabled = s.players.length >= 6;
   $('remove-bot-btn').disabled = !s.players.some((p) => p.isBot);
   $('shuffle-btn').disabled = s.players.length < 2;
   if (s.phase === 'lobby' && isHost && startBtn.disabled) {

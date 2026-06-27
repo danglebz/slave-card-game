@@ -12,9 +12,11 @@ import {
 import { botChoose } from './bot.js';
 
 const RANK_TITLES = {
-  2: ['🥇 คิง', '⛓️ สลาฟ'],
-  3: ['🥇 คิง', '🙂 สามัญชน', '⛓️ สลาฟ'],
-  4: ['🥇 คิง', '🥈 ควีน', '🥉 รองสลาฟ', '⛓️ สลาฟ'],
+  2: ['🥇 คิง', '😩 สลาฟ'],
+  3: ['🥇 คิง', '🙂 สามัญชน', '😩 สลาฟ'],
+  4: ['🥇 คิง', '🥈 ควีน', '🥉 รองสลาฟ', '😩 สลาฟ'],
+  5: ['🥇 คิง', '🥈 ควีน', '🙂 สามัญชน', '🥉 รองสลาฟ', '😩 สลาฟ'],
+  6: ['🥇 คิง', '🥈 ควีน', '🙂 สามัญชน', '🙂 สามัญชน', '🥉 รองสลาฟ', '😩 สลาฟ'],
 };
 
 let roomSeq = 0;
@@ -54,6 +56,7 @@ export class Room {
     };
   }
 
+  static MAX_PLAYERS = 6; // จำนวนผู้เล่นสูงสุดต่อห้อง
   static TURN_SECONDS_CHOICES = [15, 30, 45, 60];
   static COLORS = [
     '#ef4444',
@@ -95,7 +98,7 @@ export class Room {
   // ----- บอท (AI เติมคน) -----
   addBot() {
     if (this.phase !== 'lobby') throw new Error('เพิ่มบอทได้เฉพาะตอนอยู่ในล็อบบี้');
-    if (this.players.length >= 4) throw new Error('ห้องเต็มแล้ว (สูงสุด 4 คน)');
+    if (this.players.length >= Room.MAX_PLAYERS) throw new Error(`ห้องเต็มแล้ว (สูงสุด ${Room.MAX_PLAYERS} คน)`);
     // หาเลขบอทที่ว่างต่ำสุด เพื่อชื่อไม่ชนกัน
     const used = new Set(this.players.filter((p) => p.isBot).map((p) => p.name));
     let n = 1;
@@ -159,7 +162,7 @@ export class Room {
     }
     // เข้าใหม่ตอนล็อบบี้ = ผู้เล่น
     if (this.phase === 'lobby') {
-      if (this.players.length >= 4) throw new Error('ห้องเต็มแล้ว (สูงสุด 4 คน)');
+      if (this.players.length >= Room.MAX_PLAYERS) throw new Error(`ห้องเต็มแล้ว (สูงสุด ${Room.MAX_PLAYERS} คน)`);
       const player = { id: socketId, name, connected: true, hand: [], finished: false };
       this.players.push(player);
       if (!this.hostId) this.hostId = socketId;
@@ -178,7 +181,7 @@ export class Room {
 
   // ดึงผู้ชมเข้าเป็นผู้เล่น (ตอนเริ่มรอบใหม่) เท่าที่นั่งว่าง
   promoteSpectators() {
-    while (this.spectators.length && this.players.length < 4) {
+    while (this.spectators.length && this.players.length < Room.MAX_PLAYERS) {
       const s = this.spectators.shift();
       this.players.push({ id: s.id, name: s.name, connected: true, hand: [], finished: false });
     }
@@ -278,7 +281,7 @@ export class Room {
       title: titles[rank] || `อันดับ ${rank + 1}`,
     }));
     this.log.push(
-      `👑→⛓️ สลาฟหมดมือก่อนคิง! ${this.players[order[n - 1]].name} (คิงเดิม) ตกเป็นสลาฟ — แจกไพ่ใหม่`,
+      `👑→😩 สลาฟหมดมือก่อนคิง! ${this.players[order[n - 1]].name} (คิงเดิม) ตกเป็นสลาฟ — แจกไพ่ใหม่`,
     );
     this.noticeSeq++;
     this.noticeText = `👑→⛓️ คิงตกบัลลังก์! ${this.players[order[n - 1]].name} ตกเป็นสลาฟ — แจกไพ่ใหม่`;

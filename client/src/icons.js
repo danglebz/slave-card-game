@@ -51,6 +51,7 @@ import {
   Palette,
   Languages,
   Vibrate,
+  Frown,
 } from 'lucide';
 
 // ชุดไอคอนที่ใช้จริง (ให้ createIcons รู้จัก — tree-shake เฉพาะที่ import)
@@ -104,6 +105,7 @@ const ICON_SET = {
   Palette,
   Languages,
   Vibrate,
+  Frown,
 };
 
 // emoji → ชื่อไอคอน lucide (kebab-case) สำหรับข้อความที่ฝั่ง server ส่งมา
@@ -124,6 +126,7 @@ const EMOJI_ICON = {
   '🥈': 'medal',
   '🥉': 'award',
   '🙂': 'smile',
+  '😩': 'frown',
   '🏆': 'trophy',
   '💀': 'skull',
   '✅': 'circle-check',

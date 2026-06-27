@@ -80,7 +80,10 @@ export function RulesModal({
                 <br />
                 <b>Pair</b> beaten by: Four · 4-card flush straight · 6-card flush straight
               </p>
-              <p>Strength: Straight3 &lt; Triple &lt; Straight4 &lt; Four &lt; Straight5 &lt; Straight6</p>
+              <p>
+                Strength: Straight3 &lt; Triple &lt; Straight4 &lt; Four &lt; Straight5 &lt;
+                Straight6
+              </p>
             </>
           )}
 
@@ -96,10 +99,11 @@ export function RulesModal({
             </p>
           ) : (
             <p>
-              Once you pass you're <b>skipped</b> until the pile clears · everyone passes back to the
-              pile owner → clear the pile, lead again
+              Once you pass you're <b>skipped</b> until the pile clears · everyone passes back to
+              the pile owner → clear the pile, lead again
               <br />
-              If the pile owner runs out and no one can beat it → <b>reverse direction</b> (right↔left)
+              If the pile owner runs out and no one can beat it → <b>reverse direction</b>{' '}
+              (right↔left)
             </p>
           )}
 
@@ -125,11 +129,11 @@ export function RulesModal({
           </h3>
           {th ? (
             <p>
-              <Icon name="trophy" /> คิง · <Icon name="medal" /> ควีน · <Icon name="meh" /> รองสลาฟ ·{' '}
-              <Icon name="link" /> สลาฟ (ตามลำดับหมดมือ)
+              <Icon name="trophy" /> คิง · <Icon name="medal" /> ควีน · <Icon name="meh" /> รองสลาฟ
+              · <Icon name="link" /> สลาฟ (ตามลำดับหมดมือ)
               <br />
-              รอบใหม่แลกไพ่ (ตามสากล คงที่ทุกจำนวนคน): คิง↔สลาฟ <b>2 ใบ</b> · ควีน↔รองสลาฟ <b>1 ใบ</b>{' '}
-              · สามัญชน<b>ไม่แลก</b>
+              รอบใหม่แลกไพ่ (ตามสากล คงที่ทุกจำนวนคน): คิง↔สลาฟ <b>2 ใบ</b> · ควีน↔รองสลาฟ{' '}
+              <b>1 ใบ</b> · สามัญชน<b>ไม่แลก</b>
               <br />
               ผู้แพ้ให้<b>ไพ่สูงสุดอัตโนมัติ</b> · ผู้ชนะ<b>เลือกไพ่คืนเอง</b>
             </p>
@@ -141,7 +145,8 @@ export function RulesModal({
               New round exchange (standard, fixed for any player count): King↔Slave <b>2 cards</b> ·
               Queen↔Vice-Slave <b>1 card</b> · commoners <b>don't exchange</b>
               <br />
-              Losers give their <b>highest cards automatically</b> · winners <b>choose which to return</b>
+              Losers give their <b>highest cards automatically</b> · winners{' '}
+              <b>choose which to return</b>
             </p>
           )}
 

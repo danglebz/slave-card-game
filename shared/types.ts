@@ -38,6 +38,10 @@ export interface Settings {
   turnSeconds: number;
   /** ผ่านอัตโนมัติเมื่อไม่มีไพ่ลงได้ (host ปิดได้) */
   autoPassStuck: boolean;
+  /** house rules: อนุญาตชุดพิเศษไหม (host ปิดได้) — singles/pairs ลงได้เสมอ */
+  allowTriple: boolean; // ตอง
+  allowQuad: boolean; // โฟร์ (บอมบ์)
+  allowStraight: boolean; // เรียง
 }
 
 // ----- มุมมองผู้เล่นใน state -----
@@ -152,6 +156,7 @@ export interface ClientToServerEvents {
   settings: (patch: Partial<Settings>) => void;
   addBot: () => void;
   removeBot: () => void;
+  kick: (p: { name: string }) => void;
   shuffleSeats: () => void;
   setColor: (p: { color: string }) => void;
   play: (p: { cards: string[] }) => void;

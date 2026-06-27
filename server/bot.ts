@@ -13,6 +13,8 @@ export interface BotContext {
   minOppCards?: number;
   /** กองแรกของเกม: ชุดที่นำต้องมี 3♣ (id '3.0') ร่วมด้วย */
   mustInclude3?: boolean;
+  /** ชุดที่หัวห้องปิด (combo.type ที่ห้ามลง) — บอทจะไม่สร้างชุดเหล่านี้ */
+  disallowed?: Set<string>;
 }
 
 type Cand = { cards: Card[]; combo: Combo };
@@ -122,7 +124,7 @@ function chooseLead(hand: Card[], ctx: BotContext): string[] {
   const cands: Cand[] = [];
   const add = (cards: Card[]) => {
     const combo = identifyCombo(cards);
-    if (combo) cands.push({ cards, combo });
+    if (combo && !ctx.disallowed?.has(combo.type)) cands.push({ cards, combo });
   };
 
   // เดี่ยว/คู่ จากอันดับที่ "ไม่ใช่บอมบ์" (เก็บตอง/โฟร์ไว้คุมเกม)
@@ -171,7 +173,7 @@ function chooseFollow(hand: Card[], pile: Combo, ctx: BotContext): string[] | nu
   const desperate = (ctx.minOppCards ?? Infinity) <= 2; // คู่แข่งจะหมดมือ → ยอมทุ่ม
 
   // บอมบ์ที่ชนะกองนี้ได้ (อ่อนสุดก่อน) + เงื่อนไขว่าควรทุ่มไหม
-  const bombs = beatingBombs(hand, pile);
+  const bombs = beatingBombs(hand, pile, ctx.disallowed);
   const wantBomb = () =>
     bombs.length > 0 && (desperate || endgame || bombs[0].length === hand.length);
 
@@ -241,11 +243,12 @@ function bestBeatingSingle(
 }
 
 // บอมบ์ทั้งหมดที่ชนะกองนี้ เรียงจากอ่อนสุด→แรงสุด (ใช้บอมบ์ที่ถูกที่สุดก่อน)
-function beatingBombs(hand: Card[], pile: Combo): Card[][] {
+function beatingBombs(hand: Card[], pile: Combo, disallowed?: Set<string>): Card[][] {
   const ok: { cs: Card[]; combo: Combo }[] = [];
   for (const cs of allBombs(hand)) {
     const combo = identifyCombo(cs);
-    if (combo && bombPower(combo) > 0 && canBeat(pile, combo)) ok.push({ cs, combo });
+    if (combo && !disallowed?.has(combo.type) && bombPower(combo) > 0 && canBeat(pile, combo))
+      ok.push({ cs, combo });
   }
   ok.sort((a, b) => bombPower(a.combo) - bombPower(b.combo) || a.combo.value - b.combo.value);
   return ok.map((x) => x.cs);

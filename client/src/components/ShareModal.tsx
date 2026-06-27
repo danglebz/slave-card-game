@@ -43,6 +43,13 @@ export function ShareModal({
     const ok = await copyText(url);
     showToast(t(lang, ok ? 'toast.linkCopied' : 'toast.copyFailShort'), ok ? 'success' : 'error');
   }
+  async function onCopyCode() {
+    const ok = await copyText(code);
+    showToast(
+      ok ? t(lang, 'toast.codeCopied', { code }) : t(lang, 'toast.copyFailShort'),
+      ok ? 'success' : 'error',
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -60,9 +67,15 @@ export function ShareModal({
           <b>{t(lang, 'share.subScan')}</b>
           {t(lang, 'share.sub2')}
         </p>
-        <div className="share-code">
+        <button
+          type="button"
+          className="share-code"
+          title={t(lang, 'topbar.copyCode')}
+          onClick={onCopyCode}
+        >
           {t(lang, 'share.code')} <strong id="share-code">{code}</strong>
-        </div>
+          <Icon name="copy" />
+        </button>
         <div id="share-qr" className="share-qr">
           <img
             id="share-qr-img"

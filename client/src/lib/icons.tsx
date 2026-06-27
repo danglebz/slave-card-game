@@ -55,6 +55,7 @@ import {
   Meh,
   ArrowUp,
   ArrowDown,
+  BarChart3,
   type LucideProps,
 } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
@@ -115,6 +116,7 @@ const ICONS: Record<string, ComponentType<LucideProps>> = {
   vibrate: Vibrate,
   frown: Frown,
   meh: Meh,
+  'bar-chart': BarChart3,
 };
 
 // emoji → ชื่อไอคอน lucide (kebab-case) สำหรับข้อความที่ฝั่ง server ส่งมา

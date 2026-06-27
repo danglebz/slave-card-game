@@ -23,7 +23,16 @@ import type {
   ResultEntry,
   HistoryEntry,
   ExchangeInfo,
+  RankKey,
+  RankTally,
+  RoundRecord,
+  Scoreboard,
+  ScorePlayer,
 } from '../shared/types';
+
+const RANK_KEYS: RankKey[] = ['king', 'queen', 'commoner', 'viceslave', 'slave'];
+const emptyTally = (): RankTally => ({ king: 0, queen: 0, commoner: 0, viceslave: 0, slave: 0 });
+const MAX_HISTORY = 40; // เก็บประวัติรอบล่าสุดกี่รอบ (กัน state บวม)
 
 // ----- โครงสร้างภายใน -----
 interface Player {
@@ -85,6 +94,10 @@ export class Room {
   turnDeadline: number | null;
   spectators: Spectator[];
   settings: Settings;
+  /** สถิติสะสมข้ามรอบ (key = ชื่อผู้เล่น) — นับยศแต่ละแบบทั้ง session */
+  sessionStats: Record<string, RankTally>;
+  /** ประวัติผลแต่ละรอบ (ใหม่สุดท้าย) — จำกัด MAX_HISTORY */
+  roundHistory: RoundRecord[];
 
   // ฟิลด์ภายใน (ไม่ได้ประกาศใน type สาธารณะ — ใช้ภายในเกม/timer)
   _prevOrder: number[] | null;
@@ -122,6 +135,8 @@ export class Room {
     this.spectators = []; // ผู้ชมที่เข้ามากลางรอบ: { id, name } — จะเข้าเล่นรอบหน้า
     this.everPlayed = false;
     this._lastPileCards = null;
+    this.sessionStats = {}; // สถิติสะสมข้ามรอบ
+    this.roundHistory = []; // ประวัติผลแต่ละรอบ
     this._cleanupTimer = null; // ตัวจับเวลาลบห้องร้าง (ตั้ง/เคลียร์ใน index.js)
     // ตั้งค่าห้อง (หัวห้องคุม)
     this.settings = {
@@ -359,6 +374,7 @@ export class Room {
       name: this.players[pIdx].name,
       title: titles[rank] || 'slave',
     }));
+    this.recordRound(this.lastResult); // ← สะสมสถิติ (คิงตกบัลลังก์ก็นับเป็นจบรอบ)
     this.log.push(
       `dethrone: ${this.players[order[n - 1]].name} (was king) becomes slave — redeal`,
     );
@@ -638,6 +654,37 @@ export class Room {
     }
   }
 
+  // บันทึกผลรอบลงสถิติสะสม + ประวัติ (เรียกตอนรอบจบจริง: endRound / miyakoOchi)
+  recordRound(result: ResultEntry[]): void {
+    if (!result?.length) return;
+    for (const r of result) {
+      const t = (this.sessionStats[r.name] ||= emptyTally());
+      if ((RANK_KEYS as string[]).includes(r.title)) t[r.title as RankKey]++;
+    }
+    this.roundHistory.push({ order: result.map((r) => ({ name: r.name, title: r.title })) });
+    if (this.roundHistory.length > MAX_HISTORY)
+      this.roundHistory = this.roundHistory.slice(-MAX_HISTORY);
+  }
+
+  // สร้าง scoreboard (leaderboard เรียงแล้ว + ประวัติ) สำหรับส่งให้ client
+  buildScoreboard(): Scoreboard {
+    const players: ScorePlayer[] = Object.entries(this.sessionStats).map(([name, tally]) => ({
+      name,
+      tally,
+      rounds: RANK_KEYS.reduce((s, k) => s + tally[k], 0),
+    }));
+    // เรียง: คิงมากสุด → สลาฟน้อยสุด → ควีนมาก → รองสลาฟน้อย → ชื่อ
+    players.sort(
+      (a, b) =>
+        b.tally.king - a.tally.king ||
+        a.tally.slave - b.tally.slave ||
+        b.tally.queen - a.tally.queen ||
+        a.tally.viceslave - b.tally.viceslave ||
+        a.name.localeCompare(b.name),
+    );
+    return { players, history: this.roundHistory.slice(-MAX_HISTORY) };
+  }
+
   endRound(): { ok: true; finished: true } {
     this.phase = 'finished';
     const n = this.players.length;
@@ -646,6 +693,7 @@ export class Room {
       name: this.players[pIdx].name,
       title: titles[rank] || 'slave',
     }));
+    this.recordRound(this.lastResult); // ← สะสมสถิติ
     this.log.push('🎉 จบรอบ! ' + this.lastResult.map((r) => `${r.title}: ${r.name}`).join(', '));
     this.addHistory({
       event: '🎉 จบรอบ! ' + this.lastResult.map((r) => `${r.title}:${r.name}`).join(' · '),
@@ -713,6 +761,7 @@ export class Room {
       notice: this.noticeKey
         ? { seq: this.noticeSeq, key: this.noticeKey, vars: this.noticeVars ?? undefined }
         : null,
+      scoreboard: this.buildScoreboard(),
     };
   }
 
@@ -767,6 +816,8 @@ export class Room {
       _prevOrder: this._prevOrder,
       roundOrder: this.roundOrder,
       settings: this.settings,
+      sessionStats: this.sessionStats,
+      roundHistory: this.roundHistory,
     };
   }
 
@@ -778,6 +829,8 @@ export class Room {
     room.giveTasks = data.giveTasks || null;
     room._prevOrder = data._prevOrder || null;
     room.roundOrder = data.roundOrder || null;
+    room.sessionStats = data.sessionStats || {};
+    room.roundHistory = data.roundHistory || [];
     room.settings = {
       timer: true,
       autoPass: true,

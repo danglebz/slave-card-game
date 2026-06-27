@@ -2,6 +2,19 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.13.0](https://github.com/Danglebz/slave-card-game/compare/v1.12.0...v1.13.0) (2026-06-27)
+
+
+### ✨ Features
+
+* opt-in client-side Sentry error tracking ([57ed2d0](https://github.com/Danglebz/slave-card-game/commit/57ed2d0d3c2bb3eaf655a5aac766a4fb8f22f5f2))
+* **server:** observability, metrics & per-socket rate limiting ([b7a3f9e](https://github.com/Danglebz/slave-card-game/commit/b7a3f9ee1dad28ec0a4672b186695bbef57eddf6))
+
+
+### 💄 Styling
+
+* format codebase with prettier + apply eslint autofixes ([96a093e](https://github.com/Danglebz/slave-card-game/commit/96a093ea31b0329dae5678e7bf94af89cda987bc))
+
 ## [1.12.0](https://github.com/Danglebz/slave-card-game/compare/v1.11.1...v1.12.0) (2026-06-26)
 
 

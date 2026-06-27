@@ -98,7 +98,8 @@ export class Room {
   // ----- บอท (AI เติมคน) -----
   addBot() {
     if (this.phase !== 'lobby') throw new Error('เพิ่มบอทได้เฉพาะตอนอยู่ในล็อบบี้');
-    if (this.players.length >= Room.MAX_PLAYERS) throw new Error(`ห้องเต็มแล้ว (สูงสุด ${Room.MAX_PLAYERS} คน)`);
+    if (this.players.length >= Room.MAX_PLAYERS)
+      throw new Error(`ห้องเต็มแล้ว (สูงสุด ${Room.MAX_PLAYERS} คน)`);
     // หาเลขบอทที่ว่างต่ำสุด เพื่อชื่อไม่ชนกัน
     const used = new Set(this.players.filter((p) => p.isBot).map((p) => p.name));
     let n = 1;
@@ -162,7 +163,8 @@ export class Room {
     }
     // เข้าใหม่ตอนล็อบบี้ = ผู้เล่น
     if (this.phase === 'lobby') {
-      if (this.players.length >= Room.MAX_PLAYERS) throw new Error(`ห้องเต็มแล้ว (สูงสุด ${Room.MAX_PLAYERS} คน)`);
+      if (this.players.length >= Room.MAX_PLAYERS)
+        throw new Error(`ห้องเต็มแล้ว (สูงสุด ${Room.MAX_PLAYERS} คน)`);
       const player = { id: socketId, name, connected: true, hand: [], finished: false };
       this.players.push(player);
       if (!this.hostId) this.hostId = socketId;

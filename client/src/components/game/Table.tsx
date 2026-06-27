@@ -48,8 +48,10 @@ export function Table({ s }: { s: RoomState }) {
   return (
     <div id="table">
       <div id="dir-indicator">
-        {/* ลายน้ำทิศทาง (หลังไพ่) — โชว์เฉพาะตอนเล่น */}
-        {s.phase === 'playing' && <Icon name={s.dir === -1 ? 'rotate-ccw' : 'rotate-cw'} />}
+        {/* ลายน้ำทิศทาง (หลังไพ่) — โชว์เฉพาะตอนเล่น
+            ผังที่นั่งเรียง rel เพิ่ม = วนทวนเข็ม (bottom→br→tr→top→tl→bl)
+            ดังนั้น dir=+1 (index เพิ่ม) = ทวนเข็ม → ลูกศร ccw; dir=-1 = ตามเข็ม → cw */}
+        {s.phase === 'playing' && <Icon name={s.dir === -1 ? 'rotate-cw' : 'rotate-ccw'} />}
       </div>
       {seat('seat-tl')}
       {seat('seat-top')}

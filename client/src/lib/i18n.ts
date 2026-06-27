@@ -1,7 +1,9 @@
-// i18n.js — สลับภาษา TH/EN สำหรับ UI หลัก (lobby / settings / ปุ่ม / banner)
+// i18n — สลับภาษา TH/EN สำหรับ UI หลัก (lobby / settings / ปุ่ม / banner)
 // หมายเหตุ: กติกาแบบเต็ม + ข้อความเกมจาก server ยังเป็นภาษาไทย (ขยายต่อได้)
 
-const DICT = {
+export type Lang = 'th' | 'en';
+
+const DICT: Record<Lang, Record<string, string>> = {
   th: {
     'lobby.sub': 'เกมเดียวที่หัวหน้ายอมเป็นสลาฟ',
     'lobby.name': 'ใส่ชื่อของคุณ',
@@ -96,35 +98,13 @@ const DICT = {
   },
 };
 
-let lang = localStorage.getItem('lang') === 'en' ? 'en' : 'th';
-
-export function getLang() {
-  return lang;
+export function initialLang(): Lang {
+  return localStorage.getItem('lang') === 'en' ? 'en' : 'th';
 }
 
 // แปลคีย์ + แทนค่าตัวแปร {name}
-export function t(key, vars) {
-  let s = (DICT[lang] && DICT[lang][key]) ?? DICT.th[key] ?? key;
-  if (vars) for (const k of Object.keys(vars)) s = s.replace(`{${k}}`, vars[k]);
+export function t(lang: Lang, key: string, vars?: Record<string, string | number>): string {
+  let s = DICT[lang]?.[key] ?? DICT.th[key] ?? key;
+  if (vars) for (const k of Object.keys(vars)) s = s.replace(`{${k}}`, String(vars[k]));
   return s;
-}
-
-// ใส่ข้อความตาม data-i18n / data-i18n-ph / data-i18n-title ทั้งหน้า
-export function applyI18n() {
-  document.documentElement.lang = lang;
-  document.querySelectorAll('[data-i18n]').forEach((el) => {
-    el.textContent = t(el.dataset.i18n);
-  });
-  document.querySelectorAll('[data-i18n-ph]').forEach((el) => {
-    el.placeholder = t(el.dataset.i18nPh);
-  });
-  document.querySelectorAll('[data-i18n-title]').forEach((el) => {
-    el.title = t(el.dataset.i18nTitle);
-  });
-}
-
-export function setLang(next) {
-  lang = next === 'en' ? 'en' : 'th';
-  localStorage.setItem('lang', lang);
-  applyI18n();
 }

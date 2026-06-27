@@ -1,5 +1,7 @@
 import { defineConfig } from 'vite';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 // อ่าน version จาก package.json มาฝังตอน build (โชว์เป็น badge บนหน้าจอ)
@@ -18,7 +20,13 @@ export default defineConfig({
     __SENTRY_DSN__: JSON.stringify(SENTRY_DSN),
     __SENTRY_TRACES_RATE__: JSON.stringify(SENTRY_TRACES_RATE),
   },
-  plugins: [tailwindcss()],
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./client/src', import.meta.url)),
+      '@shared': fileURLToPath(new URL('./shared', import.meta.url)),
+    },
+  },
   build: {
     outDir: '../dist',
     emptyOutDir: true,

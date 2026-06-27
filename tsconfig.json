@@ -3,7 +3,8 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
     "allowJs": true,
     "checkJs": true,
     "noEmit": true,
@@ -11,11 +12,16 @@
     "strict": false,
     "noImplicitAny": false,
     "resolveJsonModule": true,
+    "paths": {
+      "@/*": ["./client/src/*"],
+      "@shared/*": ["./shared/*"]
+    },
     "types": ["vitest/globals"]
   },
   "include": [
     "server/**/*.ts",
     "shared/**/*.ts",
+    "client/src/**/*.{ts,tsx}",
     "test/**/*.{js,ts}",
     "*.config.{js,ts}"
   ],

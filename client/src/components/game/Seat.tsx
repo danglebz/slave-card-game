@@ -1,0 +1,49 @@
+// Seat.tsx — ชิปผู้เล่นหนึ่งคน (port chipHTML + chipStyle)
+import type { PlayerView, RoomState } from '@shared/types';
+import { Icon, iconize } from '@/lib/icons';
+import { chipStyle } from '@/lib/gameLogic';
+
+export function PlayerChip({ p, s }: { p: PlayerView; s: RoomState }) {
+  const cls = ['player-chip'];
+  if (p.isTurn && s.phase === 'playing') cls.push('turn');
+  if (p.finished) cls.push('finished');
+  if (!p.connected) cls.push('offline');
+  if (p.isYou) cls.push('you');
+
+  const style = p.color ? chipStyle(p.color) : undefined;
+
+  return (
+    <div className={cls.join(' ')} style={style}>
+      <span className="pname">
+        {/* หัวห้อง = มงกุฎ, บอท = ไอคอนหุ่นยนต์ */}
+        {p.isHost ? (
+          <>
+            <Icon name="crown" className="host-ico" />{' '}
+          </>
+        ) : p.isBot ? (
+          <>
+            <Icon name="bot" className="bot-ico" />{' '}
+          </>
+        ) : null}
+        {p.name}
+        {p.isYou ? ' (คุณ)' : ''}
+        {!p.connected && (
+          <>
+            {' '}
+            <Icon name="wifi-off" className="off-ico" />
+          </>
+        )}
+      </span>
+      <span className="pcount">
+        {p.finished ? (
+          <>
+            <Icon name="circle-check" /> หมดมือ
+          </>
+        ) : (
+          `${p.cardCount} ใบ`
+        )}
+      </span>
+      {p.title && <span className="ptitle">{iconize(p.title)}</span>}
+    </div>
+  );
+}

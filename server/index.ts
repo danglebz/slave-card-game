@@ -10,7 +10,16 @@ import fs from 'node:fs';
 import { Room } from './room';
 import { createSocketLimiter } from './ratelimit';
 import { initSentry, logger, captureError, metrics, snapshot } from './observability';
-import type { ClientToServerEvents, ServerToClientEvents, Settings } from '../shared/types';
+import * as v from 'valibot';
+import {
+  CreateSchema,
+  JoinSchema,
+  SettingsPatchSchema,
+  SetColorSchema,
+  PlaySchema,
+  GiveSchema,
+} from '../shared/schemas';
+import type { ClientToServerEvents, ServerToClientEvents } from '../shared/types';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3000;
@@ -199,31 +208,39 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
 
   const err = (msg: string) => socket.emit('errorMsg', msg);
 
-  socket.on('create', ({ name, color }) => {
+  // validate payload จาก client → คืนค่าที่ผ่าน schema, หรือ emit errorMsg + null ถ้าไม่ผ่าน
+  const parse = <T>(schema: v.GenericSchema<unknown, T>, raw: unknown): T | null => {
+    const r = v.safeParse(schema, raw);
+    if (r.success) return r.output;
+    err(r.issues[0].message);
+    return null;
+  };
+
+  socket.on('create', (raw) => {
+    const p = parse(CreateSchema, raw);
+    if (!p) return;
     try {
-      name = (name || '').trim();
-      if (!name) return err('กรุณาใส่ชื่อ');
       const code = makeCode();
       const room = new Room(code);
       rooms.set(code, room);
-      room.addPlayer(socket.id, name);
-      room.setColor(socket.id, color);
+      room.addPlayer(socket.id, p.name);
+      room.setColor(socket.id, p.color);
       joinedCode = code;
       socket.join(code);
       socket.emit('joined', { code });
       metrics.roomsCreated++;
-      logger.info(`สร้างห้อง ${code} โดย "${name}"`, { rooms: rooms.size });
+      logger.info(`สร้างห้อง ${code} โดย "${p.name}"`, { rooms: rooms.size });
       broadcast(room);
     } catch (e) {
       err((e as Error).message);
     }
   });
 
-  socket.on('join', ({ code, name, color }) => {
+  socket.on('join', (raw) => {
+    const p = parse(JoinSchema, raw);
+    if (!p) return;
+    const { code, name, color } = p;
     try {
-      code = (code || '').trim().toUpperCase();
-      name = (name || '').trim();
-      if (!name) return err('กรุณาใส่ชื่อ');
       const room = rooms.get(code);
       if (!room) return err('ไม่พบห้องนี้ (เช็กรหัสห้องอีกที)');
       room.addPlayer(socket.id, name);
@@ -259,13 +276,15 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
   );
 
   // ตั้งค่าห้อง (timer / auto-pass) — เฉพาะหัวห้อง
-  socket.on('settings', (patch: Partial<Settings>) =>
+  socket.on('settings', (raw) => {
+    const patch = parse(SettingsPatchSchema, raw);
+    if (!patch) return;
     withRoom((room) => {
       if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องปรับตั้งค่าได้');
-      room.setSettings(patch || {});
+      room.setSettings(patch);
       room._turnSig = null; // ให้ armTurnTimer ตั้งเวลาใหม่ตามค่าที่เพิ่งเปลี่ยน
-    }),
-  );
+    });
+  });
 
   // เพิ่ม/ลบบอท — เฉพาะหัวห้อง (ในล็อบบี้)
   socket.on('addBot', () =>
@@ -287,21 +306,25 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     }),
   );
   // สีประจำตัว — ตั้งของตัวเองได้ทุกเมื่อ
-  socket.on('setColor', ({ color }) => withRoom((room) => room.setColor(socket.id, color)));
+  socket.on('setColor', (raw) => {
+    const p = parse(SetColorSchema, raw);
+    if (!p) return;
+    withRoom((room) => room.setColor(socket.id, p.color));
+  });
 
-  socket.on('play', ({ cards }) =>
-    withRoom((room) => {
-      room.play(socket.id, Array.isArray(cards) ? cards : []);
-    }),
-  );
+  socket.on('play', (raw) => {
+    const p = parse(PlaySchema, raw);
+    if (!p) return;
+    withRoom((room) => room.play(socket.id, p.cards));
+  });
 
   socket.on('pass', () => withRoom((room) => room.pass(socket.id)));
 
-  socket.on('give', ({ cards }) =>
-    withRoom((room) => {
-      room.giveCards(socket.id, Array.isArray(cards) ? cards : []);
-    }),
-  );
+  socket.on('give', (raw) => {
+    const p = parse(GiveSchema, raw);
+    if (!p) return;
+    withRoom((room) => room.giveCards(socket.id, p.cards));
+  });
 
   socket.on('again', () =>
     withRoom((room) => {

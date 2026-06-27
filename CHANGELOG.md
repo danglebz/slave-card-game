@@ -2,6 +2,28 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.18.0](https://github.com/Danglebz/slave-card-game/compare/v1.17.0...v1.18.0) (2026-06-27)
+
+
+### ✨ Features
+
+* **client:** add TH/EN language switcher to lobby home screen ([0c639d0](https://github.com/Danglebz/slave-card-game/commit/0c639d037555f85ffc2173d2cf2c76cde6655940))
+* **game:** auto-pass when player has no legal move ([e628fbd](https://github.com/Danglebz/slave-card-game/commit/e628fbd1e2bb70a817bf10b77b10de9dfc5a3027))
+* **game:** make auto-pass-when-stuck a host setting (autoPassStuck) ([97aac5d](https://github.com/Danglebz/slave-card-game/commit/97aac5df4f5952c8696f1f27fdd5dbf5f93d954d))
+* **i18n:** server emits i18n keys+vars for errors/notices/titles, client translates ([5d65f60](https://github.com/Danglebz/slave-card-game/commit/5d65f60d358aeaf57bef9260cbbc6e61417671ce))
+* **i18n:** translate rules modal and game title to EN ([0ccd41f](https://github.com/Danglebz/slave-card-game/commit/0ccd41f7902f29fd2e9b31da4e079b569ad8554c))
+
+
+### 🐛 Bug Fixes
+
+* **settings:** make widened modal width actually apply (.modal-box override) ([65c16b4](https://github.com/Danglebz/slave-card-game/commit/65c16b4f147b9e3b9340267020b1473cb1c931e2))
+
+
+### 💄 Styling
+
+* **settings:** set settings modal width to 450px ([53180fc](https://github.com/Danglebz/slave-card-game/commit/53180fcabd54ed09566acc828c1a06489b96e10e))
+* **settings:** widen settings modal 420px → 520px ([0b9d7fd](https://github.com/Danglebz/slave-card-game/commit/0b9d7fd62a40937fc358dab21b5a4a10fe275ca8))
+
 ## [1.17.0](https://github.com/Danglebz/slave-card-game/compare/v1.16.0...v1.17.0) (2026-06-27)
 
 

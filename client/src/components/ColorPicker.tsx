@@ -48,13 +48,11 @@ export function ColorPicker({ value, onChange, onCommit, swatches }: ColorPicker
         type="button"
         id="color-custom"
         className="color-swatch-btn"
-        title="เลือกสีเอง"
-        aria-label="เลือกสีประจำตัว"
+        style={{ background: value }}
+        title={'เลือกสีเอง (' + value.toUpperCase() + ')'}
+        aria-label={'เลือกสีประจำตัว (' + value.toUpperCase() + ')'}
         onClick={() => setOpen((o) => !o)}
-      >
-        <span className="color-dot" style={{ background: value }} />
-        <span className="color-swatch-hex">{value.toUpperCase()}</span>
-      </button>
+      />
 
       {open && (
         <div className="color-pop" role="dialog">

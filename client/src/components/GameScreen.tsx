@@ -30,7 +30,13 @@ export function GameScreen() {
   const [shareOpen, setShareOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [resultDismissed, setResultDismissed] = useState(false);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // รีเซ็ตการปิดผลรอบเมื่อขึ้นรอบใหม่ (phase ออกจาก finished) → รอบหน้าโชว์ผลอีกครั้ง
+  useEffect(() => {
+    if (s?.phase !== 'finished') setResultDismissed(false);
+  }, [s?.phase]);
 
   const code = s?.code || roomCode;
 
@@ -193,9 +199,9 @@ export function GameScreen() {
       </div>
 
       <ResultModal
-        open={s.phase === 'finished' && !!s.result}
+        open={s.phase === 'finished' && !!s.result && !resultDismissed}
         result={s.result}
-        onOpenChange={() => {}}
+        onOpenChange={(o) => !o && setResultDismissed(true)}
       />
       <ShareModal open={shareOpen} code={code} onOpenChange={setShareOpen} />
       <SettingsModal open={settingsOpen} s={s} onOpenChange={setSettingsOpen} onLeave={openLeave} />

@@ -2,6 +2,19 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.14.0](https://github.com/Danglebz/slave-card-game/compare/v1.13.0...v1.14.0) (2026-06-27)
+
+
+### ✨ Features
+
+* **observability:** Sentry tracing, session replay & logs ([6e63152](https://github.com/Danglebz/slave-card-game/commit/6e631526288b3b6dffffebdb7b799b277c1768e3))
+* raise max players to 6 (Room.MAX_PLAYERS) ([1c3aec8](https://github.com/Danglebz/slave-card-game/commit/1c3aec8bfc66f8faf5e8e5f2d0cba411ba17d997))
+
+
+### 💄 Styling
+
+* wrap long lines in room.js (prettier) ([bbea542](https://github.com/Danglebz/slave-card-game/commit/bbea5429e83192d5d34afa4ebd5668b2ab7f3ee9))
+
 ## [1.13.0](https://github.com/Danglebz/slave-card-game/compare/v1.12.0...v1.13.0) (2026-06-27)
 
 

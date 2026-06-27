@@ -626,7 +626,7 @@ button.loading:disabled {
 }
 
 /* ============ กล่องตั้งค่า ============ */
-.settings-box {
+.modal-box.settings-box {
   max-width: 520px;
   text-align: left;
 }

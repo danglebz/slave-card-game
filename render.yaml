@@ -1,0 +1,20 @@
+# Render Blueprint — โฮสต์ทั้งเกม (Fastify + Socket.IO เสิร์ฟ client React ที่ build แล้ว) เป็น web service เดียว
+# วิธีใช้: Render → New → Blueprint → เลือก repo นี้ (จะอ่านไฟล์นี้อัตโนมัติ)
+services:
+  - type: web
+    name: slave-card-game
+    runtime: node
+    plan: free
+    # build client (Vite → dist/) ; pnpm ถูกตรวจจับจาก field packageManager + pnpm-lock.yaml
+    buildCommand: pnpm install && pnpm build
+    # รันเซิร์ฟเวอร์ TS ด้วย tsx (อยู่ใน dependencies แล้ว) — เสิร์ฟ dist/ + Socket.IO
+    startCommand: pnpm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      # ใส่ค่าพวกนี้เองใน dashboard ถ้าต้องการ (ไม่ตั้ง = ปิดฟีเจอร์นั้น)
+      - key: SENTRY_DSN
+        sync: false
+      - key: METRICS_TOKEN
+        sync: false

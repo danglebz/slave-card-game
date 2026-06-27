@@ -8,6 +8,21 @@ import { t, applyI18n, setLang, getLang } from './i18n.js';
 import { NameSchema, CodeSchema, validateField } from './validation.js';
 import './style.css';
 
+// ----- Sentry (error tracking ฝั่ง client) — เปิดเฉพาะตอน build มี SENTRY_DSN -----
+// __SENTRY_DSN__ ฝังตอน build (ดู vite.config.js); ถ้าว่าง บล็อกนี้ถูก tree-shake ทิ้งทั้งหมด
+if (__SENTRY_DSN__) {
+  import('@sentry/browser')
+    .then((Sentry) => {
+      Sentry.init({
+        dsn: __SENTRY_DSN__,
+        release: __APP_VERSION__,
+        environment: import.meta.env.MODE,
+        tracesSampleRate: 0,
+      });
+    })
+    .catch(() => {});
+}
+
 const socket = io();
 
 // ---------- PWA: ลงทะเบียน service worker (เฉพาะ build จริง) + ปุ่มติดตั้ง ----------

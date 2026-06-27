@@ -161,7 +161,7 @@ export function RulesModal({
         </div>
         <DialogClose asChild>
           <button id="rules-close" className="primary" type="button">
-            {th ? 'ปิด' : 'Close'}
+            <Icon name="x" /> <span>{th ? 'ปิด' : 'Close'}</span>
           </button>
         </DialogClose>
       </DialogContent>

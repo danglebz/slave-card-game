@@ -1711,7 +1711,8 @@ button.loading:disabled {
   background: rgba(225, 29, 72, 0.1);
   border-color: rgba(225, 29, 72, 0.35);
 }
-#result-close {
+#result-close,
+#scoreboard-close {
   margin-top: 18px;
   width: 100%;
   min-height: 2.7rem;

@@ -98,8 +98,8 @@ export function ScoreboardModal({
         )}
 
         <DialogClose asChild>
-          <button className="primary" type="button">
-            {t(lang, 'dialog.close')}
+          <button id="scoreboard-close" className="primary" type="button">
+            <Icon name="x" /> <span>{t(lang, 'dialog.close')}</span>
           </button>
         </DialogClose>
       </DialogContent>

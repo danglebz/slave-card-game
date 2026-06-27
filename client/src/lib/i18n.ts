@@ -5,6 +5,7 @@ export type Lang = 'th' | 'en';
 
 const DICT: Record<Lang, Record<string, string>> = {
   th: {
+    'lobby.title': 'เกมส์ไพ่สลาฟ',
     'lobby.sub': 'เกมเดียวที่หัวหน้ายอมเป็นสลาฟ',
     'lobby.name': 'ใส่ชื่อของคุณ',
     'lobby.create': 'สร้างห้องใหม่',
@@ -52,6 +53,7 @@ const DICT: Record<Lang, Record<string, string>> = {
     'dialog.close': 'ปิด',
   },
   en: {
+    'lobby.title': 'Slave Card Game',
     'lobby.sub': 'The only game where the boss becomes a slave',
     'lobby.name': 'Enter your name',
     'lobby.create': 'Create room',

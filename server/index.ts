@@ -9,6 +9,7 @@ import { networkInterfaces } from 'node:os';
 import fs from 'node:fs';
 import { Room } from './room';
 import { anyLegalMove } from './game';
+import { GameError, gerr } from './errors';
 import { createSocketLimiter } from './ratelimit';
 import { initSentry, logger, captureError, metrics, snapshot } from './observability';
 import * as v from 'valibot';
@@ -233,15 +234,20 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
   socket.use(([event], next) => {
     if (!allow(event)) {
       metrics.rateLimited++;
-      socket.emit('errorMsg', 'คุณส่งคำสั่งถี่เกินไป รอสักครู่');
+      socket.emit('errorMsg', { key: 'err.rateLimit' });
       return; // ไม่เรียก next() → ไม่รัน handler
     }
     next();
   });
 
-  const err = (msg: string) => socket.emit('errorMsg', msg);
+  const err = (key: string, vars?: Record<string, string | number>) =>
+    socket.emit('errorMsg', { key, vars });
+  // แปลง error ที่จับได้ → errorMsg (GameError มี key/vars; อื่นๆ = generic)
+  const fail = (e: unknown) =>
+    e instanceof GameError ? err(e.key, e.vars) : err('err.generic');
 
   // validate payload จาก client → คืนค่าที่ผ่าน schema, หรือ emit errorMsg + null ถ้าไม่ผ่าน
+  // หมายเหตุ: issue message เป็น i18n key (ดู shared/schemas.ts)
   const parse = <T>(schema: v.GenericSchema<unknown, T>, raw: unknown): T | null => {
     const r = v.safeParse(schema, raw);
     if (r.success) return r.output;
@@ -265,7 +271,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       logger.info(`สร้างห้อง ${code} โดย "${p.name}"`, { rooms: rooms.size });
       broadcast(room);
     } catch (e) {
-      err((e as Error).message);
+      fail(e);
     }
   });
 
@@ -275,7 +281,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     const { code, name, color } = p;
     try {
       const room = rooms.get(code);
-      if (!room) return err('ไม่พบห้องนี้ (เช็กรหัสห้องอีกที)');
+      if (!room) return err('err.roomNotFound');
       room.addPlayer(socket.id, name);
       room.setColor(socket.id, color);
       if (room._cleanupTimer) clearTimeout(room._cleanupTimer); // ยกเลิกการลบห้อง (มีคนกลับเข้ามาแล้ว)
@@ -284,24 +290,24 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       socket.emit('joined', { code });
       broadcast(room);
     } catch (e) {
-      err((e as Error).message);
+      fail(e);
     }
   });
 
   const withRoom = (fn: (room: Room) => void) => {
     const room = joinedCode ? rooms.get(joinedCode) : undefined;
-    if (!room) return err('คุณยังไม่ได้อยู่ในห้อง');
+    if (!room) return err('err.notInRoom');
     try {
       fn(room);
       broadcast(room);
     } catch (e) {
-      err((e as Error).message);
+      fail(e);
     }
   };
 
   socket.on('start', () =>
     withRoom((room) => {
-      if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องเริ่มเกมได้');
+      if (room.hostId !== socket.id) gerr('err.hostOnly');
       room.start();
       metrics.gamesStarted++;
       logger.info(`เริ่มเกมห้อง ${room.code} (${room.players.length} คน)`);
@@ -313,7 +319,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     const patch = parse(SettingsPatchSchema, raw);
     if (!patch) return;
     withRoom((room) => {
-      if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องปรับตั้งค่าได้');
+      if (room.hostId !== socket.id) gerr('err.hostOnly');
       room.setSettings(patch);
       room._turnSig = null; // ให้ armTurnTimer ตั้งเวลาใหม่ตามค่าที่เพิ่งเปลี่ยน
     });
@@ -322,19 +328,19 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
   // เพิ่ม/ลบบอท — เฉพาะหัวห้อง (ในล็อบบี้)
   socket.on('addBot', () =>
     withRoom((room) => {
-      if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องเพิ่มบอทได้');
+      if (room.hostId !== socket.id) gerr('err.hostOnly');
       room.addBot();
     }),
   );
   socket.on('removeBot', () =>
     withRoom((room) => {
-      if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องลบบอทได้');
+      if (room.hostId !== socket.id) gerr('err.hostOnly');
       room.removeBot();
     }),
   );
   socket.on('shuffleSeats', () =>
     withRoom((room) => {
-      if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องสลับที่นั่งได้');
+      if (room.hostId !== socket.id) gerr('err.hostOnly');
       room.shuffleSeats();
     }),
   );
@@ -361,7 +367,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
 
   socket.on('again', () =>
     withRoom((room) => {
-      if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องเริ่มรอบใหม่ได้');
+      if (room.hostId !== socket.id) gerr('err.hostOnly');
       room.resetToLobby();
       room.start();
     }),

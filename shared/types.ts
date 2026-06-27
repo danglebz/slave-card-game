@@ -51,12 +51,13 @@ export interface PlayerView {
   isTurn: boolean;
   isBot: boolean;
   color: string | null;
-  /** ยศจากรอบก่อน (emoji+ชื่อ) หรือ null */
+  /** ยศจากรอบก่อนเป็น i18n key ('king'|'queen'|'commoner'|'viceslave'|'slave') หรือ null */
   title: string | null;
 }
 
 export interface ResultEntry {
   name: string;
+  /** ยศเป็น i18n key ('king'|'queen'|'commoner'|'viceslave'|'slave') */
   title: string;
 }
 
@@ -81,7 +82,15 @@ export interface ExchangeInfo {
 
 export interface Notice {
   seq: number;
-  text: string;
+  /** i18n key + ตัวแปร (client แปลเอง) */
+  key: string;
+  vars?: Record<string, string | number>;
+}
+
+/** ข้อความ error จาก server — เป็น i18n key + ตัวแปร (client แปลเอง) */
+export interface ErrorMsg {
+  key: string;
+  vars?: Record<string, string | number>;
 }
 
 /** payload ของ event 'state' — ผลลัพธ์ของ Room.stateFor() */
@@ -130,6 +139,6 @@ export interface ClientToServerEvents {
 export interface ServerToClientEvents {
   state: (s: RoomState) => void;
   joined: (p: { code: string }) => void;
-  errorMsg: (msg: string) => void;
+  errorMsg: (e: ErrorMsg) => void;
   left: () => void;
 }

@@ -35,17 +35,41 @@
   "main": "server/index.js",
   "scripts": {
     "dev": "vite",
-    "dev:server": "node --watch server/index.js",
+    "dev:server": "node --env-file-if-exists=.env --watch server/index.js",
     "build": "vite build",
+    "build:release": "vite build && pnpm sentry:sourcemaps",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject ./dist && sentry-cli sourcemaps upload --release $npm_package_version ./dist && find ./dist -name '*.map' -delete",
     "preview": "vite preview",
     "start": "node server/index.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run test/unit",
+    "test:integration": "vitest run test/integration",
+    "test:smoke": "vitest run test/smoke",
+    "test:e2e": "playwright test",
+    "coverage": "vitest run --coverage",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test",
+    "check:all": "pnpm check && pnpm test:e2e",
     "release": "commit-and-tag-version",
     "release:minor": "commit-and-tag-version --release-as minor",
     "release:major": "commit-and-tag-version --release-as major",
-    "release:dry": "commit-and-tag-version --dry-run"
+    "release:dry": "commit-and-tag-version --dry-run",
+    "prepare": "husky"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@sentry/cli"
+    ]
   },
   "dependencies": {
     "@melloware/coloris": "^0.25.0",
+    "@sentry/browser": "^10.62.0",
+    "@sentry/node": "^10.62.0",
     "express": "^4.21.2",
     "lucide": "^1.21.0",
     "qrcode": "^1.5.4",
@@ -53,10 +77,23 @@
     "valibot": "^1.4.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.1.0",
+    "@commitlint/config-conventional": "^21.1.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.61.1",
+    "@sentry/cli": "^3.6.0",
     "@tailwindcss/vite": "^4.3.1",
+    "@vitest/coverage-v8": "^4.1.9",
     "commit-and-tag-version": "^12.7.3",
+    "eslint": "^10.5.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.7.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.8.5",
     "socket.io-client": "^4.8.3",
     "tailwindcss": "^4.3.1",
-    "vite": "^8.1.0"
+    "typescript": "^6.0.3",
+    "vite": "^8.1.0",
+    "vitest": "^4.1.9"
   }
 }

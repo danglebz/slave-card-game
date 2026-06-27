@@ -1,0 +1,10 @@
+node_modules/
+dist/
+tmp/
+pnpm-lock.yaml
+CHANGELOG.md
+rooms.json
+client/public/sw.js
+coverage/
+test-results/
+playwright-report/

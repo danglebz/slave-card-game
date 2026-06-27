@@ -19,6 +19,15 @@ npm-debug.log*
 # env
 .env
 .env.*
+!.env.example
 
 # temp / scratch
 tmp/
+
+# test coverage
+coverage/
+
+# playwright e2e
+test-results/
+playwright-report/
+playwright/.cache/

@@ -2,6 +2,13 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.17.0](https://github.com/Danglebz/slave-card-game/compare/v1.16.0...v1.17.0) (2026-06-27)
+
+
+### ✨ Features
+
+* **client:** circular direction ring with z-index behind/front card ([3090de0](https://github.com/Danglebz/slave-card-game/commit/3090de087c9aa8b4b6932096f7fe0fa47f54a10e))
+
 ## [1.16.0](https://github.com/Danglebz/slave-card-game/compare/v1.15.0...v1.16.0) (2026-06-27)
 
 

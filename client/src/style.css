@@ -1216,7 +1216,7 @@ button.loading:disabled {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) rotate(90deg);
+  transform: translate(-50%, -50%) rotate(-90deg);
   font-size: clamp(120px, 26vh, 240px);
   line-height: 1;
   font-weight: 400;

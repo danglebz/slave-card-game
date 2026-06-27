@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
 import { Icon, iconize } from '@/lib/icons';
 import type { ResultEntry } from '@shared/types';
 import { useStore } from '@/store';
-import { t } from '@/lib/i18n';
+import { t, displayName } from '@/lib/i18n';
 
 export function ResultModal({
   open,
@@ -27,23 +27,14 @@ export function ResultModal({
             const cls = i === 0 ? 'rank-0' : i === list.length - 1 ? 'rank-last' : '';
             return (
               <li className={cls} key={i}>
-                {i === 0 ? (
-                  <>
-                    <Icon name="trophy" />{' '}
-                  </>
-                ) : i === list.length - 1 ? (
-                  <>
-                    <Icon name="skull" />{' '}
-                  </>
-                ) : null}
-                {iconize(t(lang, 'rank.' + r.title))} — {r.name}
+                {iconize(t(lang, 'rank.' + r.title))} — {displayName(r.name, lang)}
               </li>
             );
           })}
         </ol>
         <DialogClose asChild>
           <button id="result-close" className="primary" type="button">
-            {t(lang, 'dialog.close')}
+            <Icon name="x" /> <span>{t(lang, 'dialog.close')}</span>
           </button>
         </DialogClose>
       </DialogContent>

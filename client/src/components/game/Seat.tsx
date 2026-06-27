@@ -3,7 +3,7 @@ import type { PlayerView, RoomState } from '@shared/types';
 import { Icon, iconize } from '@/lib/icons';
 import { chipStyle } from '@/lib/gameLogic';
 import { useStore } from '@/store';
-import { t } from '@/lib/i18n';
+import { t, displayName } from '@/lib/i18n';
 
 export function PlayerChip({ p, s }: { p: PlayerView; s: RoomState }) {
   const lang = useStore((st) => st.lang);
@@ -28,7 +28,7 @@ export function PlayerChip({ p, s }: { p: PlayerView; s: RoomState }) {
             <Icon name="bot" className="bot-ico" />{' '}
           </>
         ) : null}
-        {p.name}
+        {displayName(p.name, lang)}
         {p.isYou ? ` ${t(lang, 'seat.you')}` : ''}
         {!p.connected && (
           <>

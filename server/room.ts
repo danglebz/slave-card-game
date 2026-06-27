@@ -1,4 +1,4 @@
-// room.ts — สถานะห้องและรอบเล่นไพ่สลาฟ (server-authoritative)
+// room.ts — สถานะห้องและรอบเล่นเกมส์ไพ่สลาฟ (server-authoritative)
 import {
   deal,
   sortHand,

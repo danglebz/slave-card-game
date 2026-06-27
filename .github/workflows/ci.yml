@@ -77,3 +77,59 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # ----- auto-release: ออก tag + GitHub Release เมื่อ version ใน package.json ยังไม่มี tag -----
+  # flow: รัน `pnpm release` ในเครื่อง (bump+CHANGELOG+commit) → push 'chore(release)' ขึ้น main
+  #       → job นี้สร้าง tag vX.Y.Z + GitHub Release ให้อัตโนมัติ (ไม่ push commit กลับ main = ไม่ชน protection)
+  release:
+    name: Release (auto-tag)
+    runs-on: ubuntu-latest
+    needs: [check, e2e] # ออกเวอร์ชันเฉพาะเมื่อ CI ผ่านครบ
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write # ต้องใช้สร้าง tag + release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # ดึง history + tags ทั้งหมดมาเช็ค
+
+      - name: อ่าน version + เช็คว่ามี tag แล้วหรือยัง
+        id: ver
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          TAG="v${VERSION}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "⏭️  ${TAG} มี tag อยู่แล้ว — ข้าม (ไม่มีเวอร์ชันใหม่)"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "🏷️  จะออก ${TAG}"
+          fi
+
+      - name: ดึง release notes ของเวอร์ชันนี้จาก CHANGELOG
+        if: steps.ver.outputs.exists == 'false'
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          # ตัดบล็อกตั้งแต่หัวข้อ '## [X.Y.Z]' จนถึงหัวข้อเวอร์ชันถัดไป
+          awk -v ver="${VERSION}" '
+            $0 ~ "^## \\[" ver "\\]" { flag=1; next }
+            flag && /^## \[/ { exit }
+            flag { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "GEN_NOTES=true" >> "$GITHUB_ENV" # ไม่เจอใน CHANGELOG → ใช้ auto-generated notes
+          fi
+
+      - name: สร้าง tag + GitHub Release
+        if: steps.ver.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.ver.outputs.tag }}"
+          if [ "${GEN_NOTES:-false}" = "true" ]; then
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --generate-notes
+          else
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --notes-file RELEASE_NOTES.md
+          fi
+          echo "✅ ออก release $TAG แล้ว"

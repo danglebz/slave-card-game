@@ -1212,20 +1212,24 @@ button.loading:disabled {
   gap: 10px;
 }
 /* ไอคอนทิศทาง — ลายน้ำใหญ่ อยู่ "หลังไพ่" กลางโต๊ะ */
-#dir-indicator {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-90deg);
-  font-size: clamp(120px, 26vh, 240px);
-  line-height: 1;
-  font-weight: 400;
-  color: #fff;
-  opacity: 0.07;
+/* ลูกศรทิศทางในช่องกลางซ้าย(4)/ขวา(6) ของตาราง 3×3 */
+.dir-arrow {
+  width: clamp(28px, 6vh, 44px);
+  height: clamp(28px, 6vh, 44px);
+  color: var(--felt-text-soft);
+  opacity: 0.55;
+  stroke-width: 2.5;
+  animation: dir-pulse 1.8s ease-in-out infinite;
   pointer-events: none;
-  z-index: 0;
-  -webkit-user-select: none;
-  user-select: none;
+}
+@keyframes dir-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 #pile-label,
 #pile-cards {

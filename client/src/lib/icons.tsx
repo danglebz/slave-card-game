@@ -51,6 +51,8 @@ import {
   Languages,
   Vibrate,
   Frown,
+  ArrowUp,
+  ArrowDown,
   type LucideProps,
 } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
@@ -80,6 +82,8 @@ const ICONS: Record<string, ComponentType<LucideProps>> = {
   'wifi-off': WifiOff,
   'rotate-ccw': RotateCcw,
   'rotate-cw': RotateCw,
+  'arrow-up': ArrowUp,
+  'arrow-down': ArrowDown,
   check: Check,
   x: X,
   'circle-alert': CircleAlert,

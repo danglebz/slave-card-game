@@ -1,4 +1,5 @@
 // Table.tsx — โต๊ะ 3×3: 8 ที่นั่งล้อมรอบ + กองไพ่กลาง (port renderPlayers/seatFor layout)
+import type { ReactNode } from 'react';
 import type { RoomState } from '@shared/types';
 import { PlayerChip } from './Seat';
 import { Pile } from './Pile';
@@ -39,20 +40,29 @@ export function Table({ s }: { s: RoomState }) {
     occupant[seatFor(rel, n)] = p;
   });
 
-  const seat = (id: string) => (
-    <div className="seat" id={id} key={id}>
-      {occupant[id] && <PlayerChip p={occupant[id]} s={s} />}
-    </div>
-  );
+  // ลูกศรทิศทางในช่องกลางซ้าย(4)/ขวา(6) ของตาราง 3×3 — โชว์เฉพาะตอนเล่น
+  // ผังที่นั่งวน rel เพิ่ม = ทวนเข็ม ดังนั้น dir=+1 = ทวนเข็ม:
+  //   ฝั่งขวา flow ขึ้น (br→tr) = arrow-up ; ฝั่งซ้าย flow ลง (tl→bl) = arrow-down
+  //   dir=-1 (ตามเข็ม) สลับด้าน
+  const ccw = s.dir === 1;
+  const dirArrow = (side: 'left' | 'right'): ReactNode => {
+    if (s.phase !== 'playing') return null;
+    const up = side === 'right' ? ccw : !ccw;
+    return <Icon name={up ? 'arrow-up' : 'arrow-down'} className="dir-arrow" />;
+  };
+
+  const seat = (id: string) => {
+    const occ = occupant[id];
+    const side = id === 'seat-left' ? 'left' : id === 'seat-right' ? 'right' : null;
+    return (
+      <div className="seat" id={id} key={id}>
+        {occ ? <PlayerChip p={occ} s={s} /> : side ? dirArrow(side) : null}
+      </div>
+    );
+  };
 
   return (
     <div id="table">
-      <div id="dir-indicator">
-        {/* ลายน้ำทิศทาง (หลังไพ่) — โชว์เฉพาะตอนเล่น
-            ผังที่นั่งเรียง rel เพิ่ม = วนทวนเข็ม (bottom→br→tr→top→tl→bl)
-            ดังนั้น dir=+1 (index เพิ่ม) = ทวนเข็ม → ลูกศร ccw; dir=-1 = ตามเข็ม → cw */}
-        {s.phase === 'playing' && <Icon name={s.dir === -1 ? 'rotate-cw' : 'rotate-ccw'} />}
-      </div>
       {seat('seat-tl')}
       {seat('seat-top')}
       {seat('seat-tr')}

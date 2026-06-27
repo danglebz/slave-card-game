@@ -12,6 +12,7 @@ import {
   SUITS,
 } from './game';
 import { botChoose } from './bot';
+import { gerr } from './errors';
 import type {
   Card,
   Combo,
@@ -48,12 +49,13 @@ interface GiveTask {
 
 type GiveTasks = Record<number, GiveTask>;
 
+// ยศแต่ละอันดับเป็น i18n key (client แปลเป็น 'คิง'/'King' + emoji เอง)
 const RANK_TITLES: Record<number, string[]> = {
-  2: ['🥇 คิง', '😩 สลาฟ'],
-  3: ['🥇 คิง', '🙂 สามัญชน', '😩 สลาฟ'],
-  4: ['🥇 คิง', '🥈 ควีน', '🥉 รองสลาฟ', '😩 สลาฟ'],
-  5: ['🥇 คิง', '🥈 ควีน', '🙂 สามัญชน', '🥉 รองสลาฟ', '😩 สลาฟ'],
-  6: ['🥇 คิง', '🥈 ควีน', '🙂 สามัญชน', '🙂 สามัญชน', '🥉 รองสลาฟ', '😩 สลาฟ'],
+  2: ['king', 'slave'],
+  3: ['king', 'commoner', 'slave'],
+  4: ['king', 'queen', 'viceslave', 'slave'],
+  5: ['king', 'queen', 'commoner', 'viceslave', 'slave'],
+  6: ['king', 'queen', 'commoner', 'commoner', 'viceslave', 'slave'],
 };
 
 let roomSeq = 0;
@@ -78,7 +80,8 @@ export class Room {
   giveTasks: GiveTasks | null;
   roundOrder: number[] | null;
   noticeSeq: number;
-  noticeText: string | null;
+  noticeKey: string | null;
+  noticeVars: Record<string, string | number> | null;
   turnDeadline: number | null;
   spectators: Spectator[];
   settings: Settings;
@@ -113,7 +116,8 @@ export class Room {
     this._prevOrder = null; // อันดับรอบก่อน (ใช้กำหนดสลาฟขึ้นก่อน + ทิศหนีคิง)
     this.roundOrder = null; // คิง/สลาฟ ของรอบปัจจุบัน (ใช้กฎคิงตกบัลลังก์)
     this.noticeSeq = 0; // ตัวนับแจ้งเตือนเด้ง (toast) ฝั่ง client
-    this.noticeText = null;
+    this.noticeKey = null;
+    this.noticeVars = null;
     this.turnDeadline = null; // timestamp(ms) ที่ตาปัจจุบันจะหมดเวลา (ตั้งโดย server, ไม่เซฟลงไฟล์)
     this.spectators = []; // ผู้ชมที่เข้ามากลางรอบ: { id, name } — จะเข้าเล่นรอบหน้า
     this.everPlayed = false;
@@ -170,9 +174,9 @@ export class Room {
 
   // ----- บอท (AI เติมคน) -----
   addBot(): void {
-    if (this.phase !== 'lobby') throw new Error('เพิ่มบอทได้เฉพาะตอนอยู่ในล็อบบี้');
+    if (this.phase !== 'lobby') gerr('err.botLobbyOnly');
     if (this.players.length >= Room.MAX_PLAYERS)
-      throw new Error(`ห้องเต็มแล้ว (สูงสุด ${Room.MAX_PLAYERS} คน)`);
+      gerr('err.roomFull', { max: Room.MAX_PLAYERS });
     // หาเลขบอทที่ว่างต่ำสุด เพื่อชื่อไม่ชนกัน
     const used = new Set(this.players.filter((p) => p.isBot).map((p) => p.name));
     let n = 1;
@@ -188,14 +192,14 @@ export class Room {
   }
 
   removeBot(): void {
-    if (this.phase !== 'lobby') throw new Error('ลบบอทได้เฉพาะตอนอยู่ในล็อบบี้');
+    if (this.phase !== 'lobby') gerr('err.removeBotLobbyOnly');
     for (let i = this.players.length - 1; i >= 0; i--) {
       if (this.players[i].isBot) {
         this.players.splice(i, 1);
         return;
       }
     }
-    throw new Error('ไม่มีบอทให้ลบ');
+    gerr('err.noBot');
   }
 
   hasBots(): boolean {
@@ -204,8 +208,8 @@ export class Room {
 
   // สลับลำดับที่นั่ง (เปลี่ยนลำดับการวน) — เฉพาะในล็อบบี้
   shuffleSeats(): void {
-    if (this.phase !== 'lobby') throw new Error('สลับที่นั่งได้เฉพาะตอนอยู่ในล็อบบี้');
-    if (this.players.length < 2) throw new Error('ต้องมีอย่างน้อย 2 คน');
+    if (this.phase !== 'lobby') gerr('err.shuffleLobbyOnly');
+    if (this.players.length < 2) gerr('err.needTwo');
     for (let i = this.players.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [this.players[i], this.players[j]] = [this.players[j], this.players[i]];
@@ -237,7 +241,7 @@ export class Room {
     // เข้าใหม่ตอนล็อบบี้ = ผู้เล่น
     if (this.phase === 'lobby') {
       if (this.players.length >= Room.MAX_PLAYERS)
-        throw new Error(`ห้องเต็มแล้ว (สูงสุด ${Room.MAX_PLAYERS} คน)`);
+        gerr('err.roomFull', { max: Room.MAX_PLAYERS });
       const player: Player = { id: socketId, name, connected: true, hand: [], finished: false };
       this.players.push(player);
       if (!this.hostId) this.hostId = socketId;
@@ -287,7 +291,7 @@ export class Room {
 
   start(): void {
     this.promoteSpectators(); // ดึงผู้ชมที่รออยู่เข้าเล่นรอบนี้
-    if (this.players.length < 2) throw new Error('ต้องมีอย่างน้อย 2 คนถึงจะเริ่มได้');
+    if (this.players.length < 2) gerr('err.needTwoStart');
     const prevOrder = Array.isArray(this.finishOrder) ? this.finishOrder.slice() : [];
     const hands = deal(this.players.length);
     this.players.forEach((p, i) => {
@@ -353,13 +357,14 @@ export class Room {
     const titles = RANK_TITLES[n] || [];
     this.lastResult = order.map((pIdx, rank) => ({
       name: this.players[pIdx].name,
-      title: titles[rank] || `อันดับ ${rank + 1}`,
+      title: titles[rank] || 'slave',
     }));
     this.log.push(
-      `👑→😩 สลาฟหมดมือก่อนคิง! ${this.players[order[n - 1]].name} (คิงเดิม) ตกเป็นสลาฟ — แจกไพ่ใหม่`,
+      `dethrone: ${this.players[order[n - 1]].name} (was king) becomes slave — redeal`,
     );
     this.noticeSeq++;
-    this.noticeText = `👑→⛓️ คิงตกบัลลังก์! ${this.players[order[n - 1]].name} ตกเป็นสลาฟ — แจกไพ่ใหม่`;
+    this.noticeKey = 'notice.dethrone';
+    this.noticeVars = { name: this.players[order[n - 1]].name };
     this._miyakoExchange = true; // คิงตกบัลลังก์ → แลกไพ่เฉพาะคิง↔สลาฟ (ควีน/รองสลาฟไม่ต้องแลก)
     this.start(); // อ่าน finishOrder เป็นอันดับใหม่ → แจก + เข้าเฟสแลกไพ่ทันที
     return { ok: true };
@@ -405,17 +410,17 @@ export class Room {
   }
 
   _give(idx: number, cardIds: string[]): { ok: true } {
-    if (this.phase !== 'exchange' || !this.giveTasks) throw new Error('ยังไม่ถึงช่วงแลกไพ่');
+    if (this.phase !== 'exchange' || !this.giveTasks) gerr('err.notExchange');
     const task = this.giveTasks[idx];
-    if (!task) throw new Error('คุณไม่ต้องเลือกไพ่ในรอบนี้');
-    if (task.cards) throw new Error('คุณเลือกไพ่ไปแล้ว');
+    if (!task) gerr('err.noPickThisRound');
+    if (task.cards) gerr('err.alreadyPicked');
     if (!Array.isArray(cardIds) || cardIds.length !== task.count) {
-      throw new Error(`ต้องเลือกไพ่ ${task.count} ใบ`);
+      gerr('err.pickN', { count: task.count });
     }
     const player = this.players[idx];
     const handIds = new Set(player.hand.map(cardId));
-    for (const id of cardIds) if (!handIds.has(id)) throw new Error('คุณไม่มีไพ่ใบนั้น');
-    if (new Set(cardIds).size !== cardIds.length) throw new Error('ไพ่ซ้ำ');
+    for (const id of cardIds) if (!handIds.has(id)) gerr('err.noSuchCard');
+    if (new Set(cardIds).size !== cardIds.length) gerr('err.dupCard');
 
     task.cards = cardIds.slice();
     // ผู้ชนะเลือกครบทุกคนแล้ว → ย้ายไพ่คืน แล้วเริ่มเล่น
@@ -466,44 +471,35 @@ export class Room {
   }
 
   _play(idx: number, cardIds: string[], auto = false): { ok: true } {
-    if (this.phase !== 'playing') throw new Error('ยังไม่ถึงเวลาเล่น');
-    if (idx !== this.turn) throw new Error('ยังไม่ถึงตาของคุณ');
+    if (this.phase !== 'playing') gerr('err.notPlaying');
+    if (idx !== this.turn) gerr('err.notYourTurn');
     const player = this.players[idx];
 
     const cards = cardIds.map(cardFromId);
     // ตรวจว่าไพ่ที่ลงอยู่ในมือจริง
     const handIds = new Set(player.hand.map(cardId));
     for (const id of cardIds) {
-      if (!handIds.has(id)) throw new Error('คุณไม่มีไพ่ใบนั้น');
+      if (!handIds.has(id)) gerr('err.noSuchCard');
     }
-    if (new Set(cardIds).size !== cardIds.length) throw new Error('ไพ่ซ้ำ');
+    if (new Set(cardIds).size !== cardIds.length) gerr('err.dupCard');
 
     const combo = identifyCombo(cards);
-    if (!combo) throw new Error('ชุดไพ่ไม่ถูกกติกา');
+    if (!combo) gerr('err.invalidCombo');
 
     // ไพ่แรกสุดของเกมต้องมี 3♣ (ดอกจิก) ร่วมด้วย
     if (!this.everPlayed && !cardIds.includes('3.0')) {
-      throw new Error('กองแรกต้องมี 3♣ (ดอกจิก) ร่วมด้วย');
+      gerr('err.first3');
     }
 
-    if (!canBeat(this.pile, combo)) {
-      if (!this.pile) throw new Error('ลงชุดนี้ไม่ได้');
-      const TYPE_TH: Record<string, string> = {
-        single: 'ไพ่เดี่ยว',
-        pair: 'คู่',
-        triple: 'ตอง',
-        quad: 'โฟร์',
-        straight: `เรียง ${this.pile.len} ใบ`,
-      };
-      const want = TYPE_TH[this.pile.type] || 'ชุดเดียวกัน';
+    if (!canBeat(this.pile, combo!)) {
+      if (!this.pile) gerr('err.cannotPlay');
       // ชนิด/จำนวนตรงกับกอง? (ถ้าตรง = แค่เล็กกว่า / ถ้าไม่ตรง = ผิดชนิด)
       const sameShape =
-        combo.type === this.pile.type && (combo.type !== 'straight' || combo.len === this.pile.len);
-      throw new Error(
-        sameShape
-          ? 'ชุดนี้เล็กกว่ากองบนโต๊ะ — ต้องสูงกว่า'
-          : `ต้องลง "${want}" ที่สูงกว่า (หรือบอมบ์)`,
-      );
+        combo!.type === this.pile.type &&
+        (combo!.type !== 'straight' || combo!.len === this.pile.len);
+      // err.mustBeat ส่ง type/len ของกอง → client ประกอบชื่อชุด (combo.*) เอง
+      if (sameShape) gerr('err.tooSmall');
+      else gerr('err.mustBeat', { type: this.pile.type, len: this.pile.len });
     }
     combo.mode = playMode(this.pile, combo);
 
@@ -553,9 +549,9 @@ export class Room {
   }
 
   _pass(idx: number, auto = false, reason = 'หมดเวลา'): { ok: true } {
-    if (this.phase !== 'playing') throw new Error('ยังไม่ถึงเวลาเล่น');
-    if (idx !== this.turn) throw new Error('ยังไม่ถึงตาของคุณ');
-    if (!this.pile) throw new Error('คุณเป็นคนนำกอง ต้องลงไพ่ (pass ไม่ได้)');
+    if (this.phase !== 'playing') gerr('err.notPlaying');
+    if (idx !== this.turn) gerr('err.notYourTurn');
+    if (!this.pile) gerr('err.leadMustPlay');
 
     // ผ่านแล้ว = ออกจากกองนี้ ถูกข้ามจนกว่ากองจะเคลียร์
     this.passed.add(idx);
@@ -648,7 +644,7 @@ export class Room {
     const titles = RANK_TITLES[n] || [];
     this.lastResult = this.finishOrder.map((pIdx, rank) => ({
       name: this.players[pIdx].name,
-      title: titles[rank] || `อันดับ ${rank + 1}`,
+      title: titles[rank] || 'slave',
     }));
     this.log.push('🎉 จบรอบ! ' + this.lastResult.map((r) => `${r.title}: ${r.name}`).join(', '));
     this.addHistory({
@@ -714,7 +710,9 @@ export class Room {
       log: this.log.slice(-12),
       history: (this.history || []).slice(-16),
       exchange: this.exchangeFor(meIdx),
-      notice: this.noticeText ? { seq: this.noticeSeq, text: this.noticeText } : null,
+      notice: this.noticeKey
+        ? { seq: this.noticeSeq, key: this.noticeKey, vars: this.noticeVars ?? undefined }
+        : null,
     };
   }
 

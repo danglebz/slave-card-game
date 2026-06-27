@@ -11,44 +11,42 @@ import * as v from 'valibot';
 // ----- ฟิลด์พื้นฐาน -----
 
 /** ชื่อผู้เล่น: ตัดช่องว่างหัวท้าย, ต้องมี 1–16 ตัว */
+// หมายเหตุ: ข้อความ error เป็น i18n key — client แปลเองด้วย t(lang, key) (ดู lib/i18n.ts)
 export const NameSchema = v.pipe(
-  v.string('กรุณาใส่ชื่อ'),
+  v.string('err.nameEmpty'),
   v.trim(),
-  v.minLength(1, 'กรุณาใส่ชื่อก่อน'),
-  v.maxLength(16, 'ชื่อยาวเกินไป (สูงสุด 16 ตัว)'),
+  v.minLength(1, 'err.nameEmpty'),
+  v.maxLength(16, 'err.nameTooLong'),
 );
 
 /** รหัสห้อง: ตัดช่องว่าง → ตัวพิมพ์ใหญ่ → ต้องเป็นตัวอักษร/ตัวเลข 4 ตัว */
 export const CodeSchema = v.pipe(
-  v.string('กรุณาใส่รหัสห้อง'),
+  v.string('err.codeEmpty'),
   v.trim(),
   v.toUpperCase(),
-  v.nonEmpty('กรุณาใส่รหัสห้อง'),
-  v.length(4, 'รหัสห้องต้องมี 4 ตัว'),
-  v.regex(/^[A-Z0-9]{4}$/, 'รหัสห้องไม่ถูกต้อง (ตัวอักษร/ตัวเลขเท่านั้น)'),
+  v.nonEmpty('err.codeEmpty'),
+  v.length(4, 'err.codeLen'),
+  v.regex(/^[A-Z0-9]{4}$/, 'err.codeInvalid'),
 );
 
 /** สีประจำตัว: hex #rrggbb (ตรงกับ Room.setColor) — normalize เป็นตัวพิมพ์เล็ก */
 export const ColorSchema = v.pipe(
-  v.string('สีไม่ถูกต้อง'),
-  v.regex(/^#[0-9a-fA-F]{6}$/, 'สีไม่ถูกต้อง (ต้องเป็น #rrggbb)'),
+  v.string('err.colorInvalid'),
+  v.regex(/^#[0-9a-fA-F]{6}$/, 'err.colorInvalid'),
   v.toLowerCase(),
 );
 
 /** id ไพ่ 'rank.suit' — rank 3..15, suit 0..3 (ตรงกับ game.ts cardId/cardFromId) */
-export const CardIdSchema = v.pipe(
-  v.string(),
-  v.regex(/^(?:[3-9]|1[0-5])\.[0-3]$/, 'ไพ่ไม่ถูกต้อง'),
-);
+export const CardIdSchema = v.pipe(v.string(), v.regex(/^(?:[3-9]|1[0-5])\.[0-3]$/, 'err.cardInvalid'));
 
 /** กองไพ่ที่ส่งมา (play/give) — จำกัดความยาวกันสแปม payload ใหญ่ */
 export const CardsSchema = v.pipe(
-  v.array(CardIdSchema, 'cards ต้องเป็น array'),
-  v.maxLength(27, 'ส่งไพ่มากเกินไป'),
+  v.array(CardIdSchema, 'err.cardsType'),
+  v.maxLength(27, 'err.cardsTooMany'),
 );
 
 /** turnSeconds: ต้องเป็นหนึ่งในตัวเลือกที่ server ยอมรับ (Room.TURN_SECONDS_CHOICES) */
-export const TurnSecondsSchema = v.picklist([15, 30, 45, 60], 'เวลาต่อตาไม่ถูกต้อง');
+export const TurnSecondsSchema = v.picklist([15, 30, 45, 60], 'err.turnSecInvalid');
 
 // ----- payload ของแต่ละ event (เฉพาะ event ที่มี data จาก client) -----
 

@@ -181,7 +181,7 @@ export function GameScreen() {
         </span>
         <button
           id="share-btn"
-          className="icon-btn hidden"
+          className="icon-btn"
           type="button"
           title={t(lang, 'topbar.share')}
           aria-label={t(lang, 'topbar.shareAria')}

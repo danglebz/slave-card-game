@@ -4,7 +4,7 @@ import { socket } from '@/lib/socket';
 import { NameSchema, CodeSchema, validateField } from '@/lib/validation';
 import { Icon } from '@/lib/icons';
 import { useStore } from '@/store';
-import { t } from '@/lib/i18n';
+import { t, type Lang } from '@/lib/i18n';
 import { progStart, progDone } from '@/lib/progress';
 import { ProgressBar } from './ProgressBar';
 import { RulesModal } from './RulesModal';
@@ -32,6 +32,7 @@ function initialColor(): string {
 
 export function LobbyScreen() {
   const lang = useStore((s) => s.lang);
+  const setLang = useStore((s) => s.setLang);
   const showToast = useStore((s) => s.showToast);
 
   const [name, setName] = useState(() => localStorage.getItem('name') || '');
@@ -137,9 +138,22 @@ export function LobbyScreen() {
       <ProgressBar />
       <section id="lobby-screen" className="screen">
         <div className="card-panel">
+          <div className="lang-switch" role="group" aria-label="Language">
+            {(['th', 'en'] as Lang[]).map((l) => (
+              <button
+                key={l}
+                type="button"
+                data-lang={l}
+                className={l === lang ? 'active' : undefined}
+                onClick={() => setLang(l)}
+              >
+                {l === 'th' ? 'ไทย' : 'EN'}
+              </button>
+            ))}
+          </div>
           <button
             id="install-btn"
-            className={`corner-btn corner-tl${canInstall ? '' : ' hidden'}`}
+            className={`corner-btn corner-install${canInstall ? '' : ' hidden'}`}
             type="button"
             title="ติดตั้งแอปลงเครื่อง"
             aria-label="ติดตั้งแอป"
@@ -160,7 +174,7 @@ export function LobbyScreen() {
             </svg>
           </a>
           <img className="project-logo" src="/logo.png" alt="" aria-hidden="true" />
-          <h1>ไพ่สลาฟ</h1>
+          <h1>{t(lang, 'lobby.title')}</h1>
           <p className="sub">{t(lang, 'lobby.sub')}</p>
           <div className="field">
             <div className="input-icon">

@@ -272,6 +272,47 @@ button.loading:disabled {
 .corner-tr {
   right: 12px;
 }
+/* ปุ่มติดตั้งย้ายมาอยู่ซ้ายของ GitHub (มุมซ้ายให้สวิตช์ภาษา) */
+.corner-install {
+  right: 44px;
+}
+/* สวิตช์ภาษามุมบนซ้าย — text จางๆ เข้ากับปุ่มไอคอนมุมอื่น (ไม่มีกล่องพื้นหลัง) */
+.lang-switch {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+}
+.lang-switch button {
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--felt-text-faint);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.lang-switch button:not(:first-of-type) {
+  margin-left: 7px;
+  padding-left: 7px;
+  border-left: 1px solid var(--felt-line);
+}
+.lang-switch button:hover:not(.active) {
+  color: var(--felt-text-soft);
+  background: none;
+}
+.lang-switch button.active {
+  color: var(--felt-text);
+}
+.lang-switch button:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
 .corner-btn svg {
   width: 17px;
   height: 17px;

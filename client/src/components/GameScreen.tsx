@@ -117,9 +117,9 @@ export function GameScreen() {
   useEffect(() => {
     if (s?.notice && s.notice.seq !== lastNoticeSeq.current) {
       lastNoticeSeq.current = s.notice.seq;
-      showToast(s.notice.text);
+      showToast(t(lang, s.notice.key, s.notice.vars));
     }
-  }, [s, showToast]);
+  }, [s, showToast, lang]);
 
   function onCopyCode() {
     if (!code) return;
@@ -129,7 +129,7 @@ export function GameScreen() {
         if (copiedTimer.current) clearTimeout(copiedTimer.current);
         copiedTimer.current = setTimeout(() => setCopied(false), 1400);
       }
-      showToast(ok ? `คัดลอกรหัสห้องแล้ว (${code})` : `คัดลอกไม่สำเร็จ — ${code}`);
+      showToast(t(lang, ok ? 'toast.codeCopied' : 'toast.copyFail', { code }));
     });
   }
 
@@ -163,7 +163,7 @@ export function GameScreen() {
           className={`room-code${copied ? ' copied' : ''}`}
           id="room-code-box"
           type="button"
-          title="คลิกเพื่อคัดลอกรหัสห้อง"
+          title={t(lang, 'topbar.copyCode')}
           onClick={onCopyCode}
         >
           <Icon name="hash" />
@@ -173,7 +173,7 @@ export function GameScreen() {
         <span
           id="spectator-count"
           className={`spec-count${specCount === 0 ? ' hidden' : ''}`}
-          title="ผู้ชม"
+          title={t(lang, 'topbar.spectators')}
         >
           <Icon name="eye" /> <span id="spec-n">{specCount}</span>
         </span>
@@ -181,8 +181,8 @@ export function GameScreen() {
           id="share-btn"
           className="icon-btn hidden"
           type="button"
-          title="แชร์ห้อง (QR)"
-          aria-label="แชร์ห้อง"
+          title={t(lang, 'topbar.share')}
+          aria-label={t(lang, 'topbar.shareAria')}
           onClick={() => setShareOpen(true)}
         >
           <Icon name="qr-code" />
@@ -191,8 +191,8 @@ export function GameScreen() {
           id="settings-btn"
           className="icon-btn"
           type="button"
-          title="ตั้งค่า"
-          aria-label="ตั้งค่า"
+          title={t(lang, 'set.title')}
+          aria-label={t(lang, 'set.title')}
           onClick={() => setSettingsOpen(true)}
         >
           <Icon name="settings" />
@@ -262,8 +262,8 @@ function GameShell({
           id="settings-btn"
           className="icon-btn"
           type="button"
-          title="ตั้งค่า"
-          aria-label="ตั้งค่า"
+          title={t(lang, 'set.title')}
+          aria-label={t(lang, 'set.title')}
         >
           <Icon name="settings" />
         </button>

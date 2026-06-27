@@ -1,5 +1,6 @@
 // gameLogic.ts — ตรรกะการ์ดฝั่ง client (port จาก app.js: rankLabel, sortedHand, detectCombos)
 import type { Card, CardWithId } from '@shared/types';
+import { t, type Lang } from './i18n';
 
 // ︎ = text-presentation selector: บังคับให้ดอกแสดงเป็นตัวอักษร (ไม่ใช่ emoji)
 // เพื่อให้สี CSS (.red) มีผลจริงบนมือถือ
@@ -59,7 +60,7 @@ export function sortedHand(hand: CardWithId[] | undefined, handSort: HandSort): 
 }
 
 // ตรวจหา "บอมบ์" ที่ทำได้จากไพ่ในมือ: ตอง, โฟร์, เรียงดอกเดียว (ยาว >=3)
-export function detectCombos(hand: CardWithId[]): ComboHint[] {
+export function detectCombos(hand: CardWithId[], lang: Lang = 'th'): ComboHint[] {
   const out: ComboHint[] = [];
 
   // ตอง / โฟร์ — จัดกลุ่มตามอันดับ
@@ -71,9 +72,12 @@ export function detectCombos(hand: CardWithId[]): ComboHint[] {
     .forEach((r) => {
       const cards = byRank[r];
       if (cards.length === 4) {
-        out.push({ label: `โฟร์ ${rankLabel(r)}`, ids: cards.map((c) => c.id) });
+        out.push({ label: `${t(lang, 'combo.quad')} ${rankLabel(r)}`, ids: cards.map((c) => c.id) });
       } else if (cards.length === 3) {
-        out.push({ label: `ตอง ${rankLabel(r)}`, ids: cards.map((c) => c.id) });
+        out.push({
+          label: `${t(lang, 'combo.triple')} ${rankLabel(r)}`,
+          ids: cards.map((c) => c.id),
+        });
       }
     });
 
@@ -88,7 +92,7 @@ export function detectCombos(hand: CardWithId[]): ComboHint[] {
       const flush = (rn: CardWithId[]) => {
         if (rn.length >= 3) {
           out.push({
-            label: `เรียง${SUITS[s]} ${rankLabel(rn[0].r)}-${rankLabel(rn[rn.length - 1].r)} (${rn.length})`,
+            label: `${t(lang, 'combo.straightWord')} ${SUITS[s]} ${rankLabel(rn[0].r)}-${rankLabel(rn[rn.length - 1].r)} (${rn.length})`,
             ids: rn.map((c) => c.id),
           });
         }

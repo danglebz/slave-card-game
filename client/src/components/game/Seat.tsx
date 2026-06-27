@@ -2,8 +2,11 @@
 import type { PlayerView, RoomState } from '@shared/types';
 import { Icon, iconize } from '@/lib/icons';
 import { chipStyle } from '@/lib/gameLogic';
+import { useStore } from '@/store';
+import { t } from '@/lib/i18n';
 
 export function PlayerChip({ p, s }: { p: PlayerView; s: RoomState }) {
+  const lang = useStore((st) => st.lang);
   const cls = ['player-chip'];
   if (p.isTurn && s.phase === 'playing') cls.push('turn');
   if (p.finished) cls.push('finished');
@@ -26,7 +29,7 @@ export function PlayerChip({ p, s }: { p: PlayerView; s: RoomState }) {
           </>
         ) : null}
         {p.name}
-        {p.isYou ? ' (คุณ)' : ''}
+        {p.isYou ? ` ${t(lang, 'seat.you')}` : ''}
         {!p.connected && (
           <>
             {' '}
@@ -37,13 +40,13 @@ export function PlayerChip({ p, s }: { p: PlayerView; s: RoomState }) {
       <span className="pcount">
         {p.finished ? (
           <>
-            <Icon name="circle-check" /> หมดมือ
+            <Icon name="circle-check" /> {t(lang, 'seat.finished')}
           </>
         ) : (
-          `${p.cardCount} ใบ`
+          t(lang, 'seat.cards', { n: p.cardCount })
         )}
       </span>
-      {p.title && <span className="ptitle">{iconize(p.title)}</span>}
+      {p.title && <span className="ptitle">{iconize(t(lang, 'rank.' + p.title))}</span>}
     </div>
   );
 }

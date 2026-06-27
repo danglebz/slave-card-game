@@ -1,5 +1,6 @@
 // audio.ts — เสียง/สั่น (port จาก app.js: primeAudio, beep, tone, sfx + sfxPref)
 // singleton: AudioContext เดียวทั้งแอป, ปลดล็อก autoplay ด้วย gesture แรก
+import { t, initialLang } from './i18n';
 
 let audioCtx: AudioContext | null = null;
 
@@ -148,7 +149,7 @@ export function flashTitle() {
   let on = false;
   titleFlash = setInterval(() => {
     on = !on;
-    document.title = on ? '🔔 ถึงตาคุณ!' : baseTitle;
+    document.title = on ? t(initialLang(), 'tab.yourTurn') : baseTitle;
   }, 800);
 }
 export function stopFlash() {

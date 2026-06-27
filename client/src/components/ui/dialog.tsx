@@ -4,6 +4,8 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Icon } from '@/lib/icons';
+import { useStore } from '@/store';
+import { t } from '@/lib/i18n';
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
@@ -36,6 +38,7 @@ export function DialogContent({
   children,
 }: DialogContentProps) {
   // mounted คุมการ render (รอ exit-animation จบก่อน unmount), shown คุมคลาส .open
+  const lang = useStore((s) => s.lang);
   const [mounted, setMounted] = useState(open);
   const [shown, setShown] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -74,7 +77,7 @@ export function DialogContent({
       >
         <div className={`modal-box ${className}`.trim()}>
           {showClose && (
-            <DialogPrimitive.Close className="dialog-close" aria-label="ปิด">
+            <DialogPrimitive.Close className="dialog-close" aria-label={t(lang, 'dialog.close')}>
               <Icon name="x" />
             </DialogPrimitive.Close>
           )}

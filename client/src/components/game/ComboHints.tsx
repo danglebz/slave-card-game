@@ -4,13 +4,16 @@ import type { RoomState } from '@shared/types';
 import { detectCombos } from '@/lib/gameLogic';
 import { Icon } from '@/lib/icons';
 import { useStore } from '@/store';
+import { t } from '@/lib/i18n';
 
 export function ComboHints({ s }: { s: RoomState }) {
   const selected = useStore((st) => st.selected);
   const setSelected = useStore((st) => st.setSelected);
   const clearSelected = useStore((st) => st.clearSelected);
+  const lang = useStore((st) => st.lang);
 
-  const combos = s.phase === 'playing' && s.hand && s.hand.length ? detectCombos(s.hand) : [];
+  const combos =
+    s.phase === 'playing' && s.hand && s.hand.length ? detectCombos(s.hand, lang) : [];
 
   if (!combos.length) {
     return <div id="combo-hints" className="hidden" />;
@@ -22,7 +25,7 @@ export function ComboHints({ s }: { s: RoomState }) {
   return (
     <div id="combo-hints">
       <span className="combo-hints-label">
-        <Icon name="bomb" /> บอมบ์ในมือ:
+        <Icon name="bomb" /> {t(lang, 'combo.hintsLabel')}
       </span>
       {combos.map((cb, i) => {
         const active = isActive(cb.ids);

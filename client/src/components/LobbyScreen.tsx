@@ -98,14 +98,14 @@ export function LobbyScreen() {
     if (lobbyTimer.current) clearTimeout(lobbyTimer.current);
     lobbyTimer.current = setTimeout(() => {
       endAction();
-      showToast('เชื่อมต่อช้า ลองอีกครั้ง', 'error');
+      showToast(t(lang, 'lobby.slow'), 'error');
     }, 10000);
     return true;
   }
 
   function onCreate() {
     const res = validateField(NameSchema, name);
-    setNameErr(res.ok ? null : res.message);
+    setNameErr(res.ok ? null : t(lang, res.message));
     if (!res.ok) return;
     localStorage.setItem('name', res.value);
     if (startAction('create')) socket.emit('create', { name: res.value, color: colorRef.current });
@@ -114,8 +114,8 @@ export function LobbyScreen() {
   function onJoin() {
     const nameRes = validateField(NameSchema, name);
     const codeRes = validateField(CodeSchema, code);
-    setNameErr(nameRes.ok ? null : nameRes.message);
-    setCodeErr(codeRes.ok ? null : codeRes.message);
+    setNameErr(nameRes.ok ? null : t(lang, nameRes.message));
+    setCodeErr(codeRes.ok ? null : t(lang, codeRes.message));
     if (!nameRes.ok || !codeRes.ok) return;
     localStorage.setItem('name', nameRes.value);
     if (startAction('join'))
@@ -155,8 +155,8 @@ export function LobbyScreen() {
             id="install-btn"
             className={`corner-btn corner-install${canInstall ? '' : ' hidden'}`}
             type="button"
-            title="ติดตั้งแอปลงเครื่อง"
-            aria-label="ติดตั้งแอป"
+            title={t(lang, 'lobby.install')}
+            aria-label={t(lang, 'lobby.install')}
             onClick={onInstall}
           >
             <Icon name="download" />
@@ -214,7 +214,7 @@ export function LobbyScreen() {
           >
             {loading === 'create' ? (
               <>
-                <Icon name="loader-circle" className="spin" /> กำลังสร้างห้อง...
+                <Icon name="loader-circle" className="spin" /> {t(lang, 'lobby.creating')}
               </>
             ) : (
               <>
@@ -255,7 +255,7 @@ export function LobbyScreen() {
               >
                 {loading === 'join' ? (
                   <>
-                    <Icon name="loader-circle" className="spin" /> กำลังเข้าห้อง...
+                    <Icon name="loader-circle" className="spin" /> {t(lang, 'lobby.joining')}
                   </>
                 ) : (
                   <>
@@ -292,7 +292,7 @@ export function LobbyScreen() {
             href="https://github.com/Danglebz/slave-card-game/blob/main/CHANGELOG.md"
             target="_blank"
             rel="noopener"
-            title="ดู changelog"
+            title={t(lang, 'lobby.changelog')}
           >
             v{__APP_VERSION__}
           </a>

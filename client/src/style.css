@@ -531,6 +531,19 @@ button.loading:disabled {
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
+/* ปุ่มเตะผู้เล่น (host controls) — เล็ก ชิดขวาในแถว */
+.kick-btn {
+  min-height: 2rem;
+  padding: 0 12px;
+  flex: none;
+  font-size: 0.82rem;
+}
+/* กลุ่มปุ่มฝั่งขวาของ topbar (ผู้ชม · สกอร์บอร์ด · ตั้งค่า) — อยู่ติดกัน */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 /* ปุ่มไอคอนกลม (เฟืองตั้งค่า) บน topbar */
 .icon-btn {
   min-height: 2.1rem;
@@ -1206,6 +1219,24 @@ button.loading:disabled {
     0 0 0 2px var(--primary),
     0 4px 18px var(--primary-soft-2);
   transform: translateY(-2px);
+  animation: turnPop 0.34s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+/* เด้งรับเบาๆ เมื่อชิปนี้ถึงตา (class .turn ถูกเพิ่ม → animation เล่นครั้งเดียว) */
+@keyframes turnPop {
+  0% {
+    transform: translateY(-2px) scale(0.95);
+  }
+  55% {
+    transform: translateY(-5px) scale(1.06);
+  }
+  100% {
+    transform: translateY(-2px) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .player-chip.turn {
+    animation: none;
+  }
 }
 .player-chip.finished {
   opacity: 0.55;
@@ -1315,11 +1346,11 @@ button.loading:disabled {
   align-items: center;
 }
 
-/* อนิเมชันไพ่ลงกอง — เด้งเข้าทีละใบ */
+/* อนิเมชันไพ่ลงกอง — สไลด์เข้าจากทิศที่นั่งคนลง (--from-x/--from-y ตั้งจาก Pile.tsx) */
 @keyframes cardIn {
   from {
     opacity: 0;
-    transform: translateY(-16px) scale(0.82);
+    transform: translate(var(--from-x, 0px), var(--from-y, -16px)) scale(0.82);
   }
   to {
     opacity: 1;
@@ -1327,7 +1358,7 @@ button.loading:disabled {
   }
 }
 #pile-cards.deal .playing-card {
-  animation: cardIn 0.26s cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+  animation: cardIn 0.3s cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
 }
 #pile-cards.deal .playing-card:nth-child(2) {
   animation-delay: 0.05s;

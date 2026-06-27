@@ -23,7 +23,10 @@ function flushStraightsOfLen(hand, L) {
     for (let i = 0; i + L <= cards.length; i++) {
       let ok = true;
       for (let k = 1; k < L; k++) {
-        if (cards[i + k].r !== cards[i + k - 1].r + 1) { ok = false; break; }
+        if (cards[i + k].r !== cards[i + k - 1].r + 1) {
+          ok = false;
+          break;
+        }
       }
       if (ok) out.push(cards.slice(i, i + L));
     }
@@ -48,7 +51,8 @@ export function botChoose(hand, pile) {
   else if (pile.type === 'straight') cands = flushStraightsOfLen(sorted, pile.len);
   // กองตอง/โฟร์/โหมดบอมบ์ → ต้องใช้บอมบ์แรงกว่า: บอทเลือกผ่าน (ไม่เปลืองบอมบ์)
 
-  let best = null, bestVal = Infinity;
+  let best = null,
+    bestVal = Infinity;
   for (const cards of cands) {
     const combo = identifyCombo(cards);
     if (combo && combo.type === pile.type && canBeat(pile, combo) && combo.value < bestVal) {

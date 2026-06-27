@@ -98,11 +98,13 @@ const DICT = {
 
 let lang = localStorage.getItem('lang') === 'en' ? 'en' : 'th';
 
-export function getLang() { return lang; }
+export function getLang() {
+  return lang;
+}
 
 // แปลคีย์ + แทนค่าตัวแปร {name}
 export function t(key, vars) {
-  let s = (DICT[lang] && DICT[lang][key]) ?? (DICT.th[key] ?? key);
+  let s = (DICT[lang] && DICT[lang][key]) ?? DICT.th[key] ?? key;
   if (vars) for (const k of Object.keys(vars)) s = s.replace(`{${k}}`, vars[k]);
   return s;
 }
@@ -110,9 +112,15 @@ export function t(key, vars) {
 // ใส่ข้อความตาม data-i18n / data-i18n-ph / data-i18n-title ทั้งหน้า
 export function applyI18n() {
   document.documentElement.lang = lang;
-  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
-  document.querySelectorAll('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
-  document.querySelectorAll('[data-i18n-title]').forEach((el) => { el.title = t(el.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach((el) => {
+    el.placeholder = t(el.dataset.i18nPh);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+    el.title = t(el.dataset.i18nTitle);
+  });
 }
 
 export function setLang(next) {

@@ -1,258 +1,477 @@
 <!doctype html>
 <html lang="th">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <meta name="theme-color" content="#0f5132" />
-  <title>ไพ่สลาฟ</title>
-  <link rel="manifest" href="/manifest.webmanifest" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="ไพ่สลาฟ" />
-  <link rel="icon" href="/favicon.ico" sizes="any" />
-  <link rel="icon" href="/favicon-32x32.png" type="image/png" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-</head>
-<body>
-  <!-- progress bar บนสุด (shadcn) — โหลดหน้า / ระหว่างสร้าง-เข้าห้อง -->
-  <div id="progress-bar" class="progress-bar" role="progressbar" aria-hidden="true"></div>
-  <!-- สถานะการเชื่อมต่อ — โผล่ตอนเน็ตหลุด -->
-  <div id="conn-banner" class="conn-banner hidden" role="status"><i data-lucide="wifi-off"></i> <span data-i18n="banner.conn">การเชื่อมต่อหลุด — กำลังเชื่อมต่อใหม่…</span></div>
-  <div id="app">
-    <!-- หน้าเข้าห้อง -->
-    <section id="lobby-screen" class="screen">
-      <div class="card-panel">
-        <button id="install-btn" class="corner-btn corner-tl hidden" type="button" title="ติดตั้งแอปลงเครื่อง" aria-label="ติดตั้งแอป"><i data-lucide="download"></i></button>
-        <a class="corner-btn corner-tr" href="https://github.com/Danglebz/slave-card-game" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
-          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-        </a>
-        <img class="project-logo" src="/logo.png" alt="" aria-hidden="true" />
-        <h1>ไพ่สลาฟ</h1>
-        <p class="sub" data-i18n="lobby.sub">เกมเดียวที่หัวหน้ายอมเป็นสลาฟ</p>
-        <div class="field">
-          <div class="input-icon">
-            <i data-lucide="user"></i>
-            <input id="name-input" class="text-center" maxlength="16" placeholder="ใส่ชื่อของคุณ" data-i18n-ph="lobby.name" autocomplete="off" aria-describedby="name-error" />
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <meta name="theme-color" content="#0f5132" />
+    <title>ไพ่สลาฟ</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="ไพ่สลาฟ" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/favicon-32x32.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sarabun:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- progress bar บนสุด (shadcn) — โหลดหน้า / ระหว่างสร้าง-เข้าห้อง -->
+    <div id="progress-bar" class="progress-bar" role="progressbar" aria-hidden="true"></div>
+    <!-- สถานะการเชื่อมต่อ — โผล่ตอนเน็ตหลุด -->
+    <div id="conn-banner" class="conn-banner hidden" role="status">
+      <i data-lucide="wifi-off"></i>
+      <span data-i18n="banner.conn">การเชื่อมต่อหลุด — กำลังเชื่อมต่อใหม่…</span>
+    </div>
+    <div id="app">
+      <!-- หน้าเข้าห้อง -->
+      <section id="lobby-screen" class="screen">
+        <div class="card-panel">
+          <button
+            id="install-btn"
+            class="corner-btn corner-tl hidden"
+            type="button"
+            title="ติดตั้งแอปลงเครื่อง"
+            aria-label="ติดตั้งแอป"
+          >
+            <i data-lucide="download"></i>
+          </button>
+          <a
+            class="corner-btn corner-tr"
+            href="https://github.com/Danglebz/slave-card-game"
+            target="_blank"
+            rel="noopener"
+            title="GitHub"
+            aria-label="GitHub"
+          >
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor">
+              <path
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"
+              />
+            </svg>
+          </a>
+          <img class="project-logo" src="/logo.png" alt="" aria-hidden="true" />
+          <h1>ไพ่สลาฟ</h1>
+          <p class="sub" data-i18n="lobby.sub">เกมเดียวที่หัวหน้ายอมเป็นสลาฟ</p>
+          <div class="field">
+            <div class="input-icon">
+              <i data-lucide="user"></i>
+              <input
+                id="name-input"
+                class="text-center"
+                maxlength="16"
+                placeholder="ใส่ชื่อของคุณ"
+                data-i18n-ph="lobby.name"
+                autocomplete="off"
+                aria-describedby="name-error"
+              />
+            </div>
+            <p class="field-error" id="name-error" role="alert"></p>
           </div>
-          <p class="field-error" id="name-error" role="alert"></p>
-        </div>
-        <button id="create-btn" class="primary"><i data-lucide="plus"></i> <span data-i18n="lobby.create">สร้างห้องใหม่</span></button>
-        <div class="divider"><span data-i18n="lobby.or">หรือเข้าห้องที่มีอยู่</span></div>
-        <div class="field">
-          <div class="input-group">
-            <span class="input-addon"><i data-lucide="hash"></i></span>
-            <input id="code-input" maxlength="4" placeholder="รหัสห้อง" data-i18n-ph="lobby.code" autocomplete="off" aria-describedby="code-error" />
-            <button id="join-btn" class="primary"><i data-lucide="log-in"></i> <span data-i18n="lobby.join">เข้าห้อง</span></button>
+          <button id="create-btn" class="primary">
+            <i data-lucide="plus"></i> <span data-i18n="lobby.create">สร้างห้องใหม่</span>
+          </button>
+          <div class="divider"><span data-i18n="lobby.or">หรือเข้าห้องที่มีอยู่</span></div>
+          <div class="field">
+            <div class="input-group">
+              <span class="input-addon"><i data-lucide="hash"></i></span>
+              <input
+                id="code-input"
+                maxlength="4"
+                placeholder="รหัสห้อง"
+                data-i18n-ph="lobby.code"
+                autocomplete="off"
+                aria-describedby="code-error"
+              />
+              <button id="join-btn" class="primary">
+                <i data-lucide="log-in"></i> <span data-i18n="lobby.join">เข้าห้อง</span>
+              </button>
+            </div>
+            <p class="field-error" id="code-error" role="alert"></p>
           </div>
-          <p class="field-error" id="code-error" role="alert"></p>
+          <a id="rules-btn" class="link-btn" role="button" tabindex="0"
+            ><i data-lucide="book-open"></i>
+            <span data-i18n="lobby.rules">กติกา / วิธีเล่น</span></a
+          >
         </div>
-        <a id="rules-btn" class="link-btn" role="button" tabindex="0"><i data-lucide="book-open"></i> <span data-i18n="lobby.rules">กติกา / วิธีเล่น</span></a>
-      </div>
-      <footer class="lobby-foot">
-        <a id="app-version" class="app-version" href="https://github.com/Danglebz/slave-card-game/blob/main/CHANGELOG.md" target="_blank" rel="noopener" title="ดู changelog"></a>
-      </footer>
-    </section>
+        <footer class="lobby-foot">
+          <a
+            id="app-version"
+            class="app-version"
+            href="https://github.com/Danglebz/slave-card-game/blob/main/CHANGELOG.md"
+            target="_blank"
+            rel="noopener"
+            title="ดู changelog"
+          ></a>
+        </footer>
+      </section>
 
-    <!-- หน้าโต๊ะเล่น -->
-    <section id="game-screen" class="screen hidden">
-      <header id="topbar">
-        <button class="room-code" id="room-code-box" type="button" title="คลิกเพื่อคัดลอกรหัสห้อง">
-          <i data-lucide="hash"></i><strong id="room-code"></strong><i data-lucide="copy" class="room-copy-ico"></i>
-        </button>
-        <span id="spectator-count" class="spec-count hidden" title="ผู้ชม"><i data-lucide="eye"></i> <span id="spec-n">0</span></span>
-        <button id="share-btn" class="icon-btn hidden" type="button" title="แชร์ห้อง (QR)" aria-label="แชร์ห้อง"><i data-lucide="qr-code"></i></button>
-        <button id="settings-btn" class="icon-btn" type="button" title="ตั้งค่า" aria-label="ตั้งค่า"><i data-lucide="settings"></i></button>
-      </header>
-      <div id="spectator-banner" class="spectator-banner hidden"><i data-lucide="eye"></i> <span data-i18n="banner.spectator">คุณกำลังดูอยู่ — จะได้เข้าเล่นรอบถัดไป</span></div>
-
-      <!-- โต๊ะ 3×3: กองไพ่ตรงกลาง (5) ผู้เล่นล้อมรอบ บน(8)/ซ้าย(4)/ขวา(6)/ล่าง(2) -->
-      <div id="table">
-        <div id="dir-indicator"></div>
-        <div class="seat" id="seat-tl"></div>
-        <div class="seat" id="seat-top"></div>
-        <div class="seat" id="seat-tr"></div>
-        <div class="seat" id="seat-left"></div>
-        <div class="pile-center">
-          <div id="pile-label">กองบนโต๊ะ</div>
-          <div id="pile-cards"></div>
-          <div id="turn-info"></div>
-          <div id="turn-timer" class="turn-timer hidden" aria-hidden="true"><i data-lucide="timer"></i><span id="turn-timer-sec"></span></div>
+      <!-- หน้าโต๊ะเล่น -->
+      <section id="game-screen" class="screen hidden">
+        <header id="topbar">
+          <button
+            class="room-code"
+            id="room-code-box"
+            type="button"
+            title="คลิกเพื่อคัดลอกรหัสห้อง"
+          >
+            <i data-lucide="hash"></i><strong id="room-code"></strong
+            ><i data-lucide="copy" class="room-copy-ico"></i>
+          </button>
+          <span id="spectator-count" class="spec-count hidden" title="ผู้ชม"
+            ><i data-lucide="eye"></i> <span id="spec-n">0</span></span
+          >
+          <button
+            id="share-btn"
+            class="icon-btn hidden"
+            type="button"
+            title="แชร์ห้อง (QR)"
+            aria-label="แชร์ห้อง"
+          >
+            <i data-lucide="qr-code"></i>
+          </button>
+          <button
+            id="settings-btn"
+            class="icon-btn"
+            type="button"
+            title="ตั้งค่า"
+            aria-label="ตั้งค่า"
+          >
+            <i data-lucide="settings"></i>
+          </button>
+        </header>
+        <div id="spectator-banner" class="spectator-banner hidden">
+          <i data-lucide="eye"></i>
+          <span data-i18n="banner.spectator">คุณกำลังดูอยู่ — จะได้เข้าเล่นรอบถัดไป</span>
         </div>
-        <div class="seat" id="seat-right"></div>
-        <div class="seat" id="seat-bl"></div>
-        <div class="seat" id="seat-bottom"></div>
-        <div class="seat" id="seat-br"></div>
-      </div>
 
-      <div id="log"></div>
-
-      <div id="hand-area">
-        <div id="bot-controls" class="bot-controls hidden">
-          <button id="add-bot-btn" type="button"><i data-lucide="bot"></i> <span data-i18n="game.addBot">เพิ่มบอท</span></button>
-          <button id="remove-bot-btn" type="button"><i data-lucide="bot-off"></i> <span data-i18n="game.removeBot">ลบบอท</span></button>
-          <button id="shuffle-btn" type="button"><i data-lucide="shuffle"></i> <span data-i18n="game.shuffle">สลับที่นั่ง</span></button>
-        </div>
-        <div id="combo-hints" class="hidden"></div>
-        <button id="sort-toggle" type="button"><i data-lucide="list-ordered"></i> เรียงตามเลข</button>
-        <div id="hand"></div>
-        <div id="actions">
-          <button id="play-btn" class="primary" disabled><i data-lucide="play"></i> <span data-i18n="game.play">ลงไพ่</span></button>
-          <button id="pass-btn" disabled><i data-lucide="skip-forward"></i> <span data-i18n="game.pass">ผ่าน</span></button>
-          <button id="give-btn" class="primary hidden" disabled><i data-lucide="gift"></i> <span data-i18n="game.give">ส่งไพ่แลก</span></button>
-          <button id="start-btn" class="primary hidden"><span data-i18n="game.start">เริ่มเกม</span></button>
-          <button id="again-btn" class="primary hidden"><i data-lucide="rotate-ccw"></i> <span data-i18n="game.again">เล่นรอบใหม่</span></button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ผลรอบ -->
-    <div id="result-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
-      <div class="modal-box">
-        <button class="dialog-close" type="button" data-dialog-close aria-label="ปิด"><i data-lucide="x"></i></button>
-        <h2 id="result-title"><i data-lucide="party-popper"></i> <span data-i18n="result.title">จบรอบ!</span></h2>
-        <ol id="result-list"></ol>
-        <button id="result-close" class="primary" type="button" data-dialog-close data-i18n="dialog.close">ปิด</button>
-      </div>
-    </div>
-
-    <!-- กติกา -->
-    <div id="rules-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="rules-title">
-      <div class="modal-box rules-box">
-        <button class="dialog-close" type="button" data-dialog-close aria-label="ปิด"><i data-lucide="x"></i></button>
-        <h2 id="rules-title"><i data-lucide="book-open"></i> กติกาไพ่สลาฟ</h2>
-        <div class="rules-content">
-          <h3><i data-lucide="layers"></i> อันดับไพ่</h3>
-          <p>ต่ำ→สูง: <b>3 4 5 6 7 8 9 10 J Q K A</b> แล้ว <b>2 สูงสุด</b><br>ดอกตัดสินเมื่อเท่ากัน: ♣ &lt; ♦ &lt; ♥ &lt; ♠</p>
-
-          <h3><i data-lucide="target"></i> ชุดที่ลงได้</h3>
-          <p>เดี่ยว · คู่ · ตอง · โฟร์ · <b>เรียง</b> (≥3 ใบ ต่อเนื่อง <b>ดอกเดียวกัน</b> ห้ามมี 2)<br>ต้องลงชุดประเภทเดียวกัน + สูงกว่ากองบนโต๊ะ</p>
-
-          <h3><i data-lucide="bomb"></i> บอมบ์ (กินกองเล็ก ไม่สนแต้ม)</h3>
-          <p><b>เดี่ยว</b> กินด้วย: ตอง · เรียงดอกเดียว 3 · เรียงดอกเดียว 5<br>
-          <b>คู่</b> กินด้วย: โฟร์ · เรียงดอกเดียว 4 · เรียงดอกเดียว 6</p>
-          <p>ความแรง: เรียง3 &lt; ตอง &lt; เรียง4 &lt; โฟร์ &lt; เรียง5 &lt; เรียง6</p>
-
-          <h3><i data-lucide="refresh-cw"></i> ผ่าน / เคลียร์กอง / สลับทิศ</h3>
-          <p>ผ่านแล้ว<b>ถูกข้าม</b>จนกว่ากองจะเคลียร์ · ทุกคนผ่านถึงเจ้าของกอง → ล้างกอง นำใหม่<br>
-          ถ้าเจ้าของกองหมดมือแล้วไม่มีใครกินได้ → <b>สลับทิศ</b> (ขวา↔ซ้าย)</p>
-
-          <h3><i data-lucide="play"></i> เริ่มรอบ</h3>
-          <p><b>เกมแรก:</b> คนถือ 3♣ ขึ้นก่อน (กองแรกต้องมี 3♣)<br>
-          <b>รอบ 2+:</b> สลาฟขึ้นก่อน ไม่ต้องมี 3♣ + หมุนหนีคิง</p>
-
-          <h3><i data-lucide="crown"></i> ยศ &amp; แลกไพ่</h3>
-          <p><i data-lucide="crown"></i> คิง · <i data-lucide="medal"></i> ควีน · <i data-lucide="award"></i> รองสลาฟ · <i data-lucide="link"></i> สลาฟ (ตามลำดับหมดมือ)<br>
-          รอบใหม่แลกไพ่: สลาฟ↔คิง 2 ใบ · รองสลาฟ↔ควีน 1 ใบ<br>
-          ผู้แพ้ให้<b>ไพ่สูงสุดอัตโนมัติ</b> · ผู้ชนะ<b>เลือกไพ่คืนเอง</b></p>
-
-          <h3><i data-lucide="link"></i> คิงตกบัลลังก์</h3>
-          <p>ถ้า<b>สลาฟหมดมือก่อนคิง</b> → คิงตกเป็นสลาฟ จบรอบ แจกใหม่ทันที แล้วแลกไพ่กับคิงใหม่</p>
-        </div>
-        <button id="rules-close" class="primary" type="button" data-dialog-close>ปิด</button>
-      </div>
-    </div>
-
-    <!-- แชร์ห้อง (QR) -->
-    <div id="share-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="share-title">
-      <div class="modal-box share-box">
-        <button class="dialog-close" type="button" data-dialog-close aria-label="ปิด"><i data-lucide="x"></i></button>
-        <h2 id="share-title"><i data-lucide="qr-code"></i> ชวนเพื่อนเข้าห้อง</h2>
-        <p class="share-sub">ให้เพื่อนใน Wi-Fi เดียวกัน <b>สแกน QR</b> หรือเปิดลิงก์ด้านล่าง</p>
-        <div class="share-code">รหัสห้อง <strong id="share-code"></strong></div>
-        <div id="share-qr" class="share-qr"><img id="share-qr-img" alt="QR เข้าห้อง" width="220" height="220" /></div>
-        <button id="share-link" class="share-link" type="button" title="คัดลอกลิงก์">
-          <span id="share-url" class="share-url"></span><i data-lucide="copy"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- ตั้งค่า -->
-    <div id="settings-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-      <div class="modal-box settings-box">
-        <button class="dialog-close" type="button" data-dialog-close aria-label="ปิด"><i data-lucide="x"></i></button>
-        <h2 id="settings-title"><i data-lucide="settings"></i> <span data-i18n="set.title">ตั้งค่า</span></h2>
-        <div class="settings-list">
-          <p class="settings-group-label"><i data-lucide="users"></i> <span data-i18n="set.room">ทั้งห้อง</span> <span id="settings-host-tag" class="settings-tag hidden" data-i18n="set.hostTag">หัวห้องปรับได้</span></p>
-          <label class="setting-row" for="set-timer">
-            <span class="setting-label"><i data-lucide="timer"></i> <span data-i18n="set.timer">จับเวลาต่อตา</span></span>
-            <input type="checkbox" id="set-timer" class="switch" />
-          </label>
-          <label class="setting-row" for="set-autopass">
-            <span class="setting-label"><i data-lucide="skip-forward"></i> <span data-i18n="set.autopass">ผ่านอัตโนมัติเมื่อหมดเวลา</span></span>
-            <input type="checkbox" id="set-autopass" class="switch" />
-          </label>
-          <div class="setting-row">
-            <span class="setting-label"><i data-lucide="clock"></i> <span data-i18n="set.turnsec">เวลาต่อตา</span></span>
-            <div class="seg" id="turn-seconds-seg" role="group" aria-label="เวลาต่อตา">
-              <button type="button" data-sec="15">15</button>
-              <button type="button" data-sec="30">30</button>
-              <button type="button" data-sec="45">45</button>
-              <button type="button" data-sec="60">60</button>
+        <!-- โต๊ะ 3×3: กองไพ่ตรงกลาง (5) ผู้เล่นล้อมรอบ บน(8)/ซ้าย(4)/ขวา(6)/ล่าง(2) -->
+        <div id="table">
+          <div id="dir-indicator"></div>
+          <div class="seat" id="seat-tl"></div>
+          <div class="seat" id="seat-top"></div>
+          <div class="seat" id="seat-tr"></div>
+          <div class="seat" id="seat-left"></div>
+          <div class="pile-center">
+            <div id="pile-label">กองบนโต๊ะ</div>
+            <div id="pile-cards"></div>
+            <div id="turn-info"></div>
+            <div id="turn-timer" class="turn-timer hidden" aria-hidden="true">
+              <i data-lucide="timer"></i><span id="turn-timer-sec"></span>
             </div>
           </div>
+          <div class="seat" id="seat-right"></div>
+          <div class="seat" id="seat-bl"></div>
+          <div class="seat" id="seat-bottom"></div>
+          <div class="seat" id="seat-br"></div>
+        </div>
 
-          <p class="settings-group-label"><i data-lucide="user"></i> <span data-i18n="set.personal">ส่วนตัว</span></p>
-          <div class="setting-row">
-            <span class="setting-label"><i data-lucide="languages"></i> <span data-i18n="set.lang">ภาษา</span></span>
-            <div class="seg" id="lang-seg" role="group" aria-label="Language">
-              <button type="button" data-lang="th">ไทย</button>
-              <button type="button" data-lang="en">EN</button>
+        <div id="log"></div>
+
+        <div id="hand-area">
+          <div id="bot-controls" class="bot-controls hidden">
+            <button id="add-bot-btn" type="button">
+              <i data-lucide="bot"></i> <span data-i18n="game.addBot">เพิ่มบอท</span>
+            </button>
+            <button id="remove-bot-btn" type="button">
+              <i data-lucide="bot-off"></i> <span data-i18n="game.removeBot">ลบบอท</span>
+            </button>
+            <button id="shuffle-btn" type="button">
+              <i data-lucide="shuffle"></i> <span data-i18n="game.shuffle">สลับที่นั่ง</span>
+            </button>
+          </div>
+          <div id="combo-hints" class="hidden"></div>
+          <button id="sort-toggle" type="button">
+            <i data-lucide="list-ordered"></i> เรียงตามเลข
+          </button>
+          <div id="hand"></div>
+          <div id="actions">
+            <button id="play-btn" class="primary" disabled>
+              <i data-lucide="play"></i> <span data-i18n="game.play">ลงไพ่</span>
+            </button>
+            <button id="pass-btn" disabled>
+              <i data-lucide="skip-forward"></i> <span data-i18n="game.pass">ผ่าน</span>
+            </button>
+            <button id="give-btn" class="primary hidden" disabled>
+              <i data-lucide="gift"></i> <span data-i18n="game.give">ส่งไพ่แลก</span>
+            </button>
+            <button id="start-btn" class="primary hidden">
+              <span data-i18n="game.start">เริ่มเกม</span>
+            </button>
+            <button id="again-btn" class="primary hidden">
+              <i data-lucide="rotate-ccw"></i> <span data-i18n="game.again">เล่นรอบใหม่</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ผลรอบ -->
+      <div
+        id="result-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="result-title"
+      >
+        <div class="modal-box">
+          <button class="dialog-close" type="button" data-dialog-close aria-label="ปิด">
+            <i data-lucide="x"></i>
+          </button>
+          <h2 id="result-title">
+            <i data-lucide="party-popper"></i> <span data-i18n="result.title">จบรอบ!</span>
+          </h2>
+          <ol id="result-list"></ol>
+          <button
+            id="result-close"
+            class="primary"
+            type="button"
+            data-dialog-close
+            data-i18n="dialog.close"
+          >
+            ปิด
+          </button>
+        </div>
+      </div>
+
+      <!-- กติกา -->
+      <div
+        id="rules-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="rules-title"
+      >
+        <div class="modal-box rules-box">
+          <button class="dialog-close" type="button" data-dialog-close aria-label="ปิด">
+            <i data-lucide="x"></i>
+          </button>
+          <h2 id="rules-title"><i data-lucide="book-open"></i> กติกาไพ่สลาฟ</h2>
+          <div class="rules-content">
+            <h3><i data-lucide="layers"></i> อันดับไพ่</h3>
+            <p>
+              ต่ำ→สูง: <b>3 4 5 6 7 8 9 10 J Q K A</b> แล้ว <b>2 สูงสุด</b
+              ><br />ดอกตัดสินเมื่อเท่ากัน: ♣ &lt; ♦ &lt; ♥ &lt; ♠
+            </p>
+
+            <h3><i data-lucide="target"></i> ชุดที่ลงได้</h3>
+            <p>
+              เดี่ยว · คู่ · ตอง · โฟร์ · <b>เรียง</b> (≥3 ใบ ต่อเนื่อง <b>ดอกเดียวกัน</b> ห้ามมี
+              2)<br />ต้องลงชุดประเภทเดียวกัน + สูงกว่ากองบนโต๊ะ
+            </p>
+
+            <h3><i data-lucide="bomb"></i> บอมบ์ (กินกองเล็ก ไม่สนแต้ม)</h3>
+            <p>
+              <b>เดี่ยว</b> กินด้วย: ตอง · เรียงดอกเดียว 3 · เรียงดอกเดียว 5<br />
+              <b>คู่</b> กินด้วย: โฟร์ · เรียงดอกเดียว 4 · เรียงดอกเดียว 6
+            </p>
+            <p>ความแรง: เรียง3 &lt; ตอง &lt; เรียง4 &lt; โฟร์ &lt; เรียง5 &lt; เรียง6</p>
+
+            <h3><i data-lucide="refresh-cw"></i> ผ่าน / เคลียร์กอง / สลับทิศ</h3>
+            <p>
+              ผ่านแล้ว<b>ถูกข้าม</b>จนกว่ากองจะเคลียร์ · ทุกคนผ่านถึงเจ้าของกอง → ล้างกอง นำใหม่<br />
+              ถ้าเจ้าของกองหมดมือแล้วไม่มีใครกินได้ → <b>สลับทิศ</b> (ขวา↔ซ้าย)
+            </p>
+
+            <h3><i data-lucide="play"></i> เริ่มรอบ</h3>
+            <p>
+              <b>เกมแรก:</b> คนถือ 3♣ ขึ้นก่อน (กองแรกต้องมี 3♣)<br />
+              <b>รอบ 2+:</b> สลาฟขึ้นก่อน ไม่ต้องมี 3♣ + หมุนหนีคิง
+            </p>
+
+            <h3><i data-lucide="crown"></i> ยศ &amp; แลกไพ่</h3>
+            <p>
+              <i data-lucide="crown"></i> คิง · <i data-lucide="medal"></i> ควีน ·
+              <i data-lucide="award"></i> รองสลาฟ · <i data-lucide="link"></i> สลาฟ
+              (ตามลำดับหมดมือ)<br />
+              รอบใหม่แลกไพ่: สลาฟ↔คิง 2 ใบ · รองสลาฟ↔ควีน 1 ใบ<br />
+              ผู้แพ้ให้<b>ไพ่สูงสุดอัตโนมัติ</b> · ผู้ชนะ<b>เลือกไพ่คืนเอง</b>
+            </p>
+
+            <h3><i data-lucide="link"></i> คิงตกบัลลังก์</h3>
+            <p>
+              ถ้า<b>สลาฟหมดมือก่อนคิง</b> → คิงตกเป็นสลาฟ จบรอบ แจกใหม่ทันที แล้วแลกไพ่กับคิงใหม่
+            </p>
+          </div>
+          <button id="rules-close" class="primary" type="button" data-dialog-close>ปิด</button>
+        </div>
+      </div>
+
+      <!-- แชร์ห้อง (QR) -->
+      <div
+        id="share-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-title"
+      >
+        <div class="modal-box share-box">
+          <button class="dialog-close" type="button" data-dialog-close aria-label="ปิด">
+            <i data-lucide="x"></i>
+          </button>
+          <h2 id="share-title"><i data-lucide="qr-code"></i> ชวนเพื่อนเข้าห้อง</h2>
+          <p class="share-sub">ให้เพื่อนใน Wi-Fi เดียวกัน <b>สแกน QR</b> หรือเปิดลิงก์ด้านล่าง</p>
+          <div class="share-code">รหัสห้อง <strong id="share-code"></strong></div>
+          <div id="share-qr" class="share-qr">
+            <img id="share-qr-img" alt="QR เข้าห้อง" width="220" height="220" />
+          </div>
+          <button id="share-link" class="share-link" type="button" title="คัดลอกลิงก์">
+            <span id="share-url" class="share-url"></span><i data-lucide="copy"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ตั้งค่า -->
+      <div
+        id="settings-modal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+      >
+        <div class="modal-box settings-box">
+          <button class="dialog-close" type="button" data-dialog-close aria-label="ปิด">
+            <i data-lucide="x"></i>
+          </button>
+          <h2 id="settings-title">
+            <i data-lucide="settings"></i> <span data-i18n="set.title">ตั้งค่า</span>
+          </h2>
+          <div class="settings-list">
+            <p class="settings-group-label">
+              <i data-lucide="users"></i> <span data-i18n="set.room">ทั้งห้อง</span>
+              <span id="settings-host-tag" class="settings-tag hidden" data-i18n="set.hostTag"
+                >หัวห้องปรับได้</span
+              >
+            </p>
+            <label class="setting-row" for="set-timer">
+              <span class="setting-label"
+                ><i data-lucide="timer"></i> <span data-i18n="set.timer">จับเวลาต่อตา</span></span
+              >
+              <input type="checkbox" id="set-timer" class="switch" />
+            </label>
+            <label class="setting-row" for="set-autopass">
+              <span class="setting-label"
+                ><i data-lucide="skip-forward"></i>
+                <span data-i18n="set.autopass">ผ่านอัตโนมัติเมื่อหมดเวลา</span></span
+              >
+              <input type="checkbox" id="set-autopass" class="switch" />
+            </label>
+            <div class="setting-row">
+              <span class="setting-label"
+                ><i data-lucide="clock"></i> <span data-i18n="set.turnsec">เวลาต่อตา</span></span
+              >
+              <div class="seg" id="turn-seconds-seg" role="group" aria-label="เวลาต่อตา">
+                <button type="button" data-sec="15">15</button>
+                <button type="button" data-sec="30">30</button>
+                <button type="button" data-sec="45">45</button>
+                <button type="button" data-sec="60">60</button>
+              </div>
+            </div>
+
+            <p class="settings-group-label">
+              <i data-lucide="user"></i> <span data-i18n="set.personal">ส่วนตัว</span>
+            </p>
+            <div class="setting-row">
+              <span class="setting-label"
+                ><i data-lucide="languages"></i> <span data-i18n="set.lang">ภาษา</span></span
+              >
+              <div class="seg" id="lang-seg" role="group" aria-label="Language">
+                <button type="button" data-lang="th">ไทย</button>
+                <button type="button" data-lang="en">EN</button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <span class="setting-label"
+                ><i data-lucide="palette"></i> <span data-i18n="set.color">สีประจำตัว</span></span
+              >
+              <input
+                type="text"
+                id="color-custom"
+                class="coloris color-custom"
+                value="#3b82f6"
+                title="เลือกสีเอง"
+                readonly
+              />
+            </div>
+            <p class="settings-sub-label">
+              <i data-lucide="bell"></i> <span data-i18n="set.notif">แจ้งเตือนเมื่อถึงตา</span>
+            </p>
+            <label class="setting-row setting-row-sub" for="set-notif-sound">
+              <span class="setting-label"
+                ><i data-lucide="volume-2"></i> <span data-i18n="set.notifSound">เสียง</span></span
+              >
+              <input type="checkbox" id="set-notif-sound" class="switch" />
+            </label>
+            <label class="setting-row setting-row-sub" for="set-notif-vibrate">
+              <span class="setting-label"
+                ><i data-lucide="vibrate"></i> <span data-i18n="set.notifVibrate">สั่น</span></span
+              >
+              <input type="checkbox" id="set-notif-vibrate" class="switch" />
+            </label>
+            <p class="settings-sub-label">
+              <i data-lucide="volume-2"></i> <span data-i18n="set.sfx">เสียงเอฟเฟกต์</span>
+            </p>
+            <label class="setting-row setting-row-sub" for="set-sfx-play">
+              <span class="setting-label"
+                ><i data-lucide="play"></i>
+                <span data-i18n="set.sfxPlay">ลงไพ่ / เคลียร์กอง</span></span
+              >
+              <input type="checkbox" id="set-sfx-play" class="switch" />
+            </label>
+            <label class="setting-row setting-row-sub" for="set-sfx-bomb">
+              <span class="setting-label"
+                ><i data-lucide="bomb"></i> <span data-i18n="set.sfxBomb">บอมบ์</span></span
+              >
+              <input type="checkbox" id="set-sfx-bomb" class="switch" />
+            </label>
+            <label class="setting-row setting-row-sub" for="set-sfx-win">
+              <span class="setting-label"
+                ><i data-lucide="trophy"></i> <span data-i18n="set.sfxWin">ชนะ / แพ้</span></span
+              >
+              <input type="checkbox" id="set-sfx-win" class="switch" />
+            </label>
+            <div class="setting-row is-disabled">
+              <span class="setting-label"
+                ><i data-lucide="message-circle"></i> <span data-i18n="set.chat">แชท</span></span
+              >
+              <span class="setting-soon" data-i18n="set.soon">เร็วๆ นี้</span>
             </div>
           </div>
-          <div class="setting-row">
-            <span class="setting-label"><i data-lucide="palette"></i> <span data-i18n="set.color">สีประจำตัว</span></span>
-            <input type="text" id="color-custom" class="coloris color-custom" value="#3b82f6" title="เลือกสีเอง" readonly />
-          </div>
-          <p class="settings-sub-label"><i data-lucide="bell"></i> <span data-i18n="set.notif">แจ้งเตือนเมื่อถึงตา</span></p>
-          <label class="setting-row setting-row-sub" for="set-notif-sound">
-            <span class="setting-label"><i data-lucide="volume-2"></i> <span data-i18n="set.notifSound">เสียง</span></span>
-            <input type="checkbox" id="set-notif-sound" class="switch" />
-          </label>
-          <label class="setting-row setting-row-sub" for="set-notif-vibrate">
-            <span class="setting-label"><i data-lucide="vibrate"></i> <span data-i18n="set.notifVibrate">สั่น</span></span>
-            <input type="checkbox" id="set-notif-vibrate" class="switch" />
-          </label>
-          <p class="settings-sub-label"><i data-lucide="volume-2"></i> <span data-i18n="set.sfx">เสียงเอฟเฟกต์</span></p>
-          <label class="setting-row setting-row-sub" for="set-sfx-play">
-            <span class="setting-label"><i data-lucide="play"></i> <span data-i18n="set.sfxPlay">ลงไพ่ / เคลียร์กอง</span></span>
-            <input type="checkbox" id="set-sfx-play" class="switch" />
-          </label>
-          <label class="setting-row setting-row-sub" for="set-sfx-bomb">
-            <span class="setting-label"><i data-lucide="bomb"></i> <span data-i18n="set.sfxBomb">บอมบ์</span></span>
-            <input type="checkbox" id="set-sfx-bomb" class="switch" />
-          </label>
-          <label class="setting-row setting-row-sub" for="set-sfx-win">
-            <span class="setting-label"><i data-lucide="trophy"></i> <span data-i18n="set.sfxWin">ชนะ / แพ้</span></span>
-            <input type="checkbox" id="set-sfx-win" class="switch" />
-          </label>
-          <div class="setting-row is-disabled">
-            <span class="setting-label"><i data-lucide="message-circle"></i> <span data-i18n="set.chat">แชท</span></span>
-            <span class="setting-soon" data-i18n="set.soon">เร็วๆ นี้</span>
+          <button id="logout-btn" class="btn-destructive settings-logout" type="button">
+            <i data-lucide="door-open"></i> <span data-i18n="set.logout">ออกจากห้อง</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ยืนยันออกจากห้อง (AlertDialog) -->
+      <div
+        id="leave-modal"
+        class="modal hidden"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="leave-title"
+        aria-describedby="leave-desc"
+      >
+        <div class="modal-box alert-box">
+          <h2 id="leave-title"><i data-lucide="door-open"></i> ออกจากห้อง?</h2>
+          <p id="leave-desc" class="alert-desc"></p>
+          <div class="alert-actions">
+            <button class="btn-secondary" type="button" data-dialog-close>ยกเลิก</button>
+            <button id="leave-confirm" class="btn-destructive" type="button">ออกจากห้อง</button>
           </div>
         </div>
-        <button id="logout-btn" class="btn-destructive settings-logout" type="button"><i data-lucide="door-open"></i> <span data-i18n="set.logout">ออกจากห้อง</span></button>
       </div>
     </div>
 
-    <!-- ยืนยันออกจากห้อง (AlertDialog) -->
-    <div id="leave-modal" class="modal hidden" role="alertdialog" aria-modal="true" aria-labelledby="leave-title" aria-describedby="leave-desc">
-      <div class="modal-box alert-box">
-        <h2 id="leave-title"><i data-lucide="door-open"></i> ออกจากห้อง?</h2>
-        <p id="leave-desc" class="alert-desc"></p>
-        <div class="alert-actions">
-          <button class="btn-secondary" type="button" data-dialog-close>ยกเลิก</button>
-          <button id="leave-confirm" class="btn-destructive" type="button">ออกจากห้อง</button>
-        </div>
-      </div>
-    </div>
-  </div>
+    <div id="toast" class="toast hidden"></div>
 
-  <div id="toast" class="toast hidden"></div>
-
-  <script type="module" src="/src/app.js"></script>
-</body>
+    <script type="module" src="/src/app.js"></script>
+  </body>
 </html>

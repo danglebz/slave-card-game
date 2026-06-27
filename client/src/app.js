@@ -46,12 +46,22 @@ if (appVersionEl) appVersionEl.textContent = `v${__APP_VERSION__}`;
 
 // ---------- สถานะการเชื่อมต่อ (banner ตอนเน็ตหลุด/กำลังต่อใหม่) ----------
 let everConnected = false;
-function setConn(down) { document.getElementById('conn-banner').classList.toggle('hidden', !down); }
-socket.on('connect', () => { everConnected = true; setConn(false); });
-socket.on('disconnect', () => { if (everConnected) setConn(true); }); // ไม่โชว์ตอนโหลดครั้งแรก
+function setConn(down) {
+  document.getElementById('conn-banner').classList.toggle('hidden', !down);
+}
+socket.on('connect', () => {
+  everConnected = true;
+  setConn(false);
+});
+socket.on('disconnect', () => {
+  if (everConnected) setConn(true);
+}); // ไม่โชว์ตอนโหลดครั้งแรก
 socket.io.on('reconnect', () => setConn(false));
 // preview: พิมพ์ demoConn() ใน console เพื่อโชว์แบนเนอร์ชั่วคราว (ดีฟอลต์ 3 วิ)
-window.demoConn = (sec = 3) => { setConn(true); setTimeout(() => setConn(false), sec * 1000); };
+window.demoConn = (sec = 3) => {
+  setConn(true);
+  setTimeout(() => setConn(false), sec * 1000);
+};
 
 // ︎ = text-presentation selector: บังคับให้ดอกแสดงเป็นตัวอักษร (ไม่ใช่ emoji)
 // เพื่อให้สี CSS (.red) มีผลจริงบนมือถือ
@@ -67,7 +77,16 @@ let selected = new Set();
 let myState = null;
 
 // สีประจำตัว (ตรงกับ Room.COLORS ฝั่ง server) — เก็บใน localStorage, สุ่มให้ครั้งแรก
-const AVATAR_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#ec4899'];
+const AVATAR_COLORS = [
+  '#ef4444',
+  '#f97316',
+  '#eab308',
+  '#22c55e',
+  '#06b6d4',
+  '#3b82f6',
+  '#a855f7',
+  '#ec4899',
+];
 let avatarColor = localStorage.getItem('avatarColor');
 if (!AVATAR_COLORS.includes(avatarColor)) {
   avatarColor = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
@@ -78,10 +97,14 @@ $('color-custom').value = /^#[0-9a-f]{6}$/i.test(avatarColor) ? avatarColor : '#
 Coloris.init();
 Coloris({
   el: '#color-custom',
-  theme: 'pill', themeMode: 'dark', format: 'hex', alpha: false,
+  theme: 'pill',
+  themeMode: 'dark',
+  format: 'hex',
+  alpha: false,
   swatches: AVATAR_COLORS,
 });
-$('color-custom').addEventListener('input', () => { // อัปเดตสดตอนเลือก
+$('color-custom').addEventListener('input', () => {
+  // อัปเดตสดตอนเลือก
   avatarColor = $('color-custom').value;
   localStorage.setItem('avatarColor', avatarColor);
 });
@@ -92,22 +115,31 @@ applyI18n();
 function refreshLangUI() {
   applyI18n();
   $('sort-toggle').innerHTML = sortLabel();
-  $('lang-seg').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.lang === getLang()));
+  $('lang-seg')
+    .querySelectorAll('button')
+    .forEach((b) => b.classList.toggle('active', b.dataset.lang === getLang()));
   if (myState) render(myState); // อัปเดตข้อความ dynamic (turn-info, ปุ่มเริ่ม ฯลฯ)
   refreshIcons();
 }
-$('lang-seg').querySelectorAll('button').forEach((b) => {
-  b.onclick = () => { setLang(b.dataset.lang); refreshLangUI(); };
-});
-
+$('lang-seg')
+  .querySelectorAll('button')
+  .forEach((b) => {
+    b.onclick = () => {
+      setLang(b.dataset.lang);
+      refreshLangUI();
+    };
+  });
 
 // ---------- หน้าเข้าห้อง ----------
-function savedName() { return localStorage.getItem('slaveName') || ''; }
+function savedName() {
+  return localStorage.getItem('slaveName') || '';
+}
 $('name-input').value = savedName();
 
 // แสดง/ล้าง error ใต้ฟิลด์ (shadcn FormMessage) + ตั้ง aria-invalid
 function setFieldError(inputId, errorId, message) {
-  const input = $(inputId), err = $(errorId);
+  const input = $(inputId),
+    err = $(errorId);
   if (message) {
     err.innerHTML = `${icon('circle-alert')} ${esc(message)}`;
     input.setAttribute('aria-invalid', 'true');
@@ -119,14 +151,17 @@ function setFieldError(inputId, errorId, message) {
 }
 
 // ---------- Progress bar บนสุด (shadcn) — ref-count ให้ซ้อน action ได้ ----------
-let _progCount = 0, _progTimer = null, _progVal = 0;
+let _progCount = 0,
+  _progTimer = null,
+  _progVal = 0;
 function _progBegin() {
   const bar = $('progress-bar');
   _progVal = 8;
   bar.classList.add('active');
   bar.style.width = _progVal + '%';
   clearInterval(_progTimer);
-  _progTimer = setInterval(() => { // ค่อยๆ ไต่เข้าใกล้ 92% แล้วรอจังหวะ done
+  _progTimer = setInterval(() => {
+    // ค่อยๆ ไต่เข้าใกล้ 92% แล้วรอจังหวะ done
     _progVal += (92 - _progVal) * 0.12;
     $('progress-bar').style.width = _progVal.toFixed(1) + '%';
   }, 220);
@@ -135,10 +170,19 @@ function _progEnd() {
   clearInterval(_progTimer);
   const bar = $('progress-bar');
   bar.style.width = '100%';
-  setTimeout(() => { bar.classList.remove('active'); setTimeout(() => { bar.style.width = '0%'; }, 250); }, 180);
+  setTimeout(() => {
+    bar.classList.remove('active');
+    setTimeout(() => {
+      bar.style.width = '0%';
+    }, 250);
+  }, 180);
 }
-function progStart() { if (++_progCount === 1) _progBegin(); }
-function progDone() { if (_progCount > 0 && --_progCount === 0) _progEnd(); }
+function progStart() {
+  if (++_progCount === 1) _progBegin();
+}
+function progDone() {
+  if (_progCount > 0 && --_progCount === 0) _progEnd();
+}
 
 // ---------- ปุ่ม loading: สปินเนอร์ + ข้อความ + disabled (shadcn) ----------
 const _btnHTML = new WeakMap();
@@ -157,7 +201,8 @@ function setBtnLoading(btn, loading, label) {
 }
 
 // เริ่ม/จบ action ฟอร์มเข้าห้อง — ล็อกฟอร์ม + progress + timeout กันค้างถ้า server เงียบ
-let _lobbyTimer = null, _lobbyBtn = null;
+let _lobbyTimer = null,
+  _lobbyBtn = null;
 function startLobbyAction(btn, label) {
   if (_lobbyBtn) return false; // มี action ค้างอยู่แล้ว
   _lobbyBtn = btn;
@@ -166,7 +211,10 @@ function startLobbyAction(btn, label) {
   $('create-btn').disabled = $('join-btn').disabled = true;
   progStart();
   clearTimeout(_lobbyTimer);
-  _lobbyTimer = setTimeout(() => { endLobbyAction(); showLobbyError('เชื่อมต่อช้า ลองอีกครั้ง'); }, 10000);
+  _lobbyTimer = setTimeout(() => {
+    endLobbyAction();
+    showLobbyError('เชื่อมต่อช้า ลองอีกครั้ง');
+  }, 10000);
   return true;
 }
 function endLobbyAction() {
@@ -184,7 +232,8 @@ $('create-btn').onclick = () => {
   setFieldError('name-input', 'name-error', res.ok ? null : res.message);
   if (!res.ok) return;
   localStorage.setItem('slaveName', res.value);
-  if (startLobbyAction($('create-btn'), 'กำลังสร้างห้อง...')) socket.emit('create', { name: res.value, color: avatarColor });
+  if (startLobbyAction($('create-btn'), 'กำลังสร้างห้อง...'))
+    socket.emit('create', { name: res.value, color: avatarColor });
 };
 $('join-btn').onclick = () => {
   const nameRes = validateField(NameSchema, $('name-input').value);
@@ -193,17 +242,24 @@ $('join-btn').onclick = () => {
   setFieldError('code-input', 'code-error', codeRes.ok ? null : codeRes.message);
   if (!nameRes.ok || !codeRes.ok) return;
   localStorage.setItem('slaveName', nameRes.value);
-  if (startLobbyAction($('join-btn'), 'กำลังเข้าห้อง...')) socket.emit('join', { code: codeRes.value, name: nameRes.value, color: avatarColor });
+  if (startLobbyAction($('join-btn'), 'กำลังเข้าห้อง...'))
+    socket.emit('join', { code: codeRes.value, name: nameRes.value, color: avatarColor });
 };
 
 // ล้าง error ทันทีที่ผู้ใช้แก้ + กด Enter เพื่อ submit
 $('name-input').addEventListener('input', () => setFieldError('name-input', 'name-error', null));
 $('code-input').addEventListener('input', () => setFieldError('code-input', 'code-error', null));
-$('name-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('create-btn').click(); });
-$('code-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('join-btn').click(); });
+$('name-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') $('create-btn').click();
+});
+$('code-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') $('join-btn').click();
+});
 
 // error จาก server (เช่น ไม่พบห้อง) → Toast (บน-กลางจอ สีแดง)
-function showLobbyError(msg) { showToast(msg, { top: true, error: true, duration: 2500 }); }
+function showLobbyError(msg) {
+  showToast(msg, { top: true, error: true, duration: 2500 });
+}
 
 // เข้าห้องผ่าน URL ?room=CODE — ถ้ามีชื่อเก็บไว้แล้ว เข้าห้องอัตโนมัติเลย
 const urlRoom = new URLSearchParams(location.search).get('room');
@@ -212,14 +268,20 @@ if (urlRoom) {
   $('code-input').value = code; // เติมรหัสให้ แต่ "หุบ" ช่องไว้
   const name = savedName();
   // เข้าเลย / reconnect ที่นั่งเดิม — โชว์ loading ที่ปุ่มเข้าห้อง
-  if (name && startLobbyAction($('join-btn'), 'กำลังเข้าห้อง...')) socket.emit('join', { code, name, color: avatarColor });
+  if (name && startLobbyAction($('join-btn'), 'กำลังเข้าห้อง...'))
+    socket.emit('join', { code, name, color: avatarColor });
 }
 
 // ---------- socket events ----------
 // progress ตอนโหลดหน้า: เริ่มทันที จบเมื่อ socket เชื่อมต่อครั้งแรก
 let _firstConnect = true;
 progStart();
-socket.on('connect', () => { if (_firstConnect) { _firstConnect = false; progDone(); } });
+socket.on('connect', () => {
+  if (_firstConnect) {
+    _firstConnect = false;
+    progDone();
+  }
+});
 
 socket.on('joined', ({ code }) => {
   endLobbyAction();
@@ -263,8 +325,14 @@ $('start-btn').onclick = () => socket.emit('start');
 $('add-bot-btn').onclick = () => socket.emit('addBot');
 $('remove-bot-btn').onclick = () => socket.emit('removeBot');
 $('shuffle-btn').onclick = () => socket.emit('shuffleSeats');
-$('again-btn').onclick = () => { hideModal(); socket.emit('again'); };
-$('pass-btn').onclick = () => { socket.emit('pass'); selected.clear(); };
+$('again-btn').onclick = () => {
+  hideModal();
+  socket.emit('again');
+};
+$('pass-btn').onclick = () => {
+  socket.emit('pass');
+  selected.clear();
+};
 $('play-btn').onclick = () => {
   if (selected.size === 0) return;
   socket.emit('play', { cards: [...selected] });
@@ -284,22 +352,33 @@ function openLeaveConfirm() {
     : 'คุณกำลังจะออกจากห้องนี้';
   openDialog($('leave-modal'));
 }
-$('leave-confirm').onclick = () => { closeDialog($('leave-modal')); socket.emit('leave'); };
+$('leave-confirm').onclick = () => {
+  closeDialog($('leave-modal'));
+  socket.emit('leave');
+};
 
 // ---------- แชร์ห้อง (QR) ----------
-function roomCode() { return (myState && myState.code) || $('room-code').textContent.trim(); }
-function roomShareUrl() { return `${location.origin}/?room=${encodeURIComponent(roomCode())}`; }
+function roomCode() {
+  return (myState && myState.code) || $('room-code').textContent.trim();
+}
+function roomShareUrl() {
+  return `${location.origin}/?room=${encodeURIComponent(roomCode())}`;
+}
 $('share-btn').onclick = async () => {
   const url = roomShareUrl();
   $('share-code').textContent = roomCode();
   $('share-url').textContent = url.replace(/^https?:\/\//, ''); // ตัด scheme ให้อ่านสั้น
   try {
     const dataUrl = await QRCode.toDataURL(url, {
-      width: 440, margin: 1, errorCorrectionLevel: 'M',
+      width: 440,
+      margin: 1,
+      errorCorrectionLevel: 'M',
       color: { dark: '#18181b', light: '#ffffff' },
     });
     $('share-qr-img').src = dataUrl;
-  } catch (e) { $('share-qr-img').removeAttribute('src'); }
+  } catch {
+    $('share-qr-img').removeAttribute('src');
+  }
   openDialog($('share-modal'));
 };
 $('share-link').onclick = async () => {
@@ -308,8 +387,14 @@ $('share-link').onclick = async () => {
 };
 
 // ---------- ตั้งค่า (เฟือง) ----------
-$('settings-btn').onclick = () => { syncSettingsUI(myState); openDialog($('settings-modal')); };
-$('logout-btn').onclick = () => { closeDialog($('settings-modal')); openLeaveConfirm(); };
+$('settings-btn').onclick = () => {
+  syncSettingsUI(myState);
+  openDialog($('settings-modal'));
+};
+$('logout-btn').onclick = () => {
+  closeDialog($('settings-modal'));
+  openLeaveConfirm();
+};
 
 // แจ้งเตือนถึงตา = ส่วนตัว แยก เสียง/สั่น (migrate จากคีย์เดิม 'notif')
 const _oldNotif = localStorage.getItem('notif');
@@ -320,7 +405,10 @@ notifVibrate = notifVibrate === '1';
 $('set-notif-sound').onchange = () => {
   notifSound = $('set-notif-sound').checked;
   localStorage.setItem('notifSound', notifSound ? '1' : '0');
-  if (notifSound) { primeAudio(); beep(); } // ทดสอบ
+  if (notifSound) {
+    primeAudio();
+    beep();
+  } // ทดสอบ
 };
 $('set-notif-vibrate').onchange = () => {
   notifVibrate = $('set-notif-vibrate').checked;
@@ -332,13 +420,16 @@ $('set-notif-vibrate').onchange = () => {
 const sfxPref = {
   play: localStorage.getItem('sfx.play') !== '0', // ลงไพ่ / เคลียร์กอง
   bomb: localStorage.getItem('sfx.bomb') !== '0', // บอมบ์
-  win: localStorage.getItem('sfx.win') !== '0',   // ชนะ / แพ้
+  win: localStorage.getItem('sfx.win') !== '0', // ชนะ / แพ้
 };
 function bindSfxToggle(id, key, demo) {
   $(id).onchange = () => {
     sfxPref[key] = $(id).checked;
     localStorage.setItem(`sfx.${key}`, sfxPref[key] ? '1' : '0');
-    if (sfxPref[key]) { primeAudio(); sfx(demo); } // ตัวอย่างเสียง
+    if (sfxPref[key]) {
+      primeAudio();
+      sfx(demo);
+    } // ตัวอย่างเสียง
   };
 }
 bindSfxToggle('set-sfx-play', 'play', 'play');
@@ -353,12 +444,14 @@ function emitSettings() {
   socket.emit('settings', { timer: $('set-timer').checked, autoPass: $('set-autopass').checked });
 }
 // เวลาต่อตา = segmented control (หัวห้องคุม)
-$('turn-seconds-seg').querySelectorAll('button').forEach((btn) => {
-  btn.onclick = () => {
-    if (!myState?.youAreHost || $('set-timer').checked === false) return;
-    socket.emit('settings', { turnSeconds: Number(btn.dataset.sec) });
-  };
-});
+$('turn-seconds-seg')
+  .querySelectorAll('button')
+  .forEach((btn) => {
+    btn.onclick = () => {
+      if (!myState?.youAreHost || $('set-timer').checked === false) return;
+      socket.emit('settings', { turnSeconds: Number(btn.dataset.sec) });
+    };
+  });
 // อัปเดตหน้าตา settings ให้ตรงกับ state ปัจจุบัน + สิทธิ์หัวห้อง
 function syncSettingsUI(s) {
   const st = (s && s.settings) || { timer: true, autoPass: true };
@@ -369,13 +462,17 @@ function syncSettingsUI(s) {
   $('set-autopass').disabled = !isHost || st.timer === false; // ปิด timer แล้ว auto-pass ไม่มีผล
   // เวลาต่อตา: ไฮไลต์ค่าปัจจุบัน + ปิดใช้งานถ้าไม่ใช่หัวห้อง/ปิด timer
   const curSec = st.turnSeconds || 30;
-  $('turn-seconds-seg').querySelectorAll('button').forEach((btn) => {
-    btn.classList.toggle('active', Number(btn.dataset.sec) === curSec);
-    btn.disabled = !isHost || st.timer === false;
-  });
+  $('turn-seconds-seg')
+    .querySelectorAll('button')
+    .forEach((btn) => {
+      btn.classList.toggle('active', Number(btn.dataset.sec) === curSec);
+      btn.disabled = !isHost || st.timer === false;
+    });
   $('set-notif-sound').checked = notifSound;
   $('set-notif-vibrate').checked = notifVibrate;
-  $('lang-seg').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.lang === getLang()));
+  $('lang-seg')
+    .querySelectorAll('button')
+    .forEach((b) => b.classList.toggle('active', b.dataset.lang === getLang()));
   $('set-sfx-play').checked = sfxPref.play;
   $('set-sfx-bomb').checked = sfxPref.bomb;
   $('set-sfx-win').checked = sfxPref.win;
@@ -388,34 +485,46 @@ function primeAudio() {
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
-  } catch (e) { /* ไม่รองรับ → เงียบ */ }
+  } catch {
+    /* ไม่รองรับ → เงียบ */
+  }
 }
 document.addEventListener('click', primeAudio, { once: true }); // ปลดล็อก autoplay ด้วย gesture แรก
 function beep() {
   if (!audioCtx) return;
   try {
-    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.type = 'sine'; o.frequency.value = 880;
-    o.connect(g); g.connect(audioCtx.destination);
+    const o = audioCtx.createOscillator(),
+      g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.value = 880;
+    o.connect(g);
+    g.connect(audioCtx.destination);
     const t = audioCtx.currentTime;
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(0.22, t + 0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
-    o.start(t); o.stop(t + 0.3);
-  } catch (e) { /* ข้าม */ }
+    o.start(t);
+    o.stop(t + 0.3);
+  } catch {
+    /* ข้าม */
+  }
 }
 
 // โน้ตเดี่ยว (สังเคราะห์สด ไม่ต้องโหลดไฟล์เสียง)
 function tone(freq, delay, dur, { type = 'sine', gain = 0.2 } = {}) {
   if (!audioCtx) return;
-  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-  o.type = type; o.frequency.value = freq;
-  o.connect(g); g.connect(audioCtx.destination);
+  const o = audioCtx.createOscillator(),
+    g = audioCtx.createGain();
+  o.type = type;
+  o.frequency.value = freq;
+  o.connect(g);
+  g.connect(audioCtx.destination);
   const t = audioCtx.currentTime + delay;
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(gain, t + 0.015);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.start(t); o.stop(t + dur + 0.02);
+  o.start(t);
+  o.stop(t + dur + 0.02);
 }
 // เสียงเอฟเฟกต์ตามเหตุการณ์ (เคลียร์กอง=หมวดลงไพ่, แพ้=หมวดชนะ)
 function sfx(name) {
@@ -429,8 +538,10 @@ function sfx(name) {
         tone(660, 0, 0.09, { type: 'triangle', gain: 0.18 });
         tone(990, 0.04, 0.08, { type: 'triangle', gain: 0.12 });
         break;
-      case 'bomb': { // บอมบ์ — ทุ้มนุ่มแต่ได้ยินบนลำโพงเล็ก (triangle กวาดความถี่ลง เกนพอดี)
-        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      case 'bomb': {
+        // บอมบ์ — ทุ้มนุ่มแต่ได้ยินบนลำโพงเล็ก (triangle กวาดความถี่ลง เกนพอดี)
+        const o = audioCtx.createOscillator(),
+          g = audioCtx.createGain();
         o.type = 'triangle';
         const t = audioCtx.currentTime;
         o.frequency.setValueAtTime(300, t);
@@ -438,8 +549,10 @@ function sfx(name) {
         g.gain.setValueAtTime(0.0001, t);
         g.gain.exponentialRampToValueAtTime(0.2, t + 0.02);
         g.gain.exponentialRampToValueAtTime(0.0001, t + 0.36);
-        o.connect(g); g.connect(audioCtx.destination);
-        o.start(t); o.stop(t + 0.38);
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start(t);
+        o.stop(t + 0.38);
         tone(520, 0, 0.05, { type: 'triangle', gain: 0.12 }); // หัวเสียงคลิกสั้นๆ ให้มีจังหวะ
         break;
       }
@@ -448,20 +561,24 @@ function sfx(name) {
         tone(300, 0.06, 0.14, { type: 'sine', gain: 0.1 });
         break;
       case 'win': // ชนะ — อาร์เพจจิโอขึ้น
-        [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.1, 0.18, { type: 'triangle', gain: 0.2 }));
+        [523, 659, 784, 1047].forEach((f, i) =>
+          tone(f, i * 0.1, 0.18, { type: 'triangle', gain: 0.2 }),
+        );
         break;
       case 'lose': // แพ้ — โน้ตลง
         [392, 330, 262].forEach((f, i) => tone(f, i * 0.12, 0.2, { type: 'sine', gain: 0.18 }));
         break;
     }
-  } catch (e) { /* ข้าม */ }
+  } catch {
+    /* ข้าม */
+  }
 }
 
 // ตรวจจับเหตุการณ์จาก state เพื่อเล่นเสียง (กองเปลี่ยน / เคลียร์ / จบรอบ)
-let prevPileKey = null;   // null = ยังไม่ตั้ง baseline (กันเล่นเสียงตอนเข้าเกมครั้งแรก/reconnect)
+let prevPileKey = null; // null = ยังไม่ตั้ง baseline (กันเล่นเสียงตอนเข้าเกมครั้งแรก/reconnect)
 let prevPhaseSfx = null;
 function playSfx(s) {
-  const key = (s.pileCards && s.pileCards.length) ? s.pileCards.map((c) => c.id).join(',') : '';
+  const key = s.pileCards && s.pileCards.length ? s.pileCards.map((c) => c.id).join(',') : '';
   if (prevPileKey !== null && s.phase === 'playing') {
     if (key && key !== prevPileKey) {
       sfx(s.pile && s.pile.mode === 'bomb' ? 'bomb' : 'play'); // มีไพ่ลงใหม่
@@ -484,17 +601,30 @@ let titleFlash = null;
 function flashTitle() {
   if (titleFlash) return;
   let on = false;
-  titleFlash = setInterval(() => { document.title = (on = !on) ? '🔔 ถึงตาคุณ!' : baseTitle; }, 800);
+  titleFlash = setInterval(() => {
+    on = !on;
+    document.title = on ? '🔔 ถึงตาคุณ!' : baseTitle;
+  }, 800);
 }
-function stopFlash() { clearInterval(titleFlash); titleFlash = null; document.title = baseTitle; }
+function stopFlash() {
+  clearInterval(titleFlash);
+  titleFlash = null;
+  document.title = baseTitle;
+}
 window.addEventListener('focus', stopFlash);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) stopFlash(); });
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) stopFlash();
+});
 
 let prevMyTurn = false;
 function notifyTurn(s) {
   const myTurn = s.phase === 'playing' && s.turn === s.youIndex;
-  if (myTurn && !prevMyTurn) { // เพิ่งถึงตาเรา
-    if (notifSound) { primeAudio(); beep(); }
+  if (myTurn && !prevMyTurn) {
+    // เพิ่งถึงตาเรา
+    if (notifSound) {
+      primeAudio();
+      beep();
+    }
     if (notifVibrate) navigator.vibrate?.(200);
     if ((notifSound || notifVibrate) && document.hidden) flashTitle(); // อยู่แท็บอื่น → แฟลชชื่อแท็บ
   }
@@ -574,8 +704,14 @@ function renderSpectator(s) {
 }
 
 const SEAT_IDS = [
-  'seat-tl', 'seat-top', 'seat-tr', 'seat-left',
-  'seat-right', 'seat-bl', 'seat-bottom', 'seat-br',
+  'seat-tl',
+  'seat-top',
+  'seat-tr',
+  'seat-left',
+  'seat-right',
+  'seat-bl',
+  'seat-bottom',
+  'seat-br',
 ];
 
 // ที่นั่งบนตาราง 3×3 ตามตำแหน่งสัมพัทธ์จาก "คุณ" (rel 0 = คุณ)
@@ -586,8 +722,8 @@ function seatFor(rel, n) {
   }
   // คุณ = ล่าง (2) เสมอ
   if (rel === 0) return 'seat-bottom';
-  if (n === 2) return 'seat-top';                            // 2 คน: ตรงข้าม (8)
-  return rel === 1 ? 'seat-tr' : 'seat-tl';                  // 3 คน: มุมบน ขวา(9)/ซ้าย(7)
+  if (n === 2) return 'seat-top'; // 2 คน: ตรงข้าม (8)
+  return rel === 1 ? 'seat-tr' : 'seat-tl'; // 3 คน: มุมบน ขวา(9)/ซ้าย(7)
 }
 
 function chipHTML(p, s) {
@@ -597,7 +733,11 @@ function chipHTML(p, s) {
   if (!p.connected) cls.push('offline');
   if (p.isYou) cls.push('you');
   // หัวห้อง = มงกุฎ, บอท = ไอคอนหุ่นยนต์
-  const badge = p.isHost ? icon('crown', 'host-ico') + ' ' : (p.isBot ? icon('bot', 'bot-ico') + ' ' : '');
+  const badge = p.isHost
+    ? icon('crown', 'host-ico') + ' '
+    : p.isBot
+      ? icon('bot', 'bot-ico') + ' '
+      : '';
   const off = !p.connected ? ' ' + icon('wifi-off', 'off-ico') : '';
   const title = p.title ? `<span class="ptitle">${iconize(esc(p.title))}</span>` : '';
   const count = p.finished ? `${icon('circle-check')} หมดมือ` : p.cardCount + ' ใบ';
@@ -624,18 +764,21 @@ function chipStyle(hex) {
 }
 
 function renderPlayers(s) {
-  SEAT_IDS.forEach((id) => { $(id).innerHTML = ''; }); // เคลียร์ทุกที่นั่งก่อน
+  SEAT_IDS.forEach((id) => {
+    $(id).innerHTML = '';
+  }); // เคลียร์ทุกที่นั่งก่อน
   const n = s.players.length;
   const you = s.youIndex >= 0 ? s.youIndex : 0;
   s.players.forEach((p, i) => {
-    const rel = ((i - you) % n + n) % n; // 0 = คุณ, ไล่ตามลำดับรอบโต๊ะ
+    const rel = (((i - you) % n) + n) % n; // 0 = คุณ, ไล่ตามลำดับรอบโต๊ะ
     $(seatFor(rel, n)).innerHTML = chipHTML(p, s);
   });
 }
 
 function renderPile(s) {
   // ลายน้ำทิศทาง (หลังไพ่) — โชว์เฉพาะตอนเล่น
-  $('dir-indicator').innerHTML = s.phase === 'playing' ? icon(s.dir === -1 ? 'rotate-ccw' : 'rotate-cw') : '';
+  $('dir-indicator').innerHTML =
+    s.phase === 'playing' ? icon(s.dir === -1 ? 'rotate-ccw' : 'rotate-cw') : '';
 
   // ชื่อคนที่ต้องลงไพ่ — ใต้กองไพ่
   const ti = $('turn-info');
@@ -651,7 +794,9 @@ function renderPile(s) {
     ti.classList.toggle('your-turn', ex.role === 'winner' && !ex.myDone);
   } else if (s.phase === 'playing') {
     const yours = s.turn === s.youIndex;
-    ti.innerHTML = yours ? `${icon('circle-dot')} ${t('turn.yours')}` : `${icon('hourglass')} ${t('turn.other', { name: esc(s.turnName) })}`;
+    ti.innerHTML = yours
+      ? `${icon('circle-dot')} ${t('turn.yours')}`
+      : `${icon('hourglass')} ${t('turn.other', { name: esc(s.turnName) })}`;
     ti.classList.toggle('your-turn', yours);
   } else {
     ti.textContent = '';
@@ -673,7 +818,7 @@ function renderPile(s) {
 let animPileKey = null;
 function animatePile(s) {
   const el = $('pile-cards');
-  const key = (s.pileCards && s.pileCards.length) ? s.pileCards.map((c) => c.id).join(',') : '';
+  const key = s.pileCards && s.pileCards.length ? s.pileCards.map((c) => c.id).join(',') : '';
   if (key && key !== animPileKey) {
     el.classList.remove('deal', 'bomb-hit');
     void el.offsetWidth; // reflow ให้ animation เล่นซ้ำได้
@@ -698,7 +843,10 @@ function stopTurnTimer() {
 function renderTurnTimer(s) {
   const el = $('turn-timer');
   if (!el) return;
-  if (s.phase !== 'playing' || s.turnRemainingMs == null) { stopTurnTimer(); return; }
+  if (s.phase !== 'playing' || s.turnRemainingMs == null) {
+    stopTurnTimer();
+    return;
+  }
   // sync กับเวลาที่ server บอก (กัน clock skew) แล้วเดินด้วยนาฬิกาเครื่องเรา
   turnEndsAt = Date.now() + s.turnRemainingMs;
   el.classList.toggle('mine', s.turn === s.youIndex); // ตาเรา = เน้นสี
@@ -709,7 +857,10 @@ function renderTurnTimer(s) {
     $('turn-timer-sec').textContent = sec;
     el.classList.remove('hidden');
     el.classList.toggle('urgent', sec <= 5); // ใกล้หมด → แดงเต้น
-    if (ms <= 0) { clearInterval(turnTick); turnTick = null; }
+    if (ms <= 0) {
+      clearInterval(turnTick);
+      turnTick = null;
+    }
   };
   tick();
   turnTick = setInterval(tick, 250);
@@ -724,18 +875,22 @@ function miniCardHTML(c) {
 function renderLog(s) {
   const el = $('log');
   const hist = (s.history || []).filter((h) => !h.event); // ไม่โชว์ event (เริ่มรอบ/ขึ้นก่อน ฯลฯ)
-  el.innerHTML = hist.map((h) => {
-    if (h.pass) return `<span class="log-item log-pass">ผ่าน</span>`;
-    const cards = (h.cards || []).map(miniCardHTML).join('');
-    return `<span class="log-item">${cards}</span>`;
-  }).join('');
+  el.innerHTML = hist
+    .map((h) => {
+      if (h.pass) return `<span class="log-item log-pass">ผ่าน</span>`;
+      const cards = (h.cards || []).map(miniCardHTML).join('');
+      return `<span class="log-item">${cards}</span>`;
+    })
+    .join('');
   el.scrollLeft = el.scrollWidth; // เลื่อนไปล่าสุด (ขวาสุด)
 }
 
 // โหมดเรียงไพ่ในมือ: 'rank' = ตามเลขปกติ, 'bomb' = ดันไพ่ที่เป็นบอมไปขวาสุด
 let handSort = localStorage.getItem('handSort') === 'bomb' ? 'bomb' : 'rank';
 function sortLabel() {
-  return handSort === 'bomb' ? `${icon('bomb')} ${t('game.sortBomb')}` : `${icon('list-ordered')} ${t('game.sortRank')}`;
+  return handSort === 'bomb'
+    ? `${icon('bomb')} ${t('game.sortBomb')}`
+    : `${icon('list-ordered')} ${t('game.sortRank')}`;
 }
 function sortedHand(hand) {
   const arr = (hand || []).slice().sort((a, b) => a.r - b.r || a.s - b.s); // เรียงตามเลขก่อนเสมอ
@@ -782,10 +937,12 @@ $('sort-toggle').onclick = () => {
 
 function renderHand(s) {
   const hand = $('hand');
-  hand.innerHTML = sortedHand(s.hand).map((c) => {
-    const sel = selected.has(c.id) ? ' selected' : '';
-    return cardHTML(c, ` data-id="${c.id}"`, sel);
-  }).join('');
+  hand.innerHTML = sortedHand(s.hand)
+    .map((c) => {
+      const sel = selected.has(c.id) ? ' selected' : '';
+      return cardHTML(c, ` data-id="${c.id}"`, sel);
+    })
+    .join('');
   hand.querySelectorAll('.playing-card').forEach((el) => {
     el.onclick = () => {
       const id = el.dataset.id;
@@ -804,35 +961,43 @@ function detectCombos(hand) {
   // ตอง / โฟร์ — จัดกลุ่มตามอันดับ
   const byRank = {};
   for (const c of hand) (byRank[c.r] ||= []).push(c);
-  Object.keys(byRank).map(Number).sort((a, b) => a - b).forEach((r) => {
-    const cards = byRank[r];
-    if (cards.length === 4) {
-      out.push({ label: `โฟร์ ${rankLabel(r)}`, ids: cards.map((c) => c.id) });
-    } else if (cards.length === 3) {
-      out.push({ label: `ตอง ${rankLabel(r)}`, ids: cards.map((c) => c.id) });
-    }
-  });
+  Object.keys(byRank)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .forEach((r) => {
+      const cards = byRank[r];
+      if (cards.length === 4) {
+        out.push({ label: `โฟร์ ${rankLabel(r)}`, ids: cards.map((c) => c.id) });
+      } else if (cards.length === 3) {
+        out.push({ label: `ตอง ${rankLabel(r)}`, ids: cards.map((c) => c.id) });
+      }
+    });
 
   // เรียงดอกเดียว (flush straight) — จัดกลุ่มตามดอก, ห้ามมีไพ่ 2 (r=15)
   const bySuit = {};
   for (const c of hand) if (c.r !== 15) (bySuit[c.s] ||= []).push(c);
-  Object.keys(bySuit).map(Number).forEach((s) => {
-    const cards = bySuit[s].slice().sort((a, b) => a.r - b.r);
-    let run = [cards[0]];
-    const flush = (rn) => {
-      if (rn.length >= 3) {
-        out.push({
-          label: `เรียง${SUITS[s]} ${rankLabel(rn[0].r)}-${rankLabel(rn[rn.length - 1].r)} (${rn.length})`,
-          ids: rn.map((c) => c.id),
-        });
+  Object.keys(bySuit)
+    .map(Number)
+    .forEach((s) => {
+      const cards = bySuit[s].slice().sort((a, b) => a.r - b.r);
+      let run = [cards[0]];
+      const flush = (rn) => {
+        if (rn.length >= 3) {
+          out.push({
+            label: `เรียง${SUITS[s]} ${rankLabel(rn[0].r)}-${rankLabel(rn[rn.length - 1].r)} (${rn.length})`,
+            ids: rn.map((c) => c.id),
+          });
+        }
+      };
+      for (let i = 1; i < cards.length; i++) {
+        if (cards[i].r === cards[i - 1].r + 1) run.push(cards[i]);
+        else {
+          flush(run);
+          run = [cards[i]];
+        }
       }
-    };
-    for (let i = 1; i < cards.length; i++) {
-      if (cards[i].r === cards[i - 1].r + 1) run.push(cards[i]);
-      else { flush(run); run = [cards[i]]; }
-    }
-    flush(run);
-  });
+      flush(run);
+    });
 
   return out;
 }
@@ -849,9 +1014,12 @@ function renderCombos(s) {
   box.classList.remove('hidden');
   box.innerHTML =
     `<span class="combo-hints-label">${icon('bomb')} บอมบ์ในมือ:</span>` +
-    combos.map((cb, i) =>
-      `<button class="combo-chip${isActive(cb.ids) ? ' active' : ''}" data-i="${i}">${esc(cb.label)}</button>`
-    ).join('');
+    combos
+      .map(
+        (cb, i) =>
+          `<button class="combo-chip${isActive(cb.ids) ? ' active' : ''}" data-i="${i}">${esc(cb.label)}</button>`,
+      )
+      .join('');
   box.querySelectorAll('.combo-chip').forEach((btn) => {
     btn.onclick = () => {
       const ids = combos[+btn.dataset.i].ids;
@@ -911,19 +1079,25 @@ function updatePlayBtn() {
 
 // ---------- result modal ----------
 function showResult(result) {
-  $('result-list').innerHTML = result.map((r, i) => {
-    const cls = i === 0 ? 'rank-0' : (i === result.length - 1 ? 'rank-last' : '');
-    const medal = i === 0 ? icon('trophy') + ' ' : (i === result.length - 1 ? icon('skull') + ' ' : '');
-    return `<li class="${cls}">${medal}${iconize(esc(r.title))} — ${esc(r.name)}</li>`;
-  }).join('');
+  $('result-list').innerHTML = result
+    .map((r, i) => {
+      const cls = i === 0 ? 'rank-0' : i === result.length - 1 ? 'rank-last' : '';
+      const medal =
+        i === 0 ? icon('trophy') + ' ' : i === result.length - 1 ? icon('skull') + ' ' : '';
+      return `<li class="${cls}">${medal}${iconize(esc(r.title))} — ${esc(r.name)}</li>`;
+    })
+    .join('');
   openDialog($('result-modal'));
 }
-function hideModal() { closeDialog($('result-modal')); }
+function hideModal() {
+  closeDialog($('result-modal'));
+}
 
 // ---------- helpers ----------
 function cardHTML(c, attrs = '', extraClass = '') {
   const red = RED.has(c.s) ? ' red' : '';
-  const r = rankLabel(c.r), suit = SUITS[c.s];
+  const r = rankLabel(c.r),
+    suit = SUITS[c.s];
   return `<div class="playing-card${red}${extraClass}"${attrs}>
     <span class="corner tl">${r}<br>${suit}</span>
     <span class="pip">${suit}</span>
@@ -932,19 +1106,23 @@ function cardHTML(c, attrs = '', extraClass = '') {
 }
 
 function esc(str) {
-  return String(str).replace(/[&<>"']/g, (m) => (
-    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]
-  ));
+  return String(str).replace(
+    /[&<>"']/g,
+    (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m],
+  );
 }
 
 // ---------- คัดลอกลิงก์ห้อง + Toast (shadcn / Sonner) ----------
 let toastTimer, toastHideTimer;
 function showToast(msg, opts = {}) {
   const t = $('toast');
-  const variant = opts.error ? 'error' : (opts.success ? 'success' : 'default'); // ชนิด toast
-  const lead = variant === 'error' ? icon('circle-alert', 'toast-ico')
-    : variant === 'success' ? icon('circle-check', 'toast-ico')
-      : ''; // default ไม่มีไอคอนนำ (เนื้อหามักมีไอคอนของตัวเองอยู่แล้ว)
+  const variant = opts.error ? 'error' : opts.success ? 'success' : 'default'; // ชนิด toast
+  const lead =
+    variant === 'error'
+      ? icon('circle-alert', 'toast-ico')
+      : variant === 'success'
+        ? icon('circle-check', 'toast-ico')
+        : ''; // default ไม่มีไอคอนนำ (เนื้อหามักมีไอคอนของตัวเองอยู่แล้ว)
   // esc กันชื่อผู้เล่นมี HTML, แล้วค่อยแปลง emoji → ไอคอน
   t.innerHTML = `${lead}<span class="toast-msg">${iconize(esc(msg))}</span>`;
   refreshIcons();
@@ -969,7 +1147,9 @@ async function copyText(text) {
       await navigator.clipboard.writeText(text);
       return true;
     }
-  } catch (e) { /* ตกไป fallback */ }
+  } catch {
+    /* ตกไป fallback */
+  }
   // fallback สำหรับ http บน LAN (ไม่ใช่ secure context)
   try {
     const ta = document.createElement('textarea');
@@ -982,7 +1162,7 @@ async function copyText(text) {
     const ok = document.execCommand('copy');
     document.body.removeChild(ta);
     return ok;
-  } catch (e) {
+  } catch {
     return false;
   }
 }

@@ -3,6 +3,7 @@ import type { RoomState } from '@shared/types';
 import { PlayerChip } from './Seat';
 import { Pile } from './Pile';
 import { Icon } from '@/lib/icons';
+import { seatFor } from '@/lib/gameLogic';
 
 const SEAT_IDS = [
   'seat-tl',
@@ -14,20 +15,6 @@ const SEAT_IDS = [
   'seat-bottom',
   'seat-br',
 ] as const;
-
-// ที่นั่งบนตาราง 3×3 ตามตำแหน่งสัมพัทธ์จาก "คุณ" (rel 0 = คุณ) — รองรับ 2–6 คน
-const SEAT_LAYOUTS: Record<number, string[]> = {
-  2: ['seat-bottom', 'seat-top'],
-  3: ['seat-bottom', 'seat-tr', 'seat-tl'],
-  4: ['seat-bl', 'seat-br', 'seat-tr', 'seat-tl'],
-  5: ['seat-bottom', 'seat-br', 'seat-tr', 'seat-tl', 'seat-bl'],
-  6: ['seat-bottom', 'seat-br', 'seat-tr', 'seat-top', 'seat-tl', 'seat-bl'],
-};
-
-function seatFor(rel: number, n: number): string {
-  const layout = SEAT_LAYOUTS[n] || SEAT_LAYOUTS[6];
-  return layout[rel] || 'seat-top';
-}
 
 export function Table({ s }: { s: RoomState }) {
   // map seat-id → ผู้เล่นที่นั่งช่องนั้น

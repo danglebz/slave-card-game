@@ -1,6 +1,15 @@
 // gameLogic.ts — ตรรกะการ์ดฝั่ง client (port จาก app.js: rankLabel, sortedHand, detectCombos)
-import type { Card, CardWithId } from '@shared/types';
+import type { Card, CardWithId, Settings } from '@shared/types';
 import { t, type Lang } from './i18n';
+
+// house rules: ชุดพิเศษที่หัวห้องปิด → Set ของ combo.type ที่ห้ามลง (ตรงกับ server/game.ts)
+export function disabledComboTypes(settings?: Partial<Settings> | null): Set<string> {
+  const d = new Set<string>();
+  if (settings?.allowTriple === false) d.add('triple');
+  if (settings?.allowQuad === false) d.add('quad');
+  if (settings?.allowStraight === false) d.add('straight');
+  return d;
+}
 
 // ︎ = text-presentation selector: บังคับให้ดอกแสดงเป็นตัวอักษร (ไม่ใช่ emoji)
 // เพื่อให้สี CSS (.red) มีผลจริงบนมือถือ
@@ -60,8 +69,13 @@ export function sortedHand(hand: CardWithId[] | undefined, handSort: HandSort): 
 }
 
 // ตรวจหา "บอมบ์" ที่ทำได้จากไพ่ในมือ: ตอง, โฟร์, เรียงดอกเดียว (ยาว >=3)
-export function detectCombos(hand: CardWithId[], lang: Lang = 'th'): ComboHint[] {
+export function detectCombos(
+  hand: CardWithId[],
+  lang: Lang = 'th',
+  disabled?: Set<string>,
+): ComboHint[] {
   const out: ComboHint[] = [];
+  const off = (type: string) => !!disabled?.has(type); // ชุดที่หัวห้องปิด → ไม่แสดงเป็นใบ้
 
   // ตอง / โฟร์ — จัดกลุ่มตามอันดับ
   const byRank: Record<number, CardWithId[]> = {};
@@ -71,9 +85,12 @@ export function detectCombos(hand: CardWithId[], lang: Lang = 'th'): ComboHint[]
     .sort((a, b) => a - b)
     .forEach((r) => {
       const cards = byRank[r];
-      if (cards.length === 4) {
-        out.push({ label: `${t(lang, 'combo.quad')} ${rankLabel(r)}`, ids: cards.map((c) => c.id) });
-      } else if (cards.length === 3) {
+      if (cards.length === 4 && !off('quad')) {
+        out.push({
+          label: `${t(lang, 'combo.quad')} ${rankLabel(r)}`,
+          ids: cards.map((c) => c.id),
+        });
+      } else if (cards.length === 3 && !off('triple')) {
         out.push({
           label: `${t(lang, 'combo.triple')} ${rankLabel(r)}`,
           ids: cards.map((c) => c.id),
@@ -90,7 +107,7 @@ export function detectCombos(hand: CardWithId[], lang: Lang = 'th'): ComboHint[]
       const cards = bySuit[s].slice().sort((a, b) => a.r - b.r);
       let run: CardWithId[] = [cards[0]];
       const flush = (rn: CardWithId[]) => {
-        if (rn.length >= 3) {
+        if (rn.length >= 3 && !off('straight')) {
           out.push({
             label: `${t(lang, 'combo.straightWord')} ${SUITS[s]} ${rankLabel(rn[0].r)}-${rankLabel(rn[rn.length - 1].r)} (${rn.length})`,
             ids: rn.map((c) => c.id),
@@ -108,6 +125,36 @@ export function detectCombos(hand: CardWithId[], lang: Lang = 'th'): ComboHint[]
     });
 
   return out;
+}
+
+// ----- ตำแหน่งที่นั่งบนตาราง 3×3 (ใช้ร่วมกัน Table + Pile) — rel 0 = "คุณ" ที่ล่างสุด -----
+export const SEAT_LAYOUTS: Record<number, string[]> = {
+  2: ['seat-bottom', 'seat-top'],
+  3: ['seat-bottom', 'seat-tr', 'seat-tl'],
+  4: ['seat-bl', 'seat-br', 'seat-tr', 'seat-tl'],
+  5: ['seat-bottom', 'seat-br', 'seat-tr', 'seat-tl', 'seat-bl'],
+  6: ['seat-bottom', 'seat-br', 'seat-tr', 'seat-top', 'seat-tl', 'seat-bl'],
+};
+
+export function seatFor(rel: number, n: number): string {
+  const layout = SEAT_LAYOUTS[n] || SEAT_LAYOUTS[6];
+  return layout[rel] || 'seat-top';
+}
+
+// ทิศที่ไพ่ "สไลด์เข้า" กองกลาง = เวกเตอร์หน่วยจากที่นั่งของคนลงไพ่ → กลางโต๊ะ
+const SEAT_ORIGIN: Record<string, [number, number]> = {
+  'seat-bottom': [0, 1],
+  'seat-top': [0, -1],
+  'seat-left': [-1, 0],
+  'seat-right': [1, 0],
+  'seat-tl': [-0.72, -0.72],
+  'seat-tr': [0.72, -0.72],
+  'seat-bl': [-0.72, 0.72],
+  'seat-br': [0.72, 0.72],
+};
+
+export function seatOrigin(seatId: string): [number, number] {
+  return SEAT_ORIGIN[seatId] || [0, -0.26]; // ไม่รู้ที่นั่ง → เด้งลงจากบนเล็กน้อย (ของเดิม)
 }
 
 // พื้นชิป = สีเต็ม + เลือกสีตัวอักษร (ขาว/ดำ) ตามความสว่างของสี ให้อ่านออกเสมอ

@@ -25,5 +25,5 @@
     "test/**/*.{js,ts}",
     "*.config.{js,ts}"
   ],
-  "exclude": ["node_modules", "dist", "tmp"]
+  "exclude": ["node_modules", "dist", "tmp", "client/src/sw.ts"]
 }

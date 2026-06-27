@@ -86,7 +86,10 @@ export function snapshot(rooms: Map<string, Room>) {
   let spectators = 0;
   let roomsPlaying = 0;
   for (const r of rooms.values()) {
-    for (const p of r.players) p.isBot ? bots++ : players++;
+    for (const p of r.players) {
+      if (p.isBot) bots++;
+      else players++;
+    }
     spectators += r.spectators.length;
     if (r.phase === 'playing' || r.phase === 'exchange') roomsPlaying++;
   }

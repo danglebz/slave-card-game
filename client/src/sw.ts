@@ -1,18 +1,25 @@
-// sw.js — Service Worker สำหรับ PWA (โหลดเร็ว + เปิดได้แม้เน็ตหลุดชั่วคราว)
+/// <reference lib="webworker" />
+// sw.ts — Service Worker สำหรับ PWA (โหลดเร็ว + เปิดได้แม้เน็ตหลุดชั่วคราว)
 // หมายเหตุ: เกมเป็น multiplayer ต้องต่อ server จริงถึงจะเล่นได้ — SW แค่แคช "เปลือกแอป"
+// build แยกออกไปเป็น dist/sw.js ผ่าน vite.config.sw.ts (ไฟล์ใน public/ ไม่ถูก compile)
+export {}; // ทำให้ไฟล์เป็น module → declare ด้านล่างเป็น scope ของไฟล์นี้เท่านั้น
+
+declare const self: ServiceWorkerGlobalScope;
+
 const CACHE = 'slave-card-game-v1';
 
 self.addEventListener('install', () => self.skipWaiting());
 
-self.addEventListener('activate', (e) => {
+self.addEventListener('activate', (e: ExtendableEvent) => {
   e.waitUntil(
-    caches.keys()
+    caches
+      .keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
 
-self.addEventListener('fetch', (e) => {
+self.addEventListener('fetch', (e: FetchEvent) => {
   const url = new URL(e.request.url);
   // แตะเฉพาะ GET ภายในโดเมนเดียวกัน และอย่ายุ่งกับ socket.io (websocket/polling)
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
@@ -22,17 +29,27 @@ self.addEventListener('fetch', (e) => {
   if (e.request.mode === 'navigate') {
     e.respondWith(
       fetch(e.request)
-        .then((r) => { caches.open(CACHE).then((c) => c.put('/', r.clone())); return r; })
-        .catch(() => caches.match('/')),
+        .then((r) => {
+          caches.open(CACHE).then((c) => c.put('/', r.clone()));
+          return r;
+        })
+        .catch(() => caches.match('/').then((cached) => cached ?? Response.error())),
     );
     return;
   }
 
   // ไฟล์ asset/ไอคอน (ชื่อมี hash, ไม่เปลี่ยน) → cache-first
   e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request).then((r) => {
-      if (r.ok) { const clone = r.clone(); caches.open(CACHE).then((c) => c.put(e.request, clone)); }
-      return r;
-    })),
+    caches.match(e.request).then(
+      (cached) =>
+        cached ||
+        fetch(e.request).then((r) => {
+          if (r.ok) {
+            const clone = r.clone();
+            caches.open(CACHE).then((c) => c.put(e.request, clone));
+          }
+          return r;
+        }),
+    ),
   );
 });

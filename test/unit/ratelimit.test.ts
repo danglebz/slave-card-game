@@ -4,7 +4,7 @@ import { TokenBucket, createSocketLimiter } from '../../server/ratelimit';
 
 describe('TokenBucket', () => {
   it('ใช้ token ได้จนหมด capacity แล้วถูกตัด', () => {
-    let clock = 0;
+    const clock = 0;
     const b = new TokenBucket(3, 1, () => clock);
     expect(b.take()).toBe(true);
     expect(b.take()).toBe(true);
@@ -39,7 +39,7 @@ describe('TokenBucket', () => {
 
 describe('createSocketLimiter', () => {
   it('flood event เดิมซ้ำ ๆ จะถูกตัดเมื่อเกินเบิร์สต์', () => {
-    let clock = 0;
+    const clock = 0;
     const allow = createSocketLimiter(() => clock); // เวลาไม่เดิน → ไม่เติม
     let allowed = 0;
     for (let i = 0; i < 100; i++) if (allow('pass')) allowed++;
@@ -48,7 +48,7 @@ describe('createSocketLimiter', () => {
   });
 
   it('event แพง (create) ถูกจำกัดเข้มกว่า event ทั่วไป', () => {
-    let clock = 0;
+    const clock = 0;
     const allow = createSocketLimiter(() => clock);
     let creates = 0;
     for (let i = 0; i < 100; i++) if (allow('create')) creates++;

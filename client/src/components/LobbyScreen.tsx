@@ -60,7 +60,6 @@ export function LobbyScreen() {
       socket.off('joined', end);
       socket.off('errorMsg', end);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ---------- PWA install button ----------

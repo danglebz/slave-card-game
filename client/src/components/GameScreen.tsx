@@ -2,13 +2,11 @@
 // + เอฟเฟกต์ side: เล่นเสียงตามเหตุการณ์ (playSfx) + แจ้งเตือนถึงตา (notifyTurn) + notice toast
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '@/store';
-import { socket } from '@/lib/socket';
 import { Icon } from '@/lib/icons';
 import { t } from '@/lib/i18n';
 import { copyText } from '@/lib/clipboard';
 import { initialHandSort, type HandSort } from '@/lib/gameLogic';
 import { sfx, primeAudio, beep, notifPref, flashTitle, stopFlash } from '@/lib/audio';
-import type { RoomState } from '@shared/types';
 import { Table } from './game/Table';
 import { Log } from './game/Log';
 import { Hand } from './game/Hand';

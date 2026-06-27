@@ -229,7 +229,7 @@ button.loading:disabled {
   border-radius: var(--radius);
   padding: 30px 26px;
   width: 100%;
-  max-width: 380px;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -627,7 +627,7 @@ button.loading:disabled {
 
 /* ============ กล่องตั้งค่า ============ */
 .settings-box {
-  max-width: 420px;
+  max-width: 520px;
   text-align: left;
 }
 .settings-list {
@@ -1349,6 +1349,27 @@ button.loading:disabled {
 @media (prefers-reduced-motion: reduce) {
   #pile-cards.deal .playing-card,
   #pile-cards.bomb-hit {
+    animation: none;
+  }
+}
+
+/* แจกไพ่เข้ามือตอนเริ่มรอบ — ไพ่บินขึ้นจากด้านล่างทีละใบ (stagger ตาม --i) */
+@keyframes handDeal {
+  from {
+    opacity: 0;
+    transform: translateY(46px) scale(0.6) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+#hand.dealing .playing-card {
+  animation: handDeal 0.34s cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 42ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  #hand.dealing .playing-card {
     animation: none;
   }
 }

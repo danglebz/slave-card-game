@@ -114,11 +114,15 @@ export function chipStyle(hex: string): React.CSSProperties | undefined {
   const dark = lum < 0.6; // พื้นเข้ม → ตัวอักษรขาว
   const fg = dark ? '#ffffff' : '#1c1c1f';
   const soft = dark ? 'rgba(255,255,255,0.82)' : 'rgba(0,0,0,0.58)';
-  const d = (i: number) => Math.round(ch(i) * 0.78); // ขอบ = สีเดียวกันแต่เข้มกว่า ~22%
-  const border = `rgb(${d(1)},${d(3)},${d(5)})`;
+  const d = (i: number) => Math.round(ch(i) * 0.78); // เฉดเข้ม = สีเดียวกันแต่เข้มกว่า ~22% (ขอบ + ปลาย gradient)
+  const l = (i: number) => Math.round(ch(i) + (255 - ch(i)) * 0.16); // เฉดอ่อน = ผสมขาว ~16% (ต้น gradient)
+  const dark3 = `rgb(${d(1)},${d(3)},${d(5)})`;
+  const light3 = `rgb(${l(1)},${l(3)},${l(5)})`;
+  // ไล่เฉดอ่อน→สีเดิม→เข้ม ให้ป้ายดูมีมิติ (ยังอิงสีประจำตัวเดิม)
+  const gradient = `linear-gradient(160deg, ${light3} 0%, ${hex} 48%, ${dark3} 100%)`;
   return {
-    background: hex,
-    borderColor: border,
+    background: gradient,
+    borderColor: dark3,
     ['--chip-fg' as string]: fg,
     ['--chip-fg-soft' as string]: soft,
   };

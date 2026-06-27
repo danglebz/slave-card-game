@@ -11,7 +11,12 @@ export function BotControls({ s }: { s: RoomState }) {
   const show = s.phase === 'lobby' && isHost;
   return (
     <div id="bot-controls" className={`bot-controls${show ? '' : ' hidden'}`}>
-      <button id="add-bot-btn" type="button" disabled={s.players.length >= 6} onClick={() => socket.emit('addBot')}>
+      <button
+        id="add-bot-btn"
+        type="button"
+        disabled={s.players.length >= 6}
+        onClick={() => socket.emit('addBot')}
+      >
         <Icon name="bot" /> <span>{t(useStore.getState().lang, 'game.addBot')}</span>
       </button>
       <button
@@ -80,7 +85,12 @@ export function Actions({ s }: { s: RoomState }) {
       >
         <Icon name="play" /> <span>{t(lang, 'game.play')}</span>
       </button>
-      <button id="pass-btn" className={showPass ? '' : 'hidden'} disabled={passDisabled} onClick={onPass}>
+      <button
+        id="pass-btn"
+        className={showPass ? '' : 'hidden'}
+        disabled={passDisabled}
+        onClick={onPass}
+      >
         <Icon name="skip-forward" /> <span>{t(lang, 'game.pass')}</span>
       </button>
       <button
@@ -99,7 +109,11 @@ export function Actions({ s }: { s: RoomState }) {
       >
         <span>{showStart && startDisabled ? t(lang, 'game.waitMore') : t(lang, 'game.start')}</span>
       </button>
-      <button id="again-btn" className={`primary${showAgain ? '' : ' hidden'}`} onClick={() => socket.emit('again')}>
+      <button
+        id="again-btn"
+        className={`primary${showAgain ? '' : ' hidden'}`}
+        onClick={() => socket.emit('again')}
+      >
         <Icon name="rotate-ccw" /> <span>{t(lang, 'game.again')}</span>
       </button>
     </div>

@@ -22,7 +22,8 @@ export function TurnInfo({ s }: { s: RoomState }) {
     } else if (ex.role === 'loser') {
       content = (
         <>
-          <Icon name="link" /> ส่งไพ่สูงสุด {ex.gaveCount} ใบ ให้ {ex.fromName} แล้ว · รอรับไพ่คืน...
+          <Icon name="link" /> ส่งไพ่สูงสุด {ex.gaveCount} ใบ ให้ {ex.fromName} แล้ว ·
+          รอรับไพ่คืน...
         </>
       );
     } else {

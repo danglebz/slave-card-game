@@ -10,8 +10,7 @@ export function ComboHints({ s }: { s: RoomState }) {
   const setSelected = useStore((st) => st.setSelected);
   const clearSelected = useStore((st) => st.clearSelected);
 
-  const combos =
-    s.phase === 'playing' && s.hand && s.hand.length ? detectCombos(s.hand) : [];
+  const combos = s.phase === 'playing' && s.hand && s.hand.length ? detectCombos(s.hand) : [];
 
   if (!combos.length) {
     return <div id="combo-hints" className="hidden" />;

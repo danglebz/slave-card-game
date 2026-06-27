@@ -2,7 +2,13 @@
 import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
 import { Icon } from '@/lib/icons';
 
-export function RulesModal({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+export function RulesModal({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent

@@ -44,7 +44,12 @@ export function ShareModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent open={open} id="share-modal" className="share-box" ariaLabelledby="share-title">
+      <DialogContent
+        open={open}
+        id="share-modal"
+        className="share-box"
+        ariaLabelledby="share-title"
+      >
         <h2 id="share-title">
           <Icon name="qr-code" /> ชวนเพื่อนเข้าห้อง
         </h2>
@@ -57,7 +62,13 @@ export function ShareModal({
         <div id="share-qr" className="share-qr">
           <img id="share-qr-img" alt="QR เข้าห้อง" width={220} height={220} src={qr ?? undefined} />
         </div>
-        <button id="share-link" className="share-link" type="button" title="คัดลอกลิงก์" onClick={onCopy}>
+        <button
+          id="share-link"
+          className="share-link"
+          type="button"
+          title="คัดลอกลิงก์"
+          onClick={onCopy}
+        >
           <span id="share-url" className="share-url">
             {shortUrl}
           </span>

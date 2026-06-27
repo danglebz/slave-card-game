@@ -47,7 +47,9 @@ export function LobbyScreen() {
   // seed สีประจำตัว (สุ่มครั้งแรก) แล้วเก็บไว้ส่งตอน create/join
   const colorRef = useRef<string>(initialColor());
   const lobbyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const deferredInstall = useRef<Event & { prompt?: () => void; userChoice?: Promise<unknown> }>(null!);
+  const deferredInstall = useRef<Event & { prompt?: () => void; userChoice?: Promise<unknown> }>(
+    null!,
+  );
 
   // ---------- ปลดล็อกฟอร์มเมื่อ server ตอบ (joined / errorMsg) ----------
   useEffect(() => {

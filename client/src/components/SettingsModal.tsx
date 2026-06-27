@@ -108,7 +108,12 @@ export function SettingsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent open={open} id="settings-modal" className="settings-box" ariaLabelledby="settings-title">
+      <DialogContent
+        open={open}
+        id="settings-modal"
+        className="settings-box"
+        ariaLabelledby="settings-title"
+      >
         <h2 id="settings-title">
           <Icon name="settings" /> <span>{t(lang, 'set.title')}</span>
         </h2>
@@ -274,7 +279,12 @@ export function SettingsModal({
             <span className="setting-soon">{t(lang, 'set.soon')}</span>
           </div>
         </div>
-        <button id="logout-btn" className="btn-destructive settings-logout" type="button" onClick={onLeave}>
+        <button
+          id="logout-btn"
+          className="btn-destructive settings-logout"
+          type="button"
+          onClick={onLeave}
+        >
           <Icon name="door-open" /> <span>{t(lang, 'set.logout')}</span>
         </button>
       </DialogContent>

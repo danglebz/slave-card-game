@@ -7,14 +7,7 @@ import { Icon } from '@/lib/icons';
 import { t } from '@/lib/i18n';
 import { copyText } from '@/lib/clipboard';
 import { initialHandSort, type HandSort } from '@/lib/gameLogic';
-import {
-  sfx,
-  primeAudio,
-  beep,
-  notifPref,
-  flashTitle,
-  stopFlash,
-} from '@/lib/audio';
+import { sfx, primeAudio, beep, notifPref, flashTitle, stopFlash } from '@/lib/audio';
 import type { RoomState } from '@shared/types';
 import { Table } from './game/Table';
 import { Log } from './game/Log';
@@ -139,13 +132,31 @@ export function GameScreen() {
           <strong id="room-code">{code}</strong>
           <Icon name={copied ? 'check' : 'copy'} className="room-copy-ico" />
         </button>
-        <span id="spectator-count" className={`spec-count${specCount === 0 ? ' hidden' : ''}`} title="ผู้ชม">
+        <span
+          id="spectator-count"
+          className={`spec-count${specCount === 0 ? ' hidden' : ''}`}
+          title="ผู้ชม"
+        >
           <Icon name="eye" /> <span id="spec-n">{specCount}</span>
         </span>
-        <button id="share-btn" className="icon-btn hidden" type="button" title="แชร์ห้อง (QR)" aria-label="แชร์ห้อง" onClick={() => setShareOpen(true)}>
+        <button
+          id="share-btn"
+          className="icon-btn hidden"
+          type="button"
+          title="แชร์ห้อง (QR)"
+          aria-label="แชร์ห้อง"
+          onClick={() => setShareOpen(true)}
+        >
           <Icon name="qr-code" />
         </button>
-        <button id="settings-btn" className="icon-btn" type="button" title="ตั้งค่า" aria-label="ตั้งค่า" onClick={() => setSettingsOpen(true)}>
+        <button
+          id="settings-btn"
+          className="icon-btn"
+          type="button"
+          title="ตั้งค่า"
+          aria-label="ตั้งค่า"
+          onClick={() => setSettingsOpen(true)}
+        >
           <Icon name="settings" />
         </button>
       </header>
@@ -161,7 +172,12 @@ export function GameScreen() {
       <div id="hand-area" className={spec ? 'hidden' : undefined}>
         <BotControls s={s} />
         <ComboHints s={s} />
-        <button id="sort-toggle" type="button" className={showSort ? undefined : 'hidden'} onClick={toggleSort}>
+        <button
+          id="sort-toggle"
+          type="button"
+          className={showSort ? undefined : 'hidden'}
+          onClick={toggleSort}
+        >
           {handSort === 'bomb' ? (
             <>
               <Icon name="bomb" /> {t(lang, 'game.sortBomb')}
@@ -183,17 +199,19 @@ export function GameScreen() {
       />
       <ShareModal open={shareOpen} code={code} onOpenChange={setShareOpen} />
       <SettingsModal open={settingsOpen} s={s} onOpenChange={setSettingsOpen} onLeave={openLeave} />
-      <LeaveModal
-        open={leaveOpen}
-        playing={playing}
-        onOpenChange={setLeaveOpen}
-      />
+      <LeaveModal open={leaveOpen} playing={playing} onOpenChange={setLeaveOpen} />
     </section>
   );
 }
 
 // โครงหน้าเปล่า ขณะรอ state แรกจาก server (กัน flash) — คง id หลักไว้ให้ e2e/CSS
-function GameShell({ code, lang }: { code: string; lang: ReturnType<typeof useStore.getState>['lang'] }) {
+function GameShell({
+  code,
+  lang,
+}: {
+  code: string;
+  lang: ReturnType<typeof useStore.getState>['lang'];
+}) {
   return (
     <section id="game-screen" className="screen">
       <header id="topbar">
@@ -202,7 +220,13 @@ function GameShell({ code, lang }: { code: string; lang: ReturnType<typeof useSt
           <strong id="room-code">{code}</strong>
           <Icon name="copy" className="room-copy-ico" />
         </button>
-        <button id="settings-btn" className="icon-btn" type="button" title="ตั้งค่า" aria-label="ตั้งค่า">
+        <button
+          id="settings-btn"
+          className="icon-btn"
+          type="button"
+          title="ตั้งค่า"
+          aria-label="ตั้งค่า"
+        >
           <Icon name="settings" />
         </button>
       </header>

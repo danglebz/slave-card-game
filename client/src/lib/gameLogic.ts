@@ -7,7 +7,9 @@ export const SUITS = ['♣︎', '♦︎', '♥︎', '♠︎'];
 export const RED = new Set([1, 2]); // ข้าวหลามตัด, โพแดง = สีแดง
 
 export function rankLabel(r: number): string {
-  return ({ 15: '2', 14: 'A', 13: 'K', 12: 'Q', 11: 'J' } as Record<number, string>)[r] || String(r);
+  return (
+    ({ 15: '2', 14: 'A', 13: 'K', 12: 'Q', 11: 'J' } as Record<number, string>)[r] || String(r)
+  );
 }
 
 export function isRed(c: Card): boolean {

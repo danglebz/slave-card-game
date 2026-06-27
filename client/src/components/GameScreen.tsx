@@ -5,7 +5,6 @@ import confetti from 'canvas-confetti';
 import { useStore } from '@/store';
 import { Icon } from '@/lib/icons';
 import { t } from '@/lib/i18n';
-import { copyText } from '@/lib/clipboard';
 import { initialHandSort, type HandSort } from '@/lib/gameLogic';
 import { sfx, primeAudio, beep, notifPref, flashTitle, stopFlash } from '@/lib/audio';
 import { Table } from './game/Table';
@@ -41,13 +40,11 @@ export function GameScreen() {
   const showToast = useStore((st) => st.showToast);
 
   const [handSort, setHandSort] = useState<HandSort>(initialHandSort);
-  const [copied, setCopied] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [resultDismissed, setResultDismissed] = useState(false);
-  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // รีเซ็ตการปิดผลรอบเมื่อขึ้นรอบใหม่ (phase ออกจาก finished) → รอบหน้าโชว์ผลอีกครั้ง
   useEffect(() => {
@@ -123,18 +120,6 @@ export function GameScreen() {
     }
   }, [s, showToast, lang]);
 
-  function onCopyCode() {
-    if (!code) return;
-    copyText(code).then((ok) => {
-      if (ok) {
-        setCopied(true);
-        if (copiedTimer.current) clearTimeout(copiedTimer.current);
-        copiedTimer.current = setTimeout(() => setCopied(false), 1400);
-      }
-      showToast(t(lang, ok ? 'toast.codeCopied' : 'toast.copyFail', { code }));
-    });
-  }
-
   function toggleSort() {
     setHandSort((cur) => {
       const next = cur === 'rank' ? 'bomb' : 'rank';
@@ -162,15 +147,16 @@ export function GameScreen() {
     <section id="game-screen" className="screen">
       <header id="topbar">
         <button
-          className={`room-code${copied ? ' copied' : ''}`}
+          className="room-code"
           id="room-code-box"
           type="button"
-          title={t(lang, 'topbar.copyCode')}
-          onClick={onCopyCode}
+          title={t(lang, 'topbar.share')}
+          aria-label={t(lang, 'topbar.share')}
+          onClick={() => setShareOpen(true)}
         >
           <Icon name="hash" />
           <strong id="room-code">{code}</strong>
-          <Icon name={copied ? 'check' : 'copy'} className="room-copy-ico" />
+          <Icon name="qr-code" className="room-copy-ico" />
         </button>
         <span
           id="spectator-count"
@@ -179,16 +165,6 @@ export function GameScreen() {
         >
           <Icon name="eye" /> <span id="spec-n">{specCount}</span>
         </span>
-        <button
-          id="share-btn"
-          className="icon-btn"
-          type="button"
-          title={t(lang, 'topbar.share')}
-          aria-label={t(lang, 'topbar.shareAria')}
-          onClick={() => setShareOpen(true)}
-        >
-          <Icon name="qr-code" />
-        </button>
         <button
           id="score-btn"
           className="icon-btn"

@@ -561,9 +561,26 @@ button.loading:disabled {
   margin: 2px 0 14px;
 }
 .share-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-size: 1.05rem;
   color: var(--foreground);
-  margin-bottom: 12px;
+  margin: 0 auto 12px;
+  padding: 6px 12px;
+  min-height: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.share-code:hover {
+  background: var(--hover);
+}
+.share-code .lucide {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--muted-foreground);
 }
 .share-code strong {
   display: inline-block;

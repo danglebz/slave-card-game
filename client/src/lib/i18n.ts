@@ -34,6 +34,7 @@ const DICT: Record<Lang, Record<string, string>> = {
     'seat.you': '(คุณ)',
     'seat.finished': 'หมดมือ',
     'seat.cards': '{n} ใบ',
+    'bot': 'บอท',
     'log.pass': 'ผ่าน',
     'topbar.copyCode': 'คลิกเพื่อคัดลอกรหัสห้อง',
     'topbar.spectators': 'ผู้ชม',
@@ -88,6 +89,12 @@ const DICT: Record<Lang, Record<string, string>> = {
     'rank.commoner': '🙂 สามัญชน',
     'rank.viceslave': '🥉 รองสลาฟ',
     'rank.slave': '😩 สลาฟ',
+    'score.title': 'สถิติ',
+    'score.leaderboard': 'อันดับสะสม',
+    'score.history': 'ประวัติรอบ',
+    'score.rounds': 'รอบ',
+    'score.empty': 'ยังไม่มีรอบที่จบ — เล่นให้จบสักรอบก่อน',
+    'topbar.score': 'สถิติ',
     'notice.dethrone': '👑→⛓️ คิงตกบัลลังก์! {name} ตกเป็นสลาฟ — แจกไพ่ใหม่',
     'combo.single': 'ไพ่เดี่ยว',
     'combo.pair': 'คู่',
@@ -168,6 +175,7 @@ const DICT: Record<Lang, Record<string, string>> = {
     'seat.you': '(You)',
     'seat.finished': 'Finished',
     'seat.cards': '{n} cards',
+    'bot': 'Bot',
     'log.pass': 'Pass',
     'topbar.copyCode': 'Click to copy room code',
     'topbar.spectators': 'Spectators',
@@ -222,6 +230,12 @@ const DICT: Record<Lang, Record<string, string>> = {
     'rank.commoner': '🙂 Commoner',
     'rank.viceslave': '🥉 Vice-Slave',
     'rank.slave': '😩 Slave',
+    'score.title': 'Scoreboard',
+    'score.leaderboard': 'Standings',
+    'score.history': 'Round history',
+    'score.rounds': 'rounds',
+    'score.empty': 'No finished rounds yet — play a round first',
+    'topbar.score': 'Stats',
     'notice.dethrone': '👑→⛓️ King dethroned! {name} becomes the Slave — redealing',
     'combo.single': 'single',
     'combo.pair': 'pair',
@@ -276,6 +290,13 @@ const DICT: Record<Lang, Record<string, string>> = {
 
 export function initialLang(): Lang {
   return localStorage.getItem('lang') === 'en' ? 'en' : 'th';
+}
+
+// ชื่อบอทจาก server เป็น "บอท N" — แปลงเป็นภาษาที่เลือก ("Bot N") ตอนแสดงผล
+// (ชื่อ canonical ฝั่ง server คงเดิมเพื่อใช้เป็น key เช่น scoreboard)
+export function displayName(name: string, lang: Lang): string {
+  const m = /^บอท (\d+)$/.exec(name);
+  return m ? `${t(lang, 'bot')} ${m[1]}` : name;
 }
 
 // แปลคีย์ + แทนค่าตัวแปร {name}

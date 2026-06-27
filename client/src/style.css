@@ -1834,3 +1834,103 @@ button.loading:disabled {
 .app-version:empty {
   display: none;
 }
+
+/* ============ Scoreboard (สถิติสะสมข้ามรอบ) ============ */
+.score-empty {
+  color: var(--muted-foreground);
+  text-align: center;
+  padding: 22px 0;
+}
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.score-table th,
+.score-table td {
+  padding: 6px 4px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.score-table thead th {
+  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--border);
+}
+.score-table .lucide {
+  width: 1.05rem;
+  height: 1.05rem;
+  vertical-align: middle;
+}
+.score-th-name {
+  text-align: left;
+}
+.score-th-rounds {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.score-name {
+  text-align: left;
+  font-weight: 600;
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.score-table tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+.score-table tbody tr:last-child {
+  border-bottom: 0;
+}
+.score-zero {
+  color: var(--muted-foreground);
+  opacity: 0.4;
+}
+.score-rounds {
+  color: var(--muted-foreground);
+}
+.score-table tr.is-you {
+  background: var(--primary-soft);
+}
+.score-table tr.is-you .score-name {
+  color: var(--primary-hover);
+}
+.score-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 32vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.score-history li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 0.8rem;
+}
+.score-round-n {
+  color: var(--muted-foreground);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.6rem;
+}
+.score-h-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.score-h-entry.is-you {
+  color: var(--primary-hover);
+  font-weight: 700;
+}
+.score-h-entry .lucide {
+  width: 0.95rem;
+  height: 0.95rem;
+}

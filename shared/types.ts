@@ -61,6 +61,29 @@ export interface ResultEntry {
   title: string;
 }
 
+// ----- Scoreboard สะสมข้ามรอบ (ทั้ง session ของห้อง) -----
+export type RankKey = 'king' | 'queen' | 'commoner' | 'viceslave' | 'slave';
+export type RankTally = Record<RankKey, number>;
+
+export interface ScorePlayer {
+  name: string;
+  tally: RankTally;
+  /** จำนวนรอบที่เล่นจบ */
+  rounds: number;
+}
+
+/** ผลของหนึ่งรอบที่จบแล้ว (เรียงตามอันดับหมดมือ) */
+export interface RoundRecord {
+  order: ResultEntry[];
+}
+
+export interface Scoreboard {
+  /** เรียงแล้ว (คิงมากสุด → สลาฟน้อยสุด) */
+  players: ScorePlayer[];
+  /** ประวัติรอบล่าสุด (ใหม่สุดอยู่ท้าย) — จำกัดจำนวนกันบวม */
+  history: RoundRecord[];
+}
+
 /** รายการประวัติ — union แบบหลวม: เล่นไพ่ | ผ่าน | event ของเกม */
 export interface HistoryEntry {
   name?: string;
@@ -117,6 +140,8 @@ export interface RoomState {
   history: HistoryEntry[];
   exchange: ExchangeInfo | null;
   notice: Notice | null;
+  /** สถิติสะสมข้ามรอบของห้อง (leaderboard + ประวัติ) */
+  scoreboard: Scoreboard;
 }
 
 // ----- Socket.IO event maps -----

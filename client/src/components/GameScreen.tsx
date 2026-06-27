@@ -14,6 +14,7 @@ import { Hand } from './game/Hand';
 import { ComboHints } from './game/ComboHints';
 import { BotControls, Actions } from './game/Controls';
 import { ResultModal } from './ResultModal';
+import { ScoreboardModal } from './ScoreboardModal';
 import { ShareModal } from './ShareModal';
 import { SettingsModal } from './SettingsModal';
 import { LeaveModal } from './LeaveModal';
@@ -43,6 +44,7 @@ export function GameScreen() {
   const [copied, setCopied] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [scoreOpen, setScoreOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [resultDismissed, setResultDismissed] = useState(false);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -188,6 +190,16 @@ export function GameScreen() {
           <Icon name="qr-code" />
         </button>
         <button
+          id="score-btn"
+          className="icon-btn"
+          type="button"
+          title={t(lang, 'topbar.score')}
+          aria-label={t(lang, 'topbar.score')}
+          onClick={() => setScoreOpen(true)}
+        >
+          <Icon name="bar-chart" />
+        </button>
+        <button
           id="settings-btn"
           className="icon-btn"
           type="button"
@@ -234,6 +246,12 @@ export function GameScreen() {
         open={s.phase === 'finished' && !!s.result && !resultDismissed}
         result={s.result}
         onOpenChange={(o) => !o && setResultDismissed(true)}
+      />
+      <ScoreboardModal
+        open={scoreOpen}
+        scoreboard={s.scoreboard}
+        youName={s.players.find((p) => p.isYou)?.name ?? null}
+        onOpenChange={setScoreOpen}
       />
       <ShareModal open={shareOpen} code={code} onOpenChange={setShareOpen} />
       <SettingsModal open={settingsOpen} s={s} onOpenChange={setSettingsOpen} onLeave={openLeave} />

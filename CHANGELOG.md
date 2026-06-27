@@ -2,6 +2,28 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.19.0](https://github.com/Danglebz/slave-card-game/compare/v1.18.0...v1.19.0) (2026-06-27)
+
+
+### ✨ Features
+
+* **client:** show QR/share button in topbar (was hidden) ([2c8554b](https://github.com/Danglebz/slave-card-game/commit/2c8554b5a4e52725d89e3478162fed925feff97b))
+* **game:** cross-round scoreboard — cumulative rank tally + history ([08fd69e](https://github.com/Danglebz/slave-card-game/commit/08fd69e6fc692446678988610e9e004d7536f216))
+
+
+### 💄 Styling
+
+* **client:** change vice-slave rank icon from award to meh face ([4dbc5e2](https://github.com/Danglebz/slave-card-game/commit/4dbc5e2a60774d511ffd38d63294b335ed2cbbad))
+* **client:** king rank icon crown → trophy (medals only for king/queen) ([573d93f](https://github.com/Danglebz/slave-card-game/commit/573d93ff731d1a07f8913fa31a7219a5fcc0bcc5))
+
+## [1.18.1](https://github.com/Danglebz/slave-card-game/compare/v1.18.0...v1.18.1) (2026-06-27)
+
+
+### 💄 Styling
+
+* **client:** change vice-slave rank icon from award to meh face ([4dbc5e2](https://github.com/Danglebz/slave-card-game/commit/4dbc5e2a60774d511ffd38d63294b335ed2cbbad))
+* **client:** king rank icon crown → trophy (medals only for king/queen) ([573d93f](https://github.com/Danglebz/slave-card-game/commit/573d93ff731d1a07f8913fa31a7219a5fcc0bcc5))
+
 ## [1.18.0](https://github.com/Danglebz/slave-card-game/compare/v1.17.0...v1.18.0) (2026-06-27)
 
 

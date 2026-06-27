@@ -37,7 +37,10 @@ export const ColorSchema = v.pipe(
 );
 
 /** id ไพ่ 'rank.suit' — rank 3..15, suit 0..3 (ตรงกับ game.ts cardId/cardFromId) */
-export const CardIdSchema = v.pipe(v.string(), v.regex(/^(?:[3-9]|1[0-5])\.[0-3]$/, 'err.cardInvalid'));
+export const CardIdSchema = v.pipe(
+  v.string(),
+  v.regex(/^(?:[3-9]|1[0-5])\.[0-3]$/, 'err.cardInvalid'),
+);
 
 /** กองไพ่ที่ส่งมา (play/give) — จำกัดความยาวกันสแปม payload ใหญ่ */
 export const CardsSchema = v.pipe(
@@ -66,10 +69,16 @@ export const SettingsPatchSchema = v.object({
   timer: v.optional(v.boolean()),
   autoPass: v.optional(v.boolean()),
   autoPassStuck: v.optional(v.boolean()),
+  allowTriple: v.optional(v.boolean()),
+  allowQuad: v.optional(v.boolean()),
+  allowStraight: v.optional(v.boolean()),
   turnSeconds: v.optional(TurnSecondsSchema),
 });
 
 export const SetColorSchema = v.object({ color: ColorSchema });
+
+/** หัวห้องเตะผู้เล่น — อ้างอิงด้วยชื่อ (กัน index เพี้ยนตอนคนเข้า/ออก) */
+export const KickSchema = v.object({ name: NameSchema });
 
 export const PlaySchema = v.object({ cards: CardsSchema });
 
@@ -80,6 +89,7 @@ export type CreatePayload = v.InferOutput<typeof CreateSchema>;
 export type JoinPayload = v.InferOutput<typeof JoinSchema>;
 export type SettingsPatch = v.InferOutput<typeof SettingsPatchSchema>;
 export type SetColorPayload = v.InferOutput<typeof SetColorSchema>;
+export type KickPayload = v.InferOutput<typeof KickSchema>;
 export type PlayPayload = v.InferOutput<typeof PlaySchema>;
 export type GivePayload = v.InferOutput<typeof GiveSchema>;
 

@@ -5,7 +5,7 @@
 // ดอก (suit) ใช้ตัดสินเมื่ออันดับเท่ากัน (เดี่ยว/คู่/เรียง): ♣ < ♦ < ♥ < ♠
 //   0=♣ 1=♦ 2=♥ 3=♠
 
-import type { Card, Combo, ComboType } from '../shared/types';
+import type { Card, Combo, ComboType, Settings } from '../shared/types';
 
 export const SUITS: string[] = ['♣', '♦', '♥', '♠'];
 export const SUIT_NAMES: string[] = ['ดอกจิก', 'ข้าวหลามตัด', 'โพแดง', 'โพดำ'];
@@ -194,11 +194,12 @@ export function findStarter(hands: Card[][]): number {
  * มีชุดไพ่ใด ๆ ในมือที่ลงทับกองปัจจุบันได้ไหม (รวมบอมบ์ ตอง โฟร์ เรียง)
  * ใช้ตัดสินว่าควร auto-pass ไหม — นำกอง (pile=null) = ลงได้เสมอ
  */
-export function anyLegalMove(hand: Card[], pile: Combo | null): boolean {
+export function anyLegalMove(hand: Card[], pile: Combo | null, disallowed?: Set<string>): boolean {
   if (!pile) return true;
+  const off = (type: string) => !!disallowed?.has(type); // ชุดที่หัวห้องปิด
   const beats = (cards: Card[]): boolean => {
     const combo = identifyCombo(cards);
-    return !!combo && canBeat(pile, combo);
+    return !!combo && !off(combo.type) && canBeat(pile, combo);
   };
   // จัดกลุ่มตามอันดับ (เดี่ยว/คู่/ตอง/โฟร์)
   const groups = new Map<number, Card[]>();
@@ -235,6 +236,15 @@ export function anyLegalMove(hand: Card[], pile: Combo | null): boolean {
     }
   }
   return false;
+}
+
+// house rules: ชุดพิเศษที่หัวห้องปิด → Set ของ combo.type ที่ห้ามลง (singles/pairs ลงได้เสมอ)
+export function disallowedComboTypes(settings?: Partial<Settings> | null): Set<string> {
+  const d = new Set<string>();
+  if (settings?.allowTriple === false) d.add('triple');
+  if (settings?.allowQuad === false) d.add('quad');
+  if (settings?.allowStraight === false) d.add('straight');
+  return d;
 }
 
 export type { ComboType };

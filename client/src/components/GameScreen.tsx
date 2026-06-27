@@ -158,33 +158,35 @@ export function GameScreen() {
           <strong id="room-code">{code}</strong>
           <Icon name="qr-code" className="room-copy-ico" />
         </button>
-        <span
-          id="spectator-count"
-          className={`spec-count${specCount === 0 ? ' hidden' : ''}`}
-          title={t(lang, 'topbar.spectators')}
-        >
-          <Icon name="eye" /> <span id="spec-n">{specCount}</span>
-        </span>
-        <button
-          id="score-btn"
-          className="icon-btn"
-          type="button"
-          title={t(lang, 'topbar.score')}
-          aria-label={t(lang, 'topbar.score')}
-          onClick={() => setScoreOpen(true)}
-        >
-          <Icon name="bar-chart" />
-        </button>
-        <button
-          id="settings-btn"
-          className="icon-btn"
-          type="button"
-          title={t(lang, 'set.title')}
-          aria-label={t(lang, 'set.title')}
-          onClick={() => setSettingsOpen(true)}
-        >
-          <Icon name="settings" />
-        </button>
+        <div className="topbar-actions">
+          <span
+            id="spectator-count"
+            className={`spec-count${specCount === 0 ? ' hidden' : ''}`}
+            title={t(lang, 'topbar.spectators')}
+          >
+            <Icon name="eye" /> <span id="spec-n">{specCount}</span>
+          </span>
+          <button
+            id="score-btn"
+            className="icon-btn"
+            type="button"
+            title={t(lang, 'topbar.score')}
+            aria-label={t(lang, 'topbar.score')}
+            onClick={() => setScoreOpen(true)}
+          >
+            <Icon name="bar-chart" />
+          </button>
+          <button
+            id="settings-btn"
+            className="icon-btn"
+            type="button"
+            title={t(lang, 'set.title')}
+            aria-label={t(lang, 'set.title')}
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Icon name="settings" />
+          </button>
+        </div>
       </header>
 
       <div id="spectator-banner" className={`spectator-banner${spec ? '' : ' hidden'}`}>

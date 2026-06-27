@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 import { networkInterfaces } from 'node:os';
 import fs from 'node:fs';
 import { Room } from './room';
-import { anyLegalMove } from './game';
+import { anyLegalMove, disallowedComboTypes } from './game';
 import { GameError, gerr } from './errors';
 import { createSocketLimiter } from './ratelimit';
 import { initSentry, logger, captureError, metrics, snapshot } from './observability';
@@ -18,6 +18,7 @@ import {
   JoinSchema,
   SettingsPatchSchema,
   SetColorSchema,
+  KickSchema,
   PlaySchema,
   GiveSchema,
 } from '../shared/schemas';
@@ -195,7 +196,7 @@ function stuckHere(room: Room): boolean {
   if (room.phase !== 'playing' || !room.pile) return false;
   const cur = room.players[room.turn];
   if (!cur || cur.isBot || cur.finished || !cur.connected) return false;
-  return !anyLegalMove(cur.hand, room.pile); // ไม่มีไพ่ลงได้ = ติด
+  return !anyLegalMove(cur.hand, room.pile, disallowedComboTypes(room.settings)); // ไม่มีไพ่ลงได้ = ติด
 }
 function scheduleStuckPass(room: Room): void {
   clearStuckTimer(room);
@@ -243,8 +244,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
   const err = (key: string, vars?: Record<string, string | number>) =>
     socket.emit('errorMsg', { key, vars });
   // แปลง error ที่จับได้ → errorMsg (GameError มี key/vars; อื่นๆ = generic)
-  const fail = (e: unknown) =>
-    e instanceof GameError ? err(e.key, e.vars) : err('err.generic');
+  const fail = (e: unknown) => (e instanceof GameError ? err(e.key, e.vars) : err('err.generic'));
 
   // validate payload จาก client → คืนค่าที่ผ่าน schema, หรือ emit errorMsg + null ถ้าไม่ผ่าน
   // หมายเหตุ: issue message เป็น i18n key (ดู shared/schemas.ts)
@@ -344,6 +344,19 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       room.shuffleSeats();
     }),
   );
+  // หัวห้องเตะผู้เล่น (ในล็อบบี้) — แจ้งคนที่ถูกเตะ + พาออกจาก room ของ socket
+  socket.on('kick', (raw) => {
+    const p = parse(KickSchema, raw);
+    if (!p) return;
+    withRoom((room) => {
+      if (room.hostId !== socket.id) gerr('err.hostOnly');
+      const kickedId = room.kick(p.name);
+      if (kickedId && !kickedId.startsWith('bot:')) {
+        io.to(kickedId).emit('left');
+        io.sockets.sockets.get(kickedId)?.leave(room.code);
+      }
+    });
+  });
   // สีประจำตัว — ตั้งของตัวเองได้ทุกเมื่อ
   socket.on('setColor', (raw) => {
     const p = parse(SetColorSchema, raw);

@@ -24,7 +24,10 @@ export function TurnInfo({ s }: { s: RoomState }) {
       content = (
         <>
           <Icon name="link" />{' '}
-          {t(lang, 'exchange.gave', { n: ex.gaveCount, name: displayName(ex.fromName ?? '', lang) })}
+          {t(lang, 'exchange.gave', {
+            n: ex.gaveCount,
+            name: displayName(ex.fromName ?? '', lang),
+          })}
         </>
       );
     } else {
@@ -42,7 +45,8 @@ export function TurnInfo({ s }: { s: RoomState }) {
       </>
     ) : (
       <>
-        <Icon name="hourglass" /> {t(lang, 'turn.other', { name: displayName(s.turnName ?? '', lang) })}
+        <Icon name="hourglass" />{' '}
+        {t(lang, 'turn.other', { name: displayName(s.turnName ?? '', lang) })}
       </>
     );
   }

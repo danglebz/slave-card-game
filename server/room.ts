@@ -10,6 +10,7 @@ import {
   cardFromId,
   rankLabel,
   SUITS,
+  disallowedComboTypes,
 } from './game';
 import { botChoose } from './bot';
 import { gerr } from './errors';
@@ -143,6 +144,9 @@ export class Room {
       timer: true,
       autoPass: true,
       autoPassStuck: true,
+      allowTriple: true,
+      allowQuad: true,
+      allowStraight: true,
       turnSeconds: Math.max(1, Math.round(Room.TURN_MS / 1000)),
     };
   }
@@ -173,6 +177,9 @@ export class Room {
     if (typeof patch.timer === 'boolean') this.settings.timer = patch.timer;
     if (typeof patch.autoPass === 'boolean') this.settings.autoPass = patch.autoPass;
     if (typeof patch.autoPassStuck === 'boolean') this.settings.autoPassStuck = patch.autoPassStuck;
+    if (typeof patch.allowTriple === 'boolean') this.settings.allowTriple = patch.allowTriple;
+    if (typeof patch.allowQuad === 'boolean') this.settings.allowQuad = patch.allowQuad;
+    if (typeof patch.allowStraight === 'boolean') this.settings.allowStraight = patch.allowStraight;
     if (patch.turnSeconds != null && Room.TURN_SECONDS_CHOICES.includes(patch.turnSeconds))
       this.settings.turnSeconds = patch.turnSeconds;
   }
@@ -190,8 +197,7 @@ export class Room {
   // ----- บอท (AI เติมคน) -----
   addBot(): void {
     if (this.phase !== 'lobby') gerr('err.botLobbyOnly');
-    if (this.players.length >= Room.MAX_PLAYERS)
-      gerr('err.roomFull', { max: Room.MAX_PLAYERS });
+    if (this.players.length >= Room.MAX_PLAYERS) gerr('err.roomFull', { max: Room.MAX_PLAYERS });
     // หาเลขบอทที่ว่างต่ำสุด เพื่อชื่อไม่ชนกัน
     const used = new Set(this.players.filter((p) => p.isBot).map((p) => p.name));
     let n = 1;
@@ -219,6 +225,16 @@ export class Room {
 
   hasBots(): boolean {
     return this.players.some((p) => p.isBot);
+  }
+
+  // หัวห้องเตะผู้เล่น (เฉพาะในล็อบบี้) — อ้างอิงด้วยชื่อ; คืน socket id ที่ถูกเตะ (ให้ index.ts แจ้ง/พาออก)
+  kick(name: string): string | null {
+    if (this.phase !== 'lobby') gerr('err.kickLobbyOnly');
+    const idx = this.players.findIndex((p) => p.name === name);
+    if (idx < 0) gerr('err.noSuchPlayer');
+    if (this.players[idx].id === this.hostId) gerr('err.cantKickSelf');
+    const [removed] = this.players.splice(idx, 1);
+    return removed.id;
   }
 
   // สลับลำดับที่นั่ง (เปลี่ยนลำดับการวน) — เฉพาะในล็อบบี้
@@ -255,8 +271,7 @@ export class Room {
     }
     // เข้าใหม่ตอนล็อบบี้ = ผู้เล่น
     if (this.phase === 'lobby') {
-      if (this.players.length >= Room.MAX_PLAYERS)
-        gerr('err.roomFull', { max: Room.MAX_PLAYERS });
+      if (this.players.length >= Room.MAX_PLAYERS) gerr('err.roomFull', { max: Room.MAX_PLAYERS });
       const player: Player = { id: socketId, name, connected: true, hand: [], finished: false };
       this.players.push(player);
       if (!this.hostId) this.hostId = socketId;
@@ -375,9 +390,7 @@ export class Room {
       title: titles[rank] || 'slave',
     }));
     this.recordRound(this.lastResult); // ← สะสมสถิติ (คิงตกบัลลังก์ก็นับเป็นจบรอบ)
-    this.log.push(
-      `dethrone: ${this.players[order[n - 1]].name} (was king) becomes slave — redeal`,
-    );
+    this.log.push(`dethrone: ${this.players[order[n - 1]].name} (was king) becomes slave — redeal`);
     this.noticeSeq++;
     this.noticeKey = 'notice.dethrone';
     this.noticeVars = { name: this.players[order[n - 1]].name };
@@ -502,6 +515,10 @@ export class Room {
     const combo = identifyCombo(cards);
     if (!combo) gerr('err.invalidCombo');
 
+    // house rules: ชุดพิเศษที่หัวห้องปิด → ลงไม่ได้
+    if (disallowedComboTypes(this.settings).has(combo!.type))
+      gerr('err.comboDisabled', { type: combo!.type });
+
     // ไพ่แรกสุดของเกมต้องมี 3♣ (ดอกจิก) ร่วมด้วย
     if (!this.everPlayed && !cardIds.includes('3.0')) {
       gerr('err.first3');
@@ -603,7 +620,11 @@ export class Room {
     // context ช่วยบอทตัดสินใจ: คู่แข่งเหลือไพ่น้อยสุดกี่ใบ + กองแรกต้องมี 3♣ ไหม
     const opp = this.players.filter((p, i) => i !== idx && !p.finished);
     const minOppCards = opp.length ? Math.min(...opp.map((p) => p.hand.length)) : Infinity;
-    const move = botChoose(bot.hand, this.pile, { minOppCards, mustInclude3: !this.everPlayed });
+    const move = botChoose(bot.hand, this.pile, {
+      minOppCards,
+      mustInclude3: !this.everPlayed,
+      disallowed: disallowedComboTypes(this.settings),
+    });
     try {
       if (move) this._play(idx, move);
       else if (this.pile) this._pass(idx);
@@ -835,6 +856,9 @@ export class Room {
       timer: true,
       autoPass: true,
       autoPassStuck: true,
+      allowTriple: true,
+      allowQuad: true,
+      allowStraight: true,
       turnSeconds: Math.max(1, Math.round(Room.TURN_MS / 1000)),
       ...(data.settings || {}),
     };

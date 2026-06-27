@@ -1,7 +1,7 @@
 // ComboHints.tsx — บอมบ์ในมือ (port detectCombos + renderCombos)
 // กดชิป = เลือกชุดนั้น, กดซ้ำ = ยกเลิก (ผ่าน store.setSelected / clearSelected)
 import type { RoomState } from '@shared/types';
-import { detectCombos } from '@/lib/gameLogic';
+import { detectCombos, disabledComboTypes } from '@/lib/gameLogic';
 import { Icon } from '@/lib/icons';
 import { useStore } from '@/store';
 import { t } from '@/lib/i18n';
@@ -13,7 +13,9 @@ export function ComboHints({ s }: { s: RoomState }) {
   const lang = useStore((st) => st.lang);
 
   const combos =
-    s.phase === 'playing' && s.hand && s.hand.length ? detectCombos(s.hand, lang) : [];
+    s.phase === 'playing' && s.hand && s.hand.length
+      ? detectCombos(s.hand, lang, disabledComboTypes(s.settings))
+      : [];
 
   if (!combos.length) {
     return <div id="combo-hints" className="hidden" />;

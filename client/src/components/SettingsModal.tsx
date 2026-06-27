@@ -6,7 +6,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ColorPicker } from '@/components/ColorPicker';
 import { Switch } from '@/components/ui/switch';
 import { Icon } from '@/lib/icons';
-import { t, type Lang } from '@/lib/i18n';
+import { t, displayName, type Lang } from '@/lib/i18n';
 import { socket } from '@/lib/socket';
 import { useStore } from '@/store';
 import {
@@ -56,7 +56,15 @@ export function SettingsModal({
     return /^#[0-9a-f]{6}$/i.test(c) ? c : '#3b82f6';
   });
 
-  const st = s?.settings || { timer: true, autoPass: true, autoPassStuck: true, turnSeconds: 30 };
+  const st = s?.settings || {
+    timer: true,
+    autoPass: true,
+    autoPassStuck: true,
+    allowTriple: true,
+    allowQuad: true,
+    allowStraight: true,
+    turnSeconds: 30,
+  };
   const isHost = !!s?.youAreHost;
   const curSec = st.turnSeconds || 30;
 
@@ -64,6 +72,9 @@ export function SettingsModal({
     timer?: boolean;
     autoPass?: boolean;
     autoPassStuck?: boolean;
+    allowTriple?: boolean;
+    allowQuad?: boolean;
+    allowStraight?: boolean;
     turnSeconds?: number;
   }) {
     if (!s?.youAreHost) return;
@@ -147,7 +158,12 @@ export function SettingsModal({
             <span className="setting-label">
               <Icon name="clock" /> <span>{t(lang, 'set.turnsec')}</span>
             </span>
-            <div className="seg" id="turn-seconds-seg" role="group" aria-label={t(lang, 'set.turnsec')}>
+            <div
+              className="seg"
+              id="turn-seconds-seg"
+              role="group"
+              aria-label={t(lang, 'set.turnsec')}
+            >
               {SEG_SECS.map((sec) => (
                 <button
                   key={sec}
@@ -162,6 +178,74 @@ export function SettingsModal({
               ))}
             </div>
           </div>
+
+          <p className="settings-sub-label">
+            <Icon name="bomb" /> <span>{t(lang, 'set.combos')}</span>
+          </p>
+          <label className="setting-row setting-row-sub" htmlFor="set-allow-triple">
+            <span className="setting-label">
+              <Icon name="layers" /> <span>{t(lang, 'set.allowTriple')}</span>
+            </span>
+            <Switch
+              id="set-allow-triple"
+              checked={st.allowTriple !== false}
+              disabled={!isHost}
+              onCheckedChange={(c) => emitSettings({ allowTriple: c })}
+            />
+          </label>
+          <label className="setting-row setting-row-sub" htmlFor="set-allow-quad">
+            <span className="setting-label">
+              <Icon name="bomb" /> <span>{t(lang, 'set.allowQuad')}</span>
+            </span>
+            <Switch
+              id="set-allow-quad"
+              checked={st.allowQuad !== false}
+              disabled={!isHost}
+              onCheckedChange={(c) => emitSettings({ allowQuad: c })}
+            />
+          </label>
+          <label className="setting-row setting-row-sub" htmlFor="set-allow-straight">
+            <span className="setting-label">
+              <Icon name="target" /> <span>{t(lang, 'set.allowStraight')}</span>
+            </span>
+            <Switch
+              id="set-allow-straight"
+              checked={st.allowStraight !== false}
+              disabled={!isHost}
+              onCheckedChange={(c) => emitSettings({ allowStraight: c })}
+            />
+          </label>
+
+          {isHost && s?.phase === 'lobby' && (
+            <>
+              <p className="settings-group-label">
+                <Icon name="shield" /> <span>{t(lang, 'host.title')}</span>
+              </p>
+              {s.players.filter((p) => !p.isYou).length === 0 ? (
+                <div className="setting-row is-disabled">
+                  <span className="setting-label">{t(lang, 'host.empty')}</span>
+                </div>
+              ) : (
+                s.players.map((p, i) =>
+                  p.isYou ? null : (
+                    <div className="setting-row" key={i}>
+                      <span className="setting-label">
+                        <Icon name={p.isBot ? 'bot' : 'user'} />{' '}
+                        <span>{displayName(p.name, lang)}</span>
+                      </span>
+                      <button
+                        type="button"
+                        className="btn-destructive kick-btn"
+                        onClick={() => socket.emit('kick', { name: p.name })}
+                      >
+                        <Icon name="user-x" /> <span>{t(lang, 'host.kick')}</span>
+                      </button>
+                    </div>
+                  ),
+                )
+              )}
+            </>
+          )}
 
           <p className="settings-group-label">
             <Icon name="user" /> <span>{t(lang, 'set.personal')}</span>

@@ -147,7 +147,7 @@ export function SettingsModal({
             <span className="setting-label">
               <Icon name="clock" /> <span>{t(lang, 'set.turnsec')}</span>
             </span>
-            <div className="seg" id="turn-seconds-seg" role="group" aria-label="เวลาต่อตา">
+            <div className="seg" id="turn-seconds-seg" role="group" aria-label={t(lang, 'set.turnsec')}>
               {SEG_SECS.map((sec) => (
                 <button
                   key={sec}

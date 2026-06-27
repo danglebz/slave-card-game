@@ -15,21 +15,22 @@ export function TurnInfo({ s }: { s: RoomState }) {
     if (ex.role === 'winner' && !ex.myDone) {
       content = (
         <>
-          <Icon name="gift" /> เลือกไพ่ {ex.myCount} ใบ คืนให้ {ex.toName}
+          <Icon name="gift" />{' '}
+          {t(lang, 'exchange.pick', { n: ex.myCount, name: ex.toName ?? '' })}
         </>
       );
       yourTurn = true;
     } else if (ex.role === 'loser') {
       content = (
         <>
-          <Icon name="link" /> ส่งไพ่สูงสุด {ex.gaveCount} ใบ ให้ {ex.fromName} แล้ว ·
-          รอรับไพ่คืน...
+          <Icon name="link" />{' '}
+          {t(lang, 'exchange.gave', { n: ex.gaveCount, name: ex.fromName ?? '' })}
         </>
       );
     } else {
       content = (
         <>
-          <Icon name="hourglass" /> รอผู้เล่นอื่นเลือกไพ่...
+          <Icon name="hourglass" /> {t(lang, 'exchange.waiting')}
         </>
       );
     }

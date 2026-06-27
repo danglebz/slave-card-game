@@ -5,6 +5,7 @@ import { LobbyScreen } from './components/LobbyScreen';
 import { GameScreen } from './components/GameScreen';
 import { ConnBanner } from './components/ConnBanner';
 import { Toast } from './components/Toast';
+import { t } from './lib/i18n';
 
 /**
  * App shell — เดินสาย socket events เข้า store (single source of truth)
@@ -43,7 +44,15 @@ export default function App() {
     socket.on('joined', onJoined);
     socket.on('left', onLeft);
     socket.on('state', (s) => useStore.getState().setRoomState(s));
-    socket.on('errorMsg', (msg) => useStore.getState().showToast(msg, 'error'));
+    socket.on('errorMsg', (e) => {
+      const st = useStore.getState();
+      let vars = e.vars;
+      // err.mustBeat: server ส่ง type/len ของกอง → ประกอบชื่อชุด (combo.*) ตามภาษา
+      if (e.key === 'err.mustBeat' && e.vars) {
+        vars = { ...e.vars, want: t(st.lang, 'combo.' + e.vars.type, { len: Number(e.vars.len) }) };
+      }
+      st.showToast(t(st.lang, e.key, vars), 'error');
+    });
 
     // auto-join จาก ?room=CODE ถ้ามีชื่อที่เคยบันทึกไว้
     const room = new URLSearchParams(location.search).get('room');

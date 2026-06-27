@@ -4,17 +4,17 @@ import type { RoomState } from '@shared/types';
 import { PlayingCard } from './PlayingCard';
 import { TurnInfo } from './TurnInfo';
 import { TurnTimer } from './TurnTimer';
+import { useStore } from '@/store';
+import { t } from '@/lib/i18n';
 
 export function Pile({ s }: { s: RoomState }) {
+  const lang = useStore((st) => st.lang);
   const cardsRef = useRef<HTMLDivElement>(null);
   const animKey = useRef<string | null>(null);
 
   const pileCards = s.pileCards && s.pileCards.length ? s.pileCards : null;
-  const label = pileCards
-    ? 'กองบนโต๊ะ'
-    : s.phase === 'playing'
-      ? 'โต๊ะว่าง — ลงไพ่ได้เลย'
-      : 'กองบนโต๊ะ';
+  const label =
+    !pileCards && s.phase === 'playing' ? t(lang, 'pile.empty') : t(lang, 'pile.label');
 
   // อนิเมชันไพ่ลงกอง (เด้งเข้า + เขย่าถ้าเป็นบอมบ์) — เล่นเมื่อกองเปลี่ยนจริงเท่านั้น
   useEffect(() => {

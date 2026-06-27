@@ -5,6 +5,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Icon } from '@/lib/icons';
 import { copyText } from '@/lib/clipboard';
 import { useStore } from '@/store';
+import { t } from '@/lib/i18n';
 
 export function ShareModal({
   open,
@@ -16,6 +17,7 @@ export function ShareModal({
   onOpenChange: (o: boolean) => void;
 }) {
   const showToast = useStore((s) => s.showToast);
+  const lang = useStore((s) => s.lang);
   const [qr, setQr] = useState<string | null>(null);
 
   const url = `${location.origin}/?room=${encodeURIComponent(code)}`;
@@ -39,7 +41,7 @@ export function ShareModal({
 
   async function onCopy() {
     const ok = await copyText(url);
-    showToast(ok ? 'คัดลอกลิงก์แล้ว' : 'คัดลอกไม่สำเร็จ', ok ? 'success' : 'error');
+    showToast(t(lang, ok ? 'toast.linkCopied' : 'toast.copyFailShort'), ok ? 'success' : 'error');
   }
 
   return (
@@ -51,22 +53,30 @@ export function ShareModal({
         ariaLabelledby="share-title"
       >
         <h2 id="share-title">
-          <Icon name="qr-code" /> ชวนเพื่อนเข้าห้อง
+          <Icon name="qr-code" /> {t(lang, 'share.title')}
         </h2>
         <p className="share-sub">
-          ให้เพื่อนใน Wi-Fi เดียวกัน <b>สแกน QR</b> หรือเปิดลิงก์ด้านล่าง
+          {t(lang, 'share.sub1')}
+          <b>{t(lang, 'share.subScan')}</b>
+          {t(lang, 'share.sub2')}
         </p>
         <div className="share-code">
-          รหัสห้อง <strong id="share-code">{code}</strong>
+          {t(lang, 'share.code')} <strong id="share-code">{code}</strong>
         </div>
         <div id="share-qr" className="share-qr">
-          <img id="share-qr-img" alt="QR เข้าห้อง" width={220} height={220} src={qr ?? undefined} />
+          <img
+            id="share-qr-img"
+            alt={t(lang, 'share.qrAlt')}
+            width={220}
+            height={220}
+            src={qr ?? undefined}
+          />
         </div>
         <button
           id="share-link"
           className="share-link"
           type="button"
-          title="คัดลอกลิงก์"
+          title={t(lang, 'share.copyLink')}
           onClick={onCopy}
         >
           <span id="share-url" className="share-url">

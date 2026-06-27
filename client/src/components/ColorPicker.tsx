@@ -2,6 +2,8 @@
 // controlled ล้วน ไม่แตะ DOM เอง → ไม่ตีกับ React/Radix Dialog เหมือน Coloris เดิม
 import { useEffect, useRef, useState } from 'react';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
+import { useStore } from '@/store';
+import { t } from '@/lib/i18n';
 
 interface ColorPickerProps {
   /** สีปัจจุบัน (#rrggbb) */
@@ -16,6 +18,7 @@ interface ColorPickerProps {
 
 export function ColorPicker({ value, onChange, onCommit, swatches }: ColorPickerProps) {
   const [open, setOpen] = useState(false);
+  const lang = useStore((s) => s.lang);
   const ref = useRef<HTMLDivElement>(null);
 
   // ปิดเมื่อคลิกนอก/กด Esc แล้ว commit สีปัจจุบัน
@@ -49,8 +52,8 @@ export function ColorPicker({ value, onChange, onCommit, swatches }: ColorPicker
         id="color-custom"
         className="color-swatch-btn"
         style={{ background: value }}
-        title={'เลือกสีเอง (' + value.toUpperCase() + ')'}
-        aria-label={'เลือกสีประจำตัว (' + value.toUpperCase() + ')'}
+        title={t(lang, 'color.custom', { hex: value.toUpperCase() })}
+        aria-label={t(lang, 'color.customAria', { hex: value.toUpperCase() })}
         onClick={() => setOpen((o) => !o)}
       />
 

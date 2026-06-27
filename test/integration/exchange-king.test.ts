@@ -86,9 +86,9 @@ describe('คิงตกบัลลังก์ (miyakoOchi)', () => {
     room.play('slave', [cardId({ r: 5, s: 3 })]); // สลาฟลงหมดมือก่อนคิง
 
     // สลับขั้ว: SlaveP กลายเป็นคิง, KingP ตกเป็นสลาฟ
-    expect(room.noticeText).toMatch(/คิงตกบัลลังก์/);
+    expect(room.noticeKey).toBe('notice.dethrone');
     expect(room.lastResult[0].name).toBe('SlaveP');
-    expect(room.lastResult[0].title).toMatch(/คิง/);
+    expect(room.lastResult[0].title).toBe('king');
     expect(room.lastResult[1].name).toBe('KingP');
     // แจกใหม่ + เข้าเฟสแลกไพ่ทันที (เฉพาะคู่คิง↔สลาฟ)
     expect(room.phase).toBe('exchange');

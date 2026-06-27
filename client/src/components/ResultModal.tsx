@@ -36,7 +36,7 @@ export function ResultModal({
                     <Icon name="skull" />{' '}
                   </>
                 ) : null}
-                {iconize(r.title)} — {r.name}
+                {iconize(t(lang, 'rank.' + r.title))} — {r.name}
               </li>
             );
           })}

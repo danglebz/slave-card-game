@@ -2,6 +2,30 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.16.0](https://github.com/Danglebz/slave-card-game/compare/v1.15.0...v1.16.0) (2026-06-27)
+
+
+### ✨ Features
+
+* **client:** direction arrows at grid cells 4/6 instead of center watermark ([a3ed980](https://github.com/Danglebz/slave-card-game/commit/a3ed9806dd672d93003087cb5a17641e4b9a3ad6))
+* **game:** smarter bot AI + ranked-only card exchange ([ecb32ee](https://github.com/Danglebz/slave-card-game/commit/ecb32eed44d5d341dfa51f6db7e1d92a61244594))
+
+
+### 🐛 Bug Fixes
+
+* **client:** direction arrow matches actual counter-clockwise turn order ([a0b57b6](https://github.com/Danglebz/slave-card-game/commit/a0b57b621abc23d4f993a95cdd084cd00f9de847))
+
+
+### ♻️ Refactoring
+
+* **config:** convert config files to TypeScript + enable typescript-eslint ([7872451](https://github.com/Danglebz/slave-card-game/commit/78724518dd194929def5ab29de25cdb07fdf768c))
+* **test:** convert test suite + e2e to TypeScript ([bc3953b](https://github.com/Danglebz/slave-card-game/commit/bc3953bc8fd7aeb02cc61635662c9adf7fce18e3))
+
+
+### 💄 Styling
+
+* **client:** rotate direction watermark counter-clockwise (-90deg) ([17b3080](https://github.com/Danglebz/slave-card-game/commit/17b308015ee680f8da966ebccd35e3a83c284f58))
+
 ## [1.15.0](https://github.com/Danglebz/slave-card-game/compare/v1.14.0...v1.15.0) (2026-06-27)
 
 

@@ -44,17 +44,33 @@ export class Room {
     this.noticeText = null;
     this.turnDeadline = null; // timestamp(ms) ที่ตาปัจจุบันจะหมดเวลา (ตั้งโดย server, ไม่เซฟลงไฟล์)
     this.spectators = []; // ผู้ชมที่เข้ามากลางรอบ: { id, name } — จะเข้าเล่นรอบหน้า
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    this._cleanupTimer = null; // ตัวจับเวลาลบห้องร้าง (ตั้ง/เคลียร์ใน index.js)
     // ตั้งค่าห้อง (หัวห้องคุม)
-    this.settings = { timer: true, autoPass: true, turnSeconds: Math.max(1, Math.round(Room.TURN_MS / 1000)) };
+    this.settings = {
+      timer: true,
+      autoPass: true,
+      turnSeconds: Math.max(1, Math.round(Room.TURN_MS / 1000)),
+    };
   }
 
   static TURN_SECONDS_CHOICES = [15, 30, 45, 60];
-  static COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#ec4899'];
+  static COLORS = [
+    '#ef4444',
+    '#f97316',
+    '#eab308',
+    '#22c55e',
+    '#06b6d4',
+    '#3b82f6',
+    '#a855f7',
+    '#ec4899',
+  ];
 
   // ตั้งสีประจำตัวของผู้เล่น (ตัวเองเท่านั้น) — รับ hex #rrggbb ใดๆ (validate กัน injection)
   setColor(socketId, color) {
     const p = this.players.find((x) => x.id === socketId);
-    if (p && typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color)) p.color = color.toLowerCase();
+    if (p && typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color))
+      p.color = color.toLowerCase();
   }
 
   // ปรับตั้งค่าห้อง (เฉพาะค่าที่รู้จัก/ถูกต้อง)
@@ -62,7 +78,8 @@ export class Room {
     if (!patch) return;
     if (typeof patch.timer === 'boolean') this.settings.timer = patch.timer;
     if (typeof patch.autoPass === 'boolean') this.settings.autoPass = patch.autoPass;
-    if (Room.TURN_SECONDS_CHOICES.includes(patch.turnSeconds)) this.settings.turnSeconds = patch.turnSeconds;
+    if (Room.TURN_SECONDS_CHOICES.includes(patch.turnSeconds))
+      this.settings.turnSeconds = patch.turnSeconds;
   }
 
   // เวลาต่อตาเป็น ms (ตามตั้งค่าห้อง)
@@ -84,15 +101,22 @@ export class Room {
     let n = 1;
     while (used.has(`บอท ${n}`)) n++;
     this.players.push({
-      id: `bot:${this.code}:${n}`, name: `บอท ${n}`,
-      connected: true, hand: [], finished: false, isBot: true,
+      id: `bot:${this.code}:${n}`,
+      name: `บอท ${n}`,
+      connected: true,
+      hand: [],
+      finished: false,
+      isBot: true,
     });
   }
 
   removeBot() {
     if (this.phase !== 'lobby') throw new Error('ลบบอทได้เฉพาะตอนอยู่ในล็อบบี้');
     for (let i = this.players.length - 1; i >= 0; i--) {
-      if (this.players[i].isBot) { this.players.splice(i, 1); return; }
+      if (this.players[i].isBot) {
+        this.players.splice(i, 1);
+        return;
+      }
     }
     throw new Error('ไม่มีบอทให้ลบ');
   }
@@ -129,7 +153,10 @@ export class Room {
     }
     // reconnect ผู้ชมที่ค้างอยู่
     const spec = this.spectators.find((s) => s.name === name);
-    if (spec) { spec.id = socketId; return 'spectator'; }
+    if (spec) {
+      spec.id = socketId;
+      return 'spectator';
+    }
     // เข้าใหม่ตอนล็อบบี้ = ผู้เล่น
     if (this.phase === 'lobby') {
       if (this.players.length >= 4) throw new Error('ห้องเต็มแล้ว (สูงสุด 4 คน)');
@@ -250,7 +277,9 @@ export class Room {
       name: this.players[pIdx].name,
       title: titles[rank] || `อันดับ ${rank + 1}`,
     }));
-    this.log.push(`👑→⛓️ สลาฟหมดมือก่อนคิง! ${this.players[order[n - 1]].name} (คิงเดิม) ตกเป็นสลาฟ — แจกไพ่ใหม่`);
+    this.log.push(
+      `👑→⛓️ สลาฟหมดมือก่อนคิง! ${this.players[order[n - 1]].name} (คิงเดิม) ตกเป็นสลาฟ — แจกไพ่ใหม่`,
+    );
     this.noticeSeq++;
     this.noticeText = `👑→⛓️ คิงตกบัลลังก์! ${this.players[order[n - 1]].name} ตกเป็นสลาฟ — แจกไพ่ใหม่`;
     this._miyakoExchange = true; // คิงตกบัลลังก์ → แลกไพ่เฉพาะคิง↔สลาฟ (ควีน/รองสลาฟไม่ต้องแลก)
@@ -281,7 +310,9 @@ export class Room {
       loser.hand = loser.hand.filter((c) => !rm.has(cardId(c)));
       this.players[w].hand.push(...highest.map((c) => ({ r: c.r, s: c.s })));
       sortHand(this.players[w].hand);
-      this.addHistory({ event: `⛓️ ${loser.name} ส่งไพ่สูงสุด ${count} ใบ ให้ ${this.players[w].name}` });
+      this.addHistory({
+        event: `⛓️ ${loser.name} ส่งไพ่สูงสุด ${count} ใบ ให้ ${this.players[w].name}`,
+      });
       // ผู้ชนะต้องเลือก count ใบ คืนให้ผู้แพ้
       this.giveTasks[w] = { to: l, count, cards: null };
     }
@@ -344,7 +375,7 @@ export class Room {
   nextActive(from) {
     const n = this.players.length;
     for (let step = 1; step <= n; step++) {
-      const idx = ((from + step * this.dir) % n + n) % n;
+      const idx = (((from + step * this.dir) % n) + n) % n;
       if (!this.players[idx].finished) return idx;
     }
     return from;
@@ -377,13 +408,22 @@ export class Room {
 
     if (!canBeat(this.pile, combo)) {
       if (!this.pile) throw new Error('ลงชุดนี้ไม่ได้');
-      const TYPE_TH = { single: 'ไพ่เดี่ยว', pair: 'คู่', triple: 'ตอง', quad: 'โฟร์', straight: `เรียง ${this.pile.len} ใบ` };
+      const TYPE_TH = {
+        single: 'ไพ่เดี่ยว',
+        pair: 'คู่',
+        triple: 'ตอง',
+        quad: 'โฟร์',
+        straight: `เรียง ${this.pile.len} ใบ`,
+      };
       const want = TYPE_TH[this.pile.type] || 'ชุดเดียวกัน';
       // ชนิด/จำนวนตรงกับกอง? (ถ้าตรง = แค่เล็กกว่า / ถ้าไม่ตรง = ผิดชนิด)
-      const sameShape = combo.type === this.pile.type && (combo.type !== 'straight' || combo.len === this.pile.len);
-      throw new Error(sameShape
-        ? 'ชุดนี้เล็กกว่ากองบนโต๊ะ — ต้องสูงกว่า'
-        : `ต้องลง "${want}" ที่สูงกว่า (หรือบอมบ์)`);
+      const sameShape =
+        combo.type === this.pile.type && (combo.type !== 'straight' || combo.len === this.pile.len);
+      throw new Error(
+        sameShape
+          ? 'ชุดนี้เล็กกว่ากองบนโต๊ะ — ต้องสูงกว่า'
+          : `ต้องลง "${want}" ที่สูงกว่า (หรือบอมบ์)`,
+      );
     }
     combo.mode = playMode(this.pile, combo);
 
@@ -396,7 +436,9 @@ export class Room {
     this.pileOwner = idx;
     this.everPlayed = true;
     this._lastPileCards = cardIds.map((id) => ({ ...cardFromId(id), id }));
-    this.log.push(`${player.name} ลง ${cardIds.map(idToLabel).join(' ')}${auto ? ' (หมดเวลา)' : ''}`);
+    this.log.push(
+      `${player.name} ลง ${cardIds.map(idToLabel).join(' ')}${auto ? ' (หมดเวลา)' : ''}`,
+    );
     this.addHistory({ name: player.name, cards: cardIds.map(cardFromId), auto });
 
     if (player.hand.length === 0) {
@@ -477,7 +519,7 @@ export class Room {
   nextInTrick(from) {
     const n = this.players.length;
     for (let step = 1; step <= n; step++) {
-      const idx = ((from + step * this.dir) % n + n) % n;
+      const idx = (((from + step * this.dir) % n) + n) % n;
       if (this.players[idx].finished) continue;
       if (this.passed.has(idx)) continue;
       return idx;
@@ -501,7 +543,9 @@ export class Room {
         // เจ้าของกองหมดมือ + ไม่มีใครกินกองได้ → สลับทิศ แล้วคนถัดไป(ทิศใหม่)นำ
         this.dir = -this.dir;
         this.turn = this.nextActive(this.pileOwner == null ? this.turn : this.pileOwner);
-        this.log.push(`🔄 สลับทิศ! เคลียร์กอง ${this.players[this.turn].name} นำใหม่ (วน${this.dir === 1 ? 'ขวา' : 'ซ้าย'})`);
+        this.log.push(
+          `🔄 สลับทิศ! เคลียร์กอง ${this.players[this.turn].name} นำใหม่ (วน${this.dir === 1 ? 'ขวา' : 'ซ้าย'})`,
+        );
       }
       this.pileOwner = null;
     } else {
@@ -518,7 +562,9 @@ export class Room {
       title: titles[rank] || `อันดับ ${rank + 1}`,
     }));
     this.log.push('🎉 จบรอบ! ' + this.lastResult.map((r) => `${r.title}: ${r.name}`).join(', '));
-    this.addHistory({ event: '🎉 จบรอบ! ' + this.lastResult.map((r) => `${r.title}:${r.name}`).join(' · ') });
+    this.addHistory({
+      event: '🎉 จบรอบ! ' + this.lastResult.map((r) => `${r.title}:${r.name}`).join(' · '),
+    });
     return { ok: true, finished: true };
   }
 
@@ -551,8 +597,10 @@ export class Room {
       spectatorCount: this.spectators.length,
       turn: this.turn,
       turnName: this.players[this.turn]?.name ?? null,
-      turnRemainingMs: this.phase === 'playing' && this.turnDeadline
-        ? Math.max(0, this.turnDeadline - Date.now()) : null,
+      turnRemainingMs:
+        this.phase === 'playing' && this.turnDeadline
+          ? Math.max(0, this.turnDeadline - Date.now())
+          : null,
       turnMs: this.turnMs(),
       settings: this.settings,
       dir: this.dir,
@@ -592,9 +640,9 @@ export class Room {
     return {
       role: my ? 'winner' : incoming ? 'loser' : 'none',
       myCount: my ? my.count : 0,
-      toName: my ? this.players[my.to]?.name ?? null : null,
+      toName: my ? (this.players[my.to]?.name ?? null) : null,
       myDone: my ? !!my.cards : true, // ผู้ชนะ: เลือกแล้วหรือยัง; คนอื่น = รอ
-      fromName: incoming ? this.players[+incoming[0]]?.name ?? null : null,
+      fromName: incoming ? (this.players[+incoming[0]]?.name ?? null) : null,
       gaveCount: incoming ? incoming[1].count : 0,
       waitingNames: waiting,
     };
@@ -605,7 +653,13 @@ export class Room {
     return {
       code: this.code,
       players: this.players.map((p) => ({
-        id: p.id, name: p.name, connected: p.connected, hand: p.hand, finished: p.finished, isBot: !!p.isBot, color: p.color || null,
+        id: p.id,
+        name: p.name,
+        connected: p.connected,
+        hand: p.hand,
+        finished: p.finished,
+        isBot: !!p.isBot,
+        color: p.color || null,
       })),
       hostId: this.hostId,
       phase: this.phase,
@@ -635,11 +689,18 @@ export class Room {
     room.giveTasks = data.giveTasks || null;
     room._prevOrder = data._prevOrder || null;
     room.roundOrder = data.roundOrder || null;
-    room.settings = { timer: true, autoPass: true, turnSeconds: Math.max(1, Math.round(Room.TURN_MS / 1000)), ...(data.settings || {}) };
+    room.settings = {
+      timer: true,
+      autoPass: true,
+      turnSeconds: Math.max(1, Math.round(Room.TURN_MS / 1000)),
+      ...(data.settings || {}),
+    };
     room.spectators = []; // ผู้ชมเป็น socket สดๆ ไม่กู้คืนหลัง restart
-    room.everPlayed = data.everPlayed ?? (data.phase !== 'lobby');
+    room.everPlayed = data.everPlayed ?? data.phase !== 'lobby';
     // socket หายหมดตอน restart → คนจริงออฟไลน์จนกว่าจะ reconnect; บอทออนไลน์เสมอ
-    room.players.forEach((p) => { p.connected = !!p.isBot; });
+    room.players.forEach((p) => {
+      p.connected = !!p.isBot;
+    });
     return room;
   }
 }

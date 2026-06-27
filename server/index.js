@@ -7,28 +7,41 @@ import { dirname, join } from 'node:path';
 import { networkInterfaces } from 'node:os';
 import fs from 'node:fs';
 import { Room } from './room.js';
+import { createSocketLimiter } from './ratelimit.js';
+import { initSentry, logger, captureError, metrics, snapshot } from './observability.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PORT = process.env.PORT || 3000;
-const SAVE_PATH = join(__dirname, '..', 'rooms.json');
+const PORT = Number(process.env.PORT) || 3000;
+const SAVE_PATH = process.env.ROOMS_FILE || join(__dirname, '..', 'rooms.json');
 const CLIENT_DIR = join(__dirname, '..', 'dist'); // client ที่ build จาก Vite
 
 const app = express();
 // ปิด cache ของไฟล์ static (html/css/js) เพื่อให้ทุกเครื่องได้เวอร์ชันล่าสุดเสมอ
 // ป้องกันปัญหา "บางคนเห็นการ์ดเพี้ยน" เพราะเบราว์เซอร์ cache ไฟล์เก่าไว้
-app.use(express.static(CLIENT_DIR, {
-  etag: false,
-  lastModified: false,
-  setHeaders: (res) => {
-    res.setHeader('Cache-Control', 'no-store, must-revalidate');
-  },
-}));
+app.use(
+  express.static(CLIENT_DIR, {
+    etag: false,
+    lastModified: false,
+    setHeaders: (res) => {
+      res.setHeader('Cache-Control', 'no-store, must-revalidate');
+    },
+  }),
+);
 
 const server = createServer(app);
 const io = new Server(server);
 
 /** @type {Map<string, Room>} */
 const rooms = new Map();
+
+// ----- health check + metrics (ดูจำนวนห้อง/ผู้เล่น) -----
+app.get('/healthz', (_req, res) => res.json({ ok: true, uptimeSec: snapshot(rooms).uptimeSec }));
+app.get('/metrics', (req, res) => {
+  // กันคนนอกถ้าตั้ง METRICS_TOKEN ไว้ (ไม่ตั้ง = เปิดอ่านได้ — มีแค่ตัวเลขรวม ไม่มีข้อมูลส่วนตัว)
+  const token = process.env.METRICS_TOKEN;
+  if (token && req.query.token !== token) return res.status(403).json({ error: 'forbidden' });
+  res.json(snapshot(rooms));
+});
 
 // ----- เซฟ/โหลดสถานะห้องลงไฟล์ (กัน server restart แล้วเกมหาย) -----
 let saveTimer = null;
@@ -43,7 +56,7 @@ function saveRooms() {
     const data = { rooms: [...rooms.values()].map((r) => r.toState()) };
     fs.writeFileSync(SAVE_PATH, JSON.stringify(data));
   } catch (e) {
-    console.error('เซฟห้องไม่สำเร็จ:', e.message);
+    captureError(e, { where: 'saveRooms' });
   }
 }
 function loadRooms() {
@@ -58,9 +71,9 @@ function loadRooms() {
         if (rooms.get(room.code)?.isEmpty()) rooms.delete(room.code);
       }, 600000);
     }
-    if (rooms.size) console.log(`↩️  โหลดห้องที่ค้างไว้ ${rooms.size} ห้อง`);
+    if (rooms.size) logger.info(`↩️  โหลดห้องที่ค้างไว้ ${rooms.size} ห้อง`);
   } catch (e) {
-    console.error('โหลดห้องไม่สำเร็จ:', e.message);
+    captureError(e, { where: 'loadRooms' });
   }
 }
 
@@ -68,7 +81,9 @@ function makeCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code;
   do {
-    code = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    code = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join(
+      '',
+    );
   } while (rooms.has(code));
   return code;
 }
@@ -89,8 +104,12 @@ function armTurnTimer(room) {
   const anyOnline = humansOnline(room); // มีคนจริงออนไลน์ไหม (บอทไม่นับ)
   const timerOn = room.settings?.timer !== false; // หัวห้องปิด timer ได้
   // เดินเวลาเฉพาะตอนเล่นจริง + มีคนออนไลน์ + เปิด timer
-  const sig = room.phase === 'playing' && anyOnline && timerOn ? `${room.turn}:${room.pileOwner}` : null;
-  if (sig === null) { clearTurnTimer(room); return; }
+  const sig =
+    room.phase === 'playing' && anyOnline && timerOn ? `${room.turn}:${room.pileOwner}` : null;
+  if (sig === null) {
+    clearTurnTimer(room);
+    return;
+  }
   if (sig === room._turnSig) return; // ตาเดิม → เดินเวลาต่อ (ไม่รีเซ็ต)
   clearTimeout(room._turnTimer);
   room._turnTimer = null;
@@ -105,7 +124,11 @@ function armTurnTimer(room) {
 function onTurnTimeout(code) {
   const room = rooms.get(code);
   if (!room || room.phase !== 'playing') return;
-  try { room.autoAct(); } catch (e) { console.error('auto-act:', e.message); }
+  try {
+    room.autoAct();
+  } catch (e) {
+    captureError(e, { where: 'autoAct', code });
+  }
   broadcast(room); // จะ arm รอบใหม่ให้เอง
 }
 
@@ -128,17 +151,24 @@ function scheduleBot(room) {
   }
   if (!act) return;
   const base = Number(process.env.BOT_MS) || 600;
-  room._botTimer = setTimeout(() => {
-    const r = rooms.get(room.code);
-    if (!r) return;
-    try { act(); } catch (e) { console.error('bot:', e.message); }
-    broadcast(r); // เดินคนถัดไป (อาจเป็นบอทอีกตัว) ต่อเอง
-  }, base + Math.floor(Math.random() * 500)); // หน่วงให้ดูเป็นธรรมชาติ
+  room._botTimer = setTimeout(
+    () => {
+      const r = rooms.get(room.code);
+      if (!r) return;
+      try {
+        act();
+      } catch (e) {
+        captureError(e, { where: 'botAct', code: room.code });
+      }
+      broadcast(r); // เดินคนถัดไป (อาจเป็นบอทอีกตัว) ต่อเอง
+    },
+    base + Math.floor(Math.random() * 500),
+  ); // หน่วงให้ดูเป็นธรรมชาติ
 }
 
 function broadcast(room) {
   armTurnTimer(room); // ตั้งเวลาก่อนส่ง state เพื่อให้ client ได้ turnRemainingMs ที่ถูกต้อง
-  scheduleBot(room);  // ถ้าถึงตาบอท ตั้งเวลาให้บอทเดิน
+  scheduleBot(room); // ถ้าถึงตาบอท ตั้งเวลาให้บอทเดิน
   for (const p of room.players) {
     if (p.connected && !p.isBot) io.to(p.id).emit('state', room.stateFor(p.id));
   }
@@ -148,6 +178,19 @@ function broadcast(room) {
 
 io.on('connection', (socket) => {
   let joinedCode = null;
+
+  // ----- กันสแปม: token bucket ต่อ socket (เกินลิมิต = ตัด event ทิ้ง) -----
+  metrics.connections++;
+  metrics.peakConcurrent = Math.max(metrics.peakConcurrent, io.engine.clientsCount);
+  const allow = createSocketLimiter();
+  socket.use(([event], next) => {
+    if (!allow(event)) {
+      metrics.rateLimited++;
+      socket.emit('errorMsg', 'คุณส่งคำสั่งถี่เกินไป รอสักครู่');
+      return; // ไม่เรียก next() → ไม่รัน handler
+    }
+    next();
+  });
 
   const err = (msg) => socket.emit('errorMsg', msg);
 
@@ -163,6 +206,8 @@ io.on('connection', (socket) => {
       joinedCode = code;
       socket.join(code);
       socket.emit('joined', { code });
+      metrics.roomsCreated++;
+      logger.info(`สร้างห้อง ${code} โดย "${name}"`, { rooms: rooms.size });
       broadcast(room);
     } catch (e) {
       err(e.message);
@@ -199,49 +244,67 @@ io.on('connection', (socket) => {
     }
   };
 
-  socket.on('start', () => withRoom((room) => {
-    if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องเริ่มเกมได้');
-    room.start();
-  }));
+  socket.on('start', () =>
+    withRoom((room) => {
+      if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องเริ่มเกมได้');
+      room.start();
+      metrics.gamesStarted++;
+      logger.info(`เริ่มเกมห้อง ${room.code} (${room.players.length} คน)`);
+    }),
+  );
 
   // ตั้งค่าห้อง (timer / auto-pass) — เฉพาะหัวห้อง
-  socket.on('settings', (patch) => withRoom((room) => {
-    if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องปรับตั้งค่าได้');
-    room.setSettings(patch || {});
-    room._turnSig = null; // ให้ armTurnTimer ตั้งเวลาใหม่ตามค่าที่เพิ่งเปลี่ยน
-  }));
+  socket.on('settings', (patch) =>
+    withRoom((room) => {
+      if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องปรับตั้งค่าได้');
+      room.setSettings(patch || {});
+      room._turnSig = null; // ให้ armTurnTimer ตั้งเวลาใหม่ตามค่าที่เพิ่งเปลี่ยน
+    }),
+  );
 
   // เพิ่ม/ลบบอท — เฉพาะหัวห้อง (ในล็อบบี้)
-  socket.on('addBot', () => withRoom((room) => {
-    if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องเพิ่มบอทได้');
-    room.addBot();
-  }));
-  socket.on('removeBot', () => withRoom((room) => {
-    if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องลบบอทได้');
-    room.removeBot();
-  }));
-  socket.on('shuffleSeats', () => withRoom((room) => {
-    if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องสลับที่นั่งได้');
-    room.shuffleSeats();
-  }));
+  socket.on('addBot', () =>
+    withRoom((room) => {
+      if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องเพิ่มบอทได้');
+      room.addBot();
+    }),
+  );
+  socket.on('removeBot', () =>
+    withRoom((room) => {
+      if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องลบบอทได้');
+      room.removeBot();
+    }),
+  );
+  socket.on('shuffleSeats', () =>
+    withRoom((room) => {
+      if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องสลับที่นั่งได้');
+      room.shuffleSeats();
+    }),
+  );
   // สีประจำตัว — ตั้งของตัวเองได้ทุกเมื่อ
   socket.on('setColor', ({ color }) => withRoom((room) => room.setColor(socket.id, color)));
 
-  socket.on('play', ({ cards }) => withRoom((room) => {
-    room.play(socket.id, Array.isArray(cards) ? cards : []);
-  }));
+  socket.on('play', ({ cards }) =>
+    withRoom((room) => {
+      room.play(socket.id, Array.isArray(cards) ? cards : []);
+    }),
+  );
 
   socket.on('pass', () => withRoom((room) => room.pass(socket.id)));
 
-  socket.on('give', ({ cards }) => withRoom((room) => {
-    room.giveCards(socket.id, Array.isArray(cards) ? cards : []);
-  }));
+  socket.on('give', ({ cards }) =>
+    withRoom((room) => {
+      room.giveCards(socket.id, Array.isArray(cards) ? cards : []);
+    }),
+  );
 
-  socket.on('again', () => withRoom((room) => {
-    if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องเริ่มรอบใหม่ได้');
-    room.resetToLobby();
-    room.start();
-  }));
+  socket.on('again', () =>
+    withRoom((room) => {
+      if (room.hostId !== socket.id) throw new Error('เฉพาะหัวห้องเริ่มรอบใหม่ได้');
+      room.resetToLobby();
+      room.start();
+    }),
+  );
 
   // ออกจากห้องโดยตั้งใจ (กดปุ่ม) — ลบที่นั่งถ้าอยู่ล็อบบี้, พักที่นั่ง(ออฟไลน์)ถ้ากำลังเล่น
   socket.on('leave', () => {
@@ -254,7 +317,8 @@ io.on('connection', (socket) => {
     room.removeSpectator(socket.id); // เผื่อเป็นผู้ชม
     room.removePlayer(socket.id);
     if (room.players.length === 0 || room.isEmpty()) {
-      clearTurnTimer(room); clearBotTimer(room); // ห้องว่าง → หยุดนาฬิกา + บอท
+      clearTurnTimer(room);
+      clearBotTimer(room); // ห้องว่าง → หยุดนาฬิกา + บอท
       clearTimeout(room._cleanupTimer);
       room._cleanupTimer = setTimeout(() => {
         const r = rooms.get(code);
@@ -277,7 +341,8 @@ io.on('connection', (socket) => {
     if (room.players.length === 0 || room.isEmpty()) {
       // ห้องว่าง (รวมกรณีรีเฟรช) → รอ grace period เผื่อ reconnect ก่อนค่อยลบ
       const code = joinedCode;
-      clearTurnTimer(room); clearBotTimer(room); // ห้องว่าง → หยุดนาฬิกา + บอท
+      clearTurnTimer(room);
+      clearBotTimer(room); // ห้องว่าง → หยุดนาฬิกา + บอท
       clearTimeout(room._cleanupTimer);
       room._cleanupTimer = setTimeout(() => {
         const r = rooms.get(code);
@@ -303,6 +368,7 @@ function lanAddresses() {
   return out;
 }
 
+await initSentry(); // เปิด error tracking ถ้าตั้ง SENTRY_DSN ไว้
 loadRooms(); // โหลดห้องที่ค้างไว้ก่อนเปิดรับ connection
 
 server.listen(PORT, '0.0.0.0', () => {
@@ -311,6 +377,7 @@ server.listen(PORT, '0.0.0.0', () => {
   for (const ip of lanAddresses()) {
     console.log(`   ในออฟฟิศ:   http://${ip}:${PORT}   ← ส่งลิงก์นี้ให้เพื่อน`);
   }
+  console.log(`   metrics:     http://localhost:${PORT}/metrics`);
   console.log('');
 });
 

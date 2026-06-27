@@ -15,6 +15,12 @@ export function log(level, msg, meta) {
   const out = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log;
   if (meta !== undefined) out(line, meta);
   else out(line);
+  // ส่งต่อเข้า Sentry Logs (ถ้าเปิดอยู่) — ข้าม debug เพื่อประหยัด quota
+  if (Sentry?.logger && level !== 'debug') {
+    const fn = Sentry.logger[level] || Sentry.logger.info;
+    if (meta !== undefined) fn(msg, meta);
+    else fn(msg);
+  }
 }
 
 export const logger = {
@@ -43,7 +49,9 @@ export async function initSentry() {
     mod.init({
       dsn,
       environment: process.env.NODE_ENV || 'development',
-      tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE) || 0,
+      // performance tracing — ดีฟอลต์ 10% (ตั้ง SENTRY_TRACES_SAMPLE_RATE=0 เพื่อปิด)
+      tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1),
+      enableLogs: true, // เปิด Sentry Logs (รับ log จาก logger.* ด้านบน)
     });
     Sentry = mod;
     logger.info('Sentry: เปิดใช้งานแล้ว');

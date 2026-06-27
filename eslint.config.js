@@ -37,6 +37,7 @@ export default [
         ...globals.browser,
         __APP_VERSION__: 'readonly',
         __SENTRY_DSN__: 'readonly',
+        __SENTRY_TRACES_RATE__: 'readonly',
       },
     },
   },

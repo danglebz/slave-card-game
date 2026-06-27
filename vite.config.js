@@ -7,6 +7,8 @@ const { version } = createRequire(import.meta.url)('./package.json');
 
 // DSN ฝั่ง client (ฝังตอน build) — ไม่ตั้ง = '' → โค้ด Sentry ถูก tree-shake ทิ้ง (ไม่มีต้นทุน)
 const SENTRY_DSN = process.env.SENTRY_DSN || '';
+// อัตรา sample ของ performance tracing ฝั่ง client (0–1) — ดีฟอลต์ 10% เพื่อประหยัด quota
+const SENTRY_TRACES_RATE = Number(process.env.SENTRY_TRACES_RATE ?? 0.1);
 
 // client (vanilla JS) อยู่ใน client/, build ออกไป dist/ (Express เสิร์ฟ)
 export default defineConfig({
@@ -14,6 +16,7 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(version),
     __SENTRY_DSN__: JSON.stringify(SENTRY_DSN),
+    __SENTRY_TRACES_RATE__: JSON.stringify(SENTRY_TRACES_RATE),
   },
   plugins: [tailwindcss()],
   build: {

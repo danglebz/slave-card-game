@@ -682,39 +682,94 @@ button.loading:disabled {
   min-height: 2.7rem;
 }
 
-/* ช่องเลือกสีเอง (Coloris) */
-.color-custom {
-  width: 96px;
+/* ช่องเลือกสีเอง (react-colorful) */
+.color-picker {
+  position: relative;
+}
+.color-swatch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-height: 2rem;
-  padding: 0.3rem 0.5rem;
-  padding-left: 30px;
-  font-size: 0.76rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  text-transform: uppercase;
+  padding: 0.3rem 0.6rem;
+  background: var(--glass-field-bg);
+  border: 1px solid var(--glass-field-border);
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
-.clr-field button {
+.color-dot {
   width: 18px;
   height: 18px;
-  left: 6px;
   border-radius: 5px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
 }
-/* กัน global button/input styles ของเรารั่วเข้า popup Coloris (ไม่งั้น swatch เป็นวงรี) */
-#clr-picker button,
-.clr-field button {
+.color-swatch-hex {
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--felt-text);
+}
+/* popover */
+.color-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: #27272a;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+.color-pop .react-colorful {
+  width: 180px;
+  height: 140px;
+}
+.color-swatches {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+.color-swatch {
+  width: 20px;
+  height: 20px;
   min-height: 0;
   padding: 0;
-}
-#clr-picker input {
-  min-height: 0;
-}
-#clr-picker input:focus {
-  box-shadow: none;
-}
-#clr-picker .clr-swatches button {
   border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+.color-swatch.active {
+  box-shadow:
+    0 0 0 2px #27272a,
+    0 0 0 4px var(--primary);
+}
+.color-hex-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--felt-text);
+}
+.color-hex-row input {
+  width: 100%;
+  min-height: 0;
+  padding: 4px 6px;
+  text-transform: uppercase;
+  background: var(--glass-field-bg);
+  border: 1px solid var(--glass-field-border);
+  border-radius: var(--radius-sm);
+  color: var(--felt-text);
+  font: inherit;
+}
+.color-hex-row input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring);
 }
 
 /* สถานะการเชื่อมต่อ (banner บนสุด) */

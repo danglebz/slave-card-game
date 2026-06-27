@@ -1,10 +1,9 @@
 // SettingsModal.tsx — ตั้งค่า (port settings-modal + syncSettingsUI + handlers)
 // ห้อง (timer/autopass/turnSeconds) = หัวห้องคุม → emit settings
-// ส่วนตัว: ภาษา, สีประจำตัว (Coloris), แจ้งเตือน (เสียง/สั่น), เสียงเอฟเฟกต์
-import { useEffect, useRef, useState } from 'react';
-import '@melloware/coloris/dist/coloris.css';
-import Coloris from '@melloware/coloris';
+// ส่วนตัว: ภาษา, สีประจำตัว (react-colorful), แจ้งเตือน (เสียง/สั่น), เสียงเอฟเฟกต์
+import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { ColorPicker } from '@/components/ColorPicker';
 import { Switch } from '@/components/ui/switch';
 import { Icon } from '@/lib/icons';
 import { t, type Lang } from '@/lib/i18n';
@@ -34,8 +33,6 @@ const AVATAR_COLORS = [
   '#ec4899',
 ];
 
-let colorisInited = false;
-
 export function SettingsModal({
   open,
   s,
@@ -54,27 +51,10 @@ export function SettingsModal({
   const [notifSound, setNotifSoundS] = useState(notifPref.sound);
   const [notifVibrate, setNotifVibrateS] = useState(notifPref.vibrate);
   const [sfxState, setSfxState] = useState<Record<SfxKey, boolean>>({ ...sfxPref });
-  const colorRef = useRef<HTMLInputElement>(null);
   const [color, setColor] = useState(() => {
     const c = localStorage.getItem('color') || '#3b82f6';
     return /^#[0-9a-f]{6}$/i.test(c) ? c : '#3b82f6';
   });
-
-  // ---------- Coloris: popup เลือกสีเอง ----------
-  useEffect(() => {
-    if (!colorisInited) {
-      Coloris.init();
-      colorisInited = true;
-    }
-    Coloris({
-      el: '#color-custom',
-      theme: 'pill',
-      themeMode: 'dark',
-      format: 'hex',
-      alpha: false,
-      swatches: AVATAR_COLORS,
-    });
-  }, []);
 
   const st = s?.settings || { timer: true, autoPass: true, turnSeconds: 30 };
   const isHost = !!s?.youAreHost;
@@ -85,13 +65,12 @@ export function SettingsModal({
     socket.emit('settings', patch);
   }
 
-  function onColorInput(e: React.FormEvent<HTMLInputElement>) {
-    const v = (e.target as HTMLInputElement).value;
+  function onColorInput(v: string) {
     setColor(v);
     localStorage.setItem('color', v); // อัปเดตสดตอนเลือก
   }
-  function onColorChange() {
-    socket.emit('setColor', { color }); // ส่งตอนปิด picker
+  function onColorCommit(v: string) {
+    socket.emit('setColor', { color: v }); // ส่งตอนปิด picker / เลือก swatch
   }
 
   function toggleSfx(key: SfxKey, demo: 'play' | 'bomb' | 'win', on: boolean) {
@@ -193,16 +172,11 @@ export function SettingsModal({
             <span className="setting-label">
               <Icon name="palette" /> <span>{t(lang, 'set.color')}</span>
             </span>
-            <input
-              ref={colorRef}
-              type="text"
-              id="color-custom"
-              className="coloris color-custom"
+            <ColorPicker
               value={color}
-              title="เลือกสีเอง"
-              readOnly
-              onInput={onColorInput}
-              onChange={onColorChange}
+              onChange={onColorInput}
+              onCommit={onColorCommit}
+              swatches={AVATAR_COLORS}
             />
           </div>
           <p className="settings-sub-label">

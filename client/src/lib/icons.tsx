@@ -131,7 +131,7 @@ const EMOJI_ICON: Record<string, string> = {
   '⛓️': 'link',
   '⛓': 'link',
   '🎉': 'party-popper',
-  '🥇': 'crown',
+  '🥇': 'trophy',
   '🥈': 'medal',
   '🥉': 'meh',
   '🙂': 'smile',

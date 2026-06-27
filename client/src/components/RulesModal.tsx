@@ -125,7 +125,7 @@ export function RulesModal({
           </h3>
           {th ? (
             <p>
-              <Icon name="crown" /> คิง · <Icon name="medal" /> ควีน · <Icon name="meh" /> รองสลาฟ ·{' '}
+              <Icon name="trophy" /> คิง · <Icon name="medal" /> ควีน · <Icon name="meh" /> รองสลาฟ ·{' '}
               <Icon name="link" /> สลาฟ (ตามลำดับหมดมือ)
               <br />
               รอบใหม่แลกไพ่ (ตามสากล คงที่ทุกจำนวนคน): คิง↔สลาฟ <b>2 ใบ</b> · ควีน↔รองสลาฟ <b>1 ใบ</b>{' '}
@@ -135,7 +135,7 @@ export function RulesModal({
             </p>
           ) : (
             <p>
-              <Icon name="crown" /> King · <Icon name="medal" /> Queen · <Icon name="meh" />{' '}
+              <Icon name="trophy" /> King · <Icon name="medal" /> Queen · <Icon name="meh" />{' '}
               Vice-Slave · <Icon name="link" /> Slave (by finishing order)
               <br />
               New round exchange (standard, fixed for any player count): King↔Slave <b>2 cards</b> ·

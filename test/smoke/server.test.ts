@@ -51,7 +51,7 @@ describe('smoke: HTTP', () => {
   it('/healthz ตอบ ok', async () => {
     const res = await fetch(`${URL}/healthz`);
     expect(res.status).toBe(200);
-    const body = /** @type {any} */ (await res.json());
+    const body = /** @type {any} */ await res.json();
     expect(body.ok).toBe(true);
     expect(typeof body.uptimeSec).toBe('number');
   });

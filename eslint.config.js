@@ -17,9 +17,9 @@ export default [
 
   js.configs.recommended,
 
-  // ฝั่ง server (Node, ESM)
+  // config tooling (.js) — Node ESM; โค้ด .ts ตรวจด้วย tsc (typecheck) ไม่ผ่าน eslint
   {
-    files: ['server/**/*.js', '*.config.js', 'e2e/**/*.js'],
+    files: ['*.config.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -39,14 +39,6 @@ export default [
         __SENTRY_DSN__: 'readonly',
         __SENTRY_TRACES_RATE__: 'readonly',
       },
-    },
-  },
-
-  // ไฟล์เทส (Vitest + Playwright)
-  {
-    files: ['**/*.test.js', '**/*.spec.js'],
-    languageOptions: {
-      globals: { ...globals.node, ...globals.browser },
     },
   },
 

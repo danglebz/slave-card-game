@@ -52,6 +52,7 @@ import {
   Languages,
   Vibrate,
   Frown,
+  Meh,
   ArrowUp,
   ArrowDown,
   type LucideProps,
@@ -113,6 +114,7 @@ const ICONS: Record<string, ComponentType<LucideProps>> = {
   languages: Languages,
   vibrate: Vibrate,
   frown: Frown,
+  meh: Meh,
 };
 
 // emoji → ชื่อไอคอน lucide (kebab-case) สำหรับข้อความที่ฝั่ง server ส่งมา
@@ -131,7 +133,7 @@ const EMOJI_ICON: Record<string, string> = {
   '🎉': 'party-popper',
   '🥇': 'crown',
   '🥈': 'medal',
-  '🥉': 'award',
+  '🥉': 'meh',
   '🙂': 'smile',
   '😩': 'frown',
   '🏆': 'trophy',

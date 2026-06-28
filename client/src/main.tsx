@@ -28,6 +28,18 @@ if (__SENTRY_DSN__) {
     .catch(() => {});
 }
 
+// ----- Cookieless analytics (Plausible / Umami) — เปิดเฉพาะตอน build มี ANALYTICS_SRC -----
+// __ANALYTICS_SRC__ ฝังตอน build (ดู vite.config.ts); ถ้าว่าง บล็อกนี้ถูก tree-shake ทิ้ง
+// ไม่ใช้ cookie + ไม่เก็บ PII → ไม่ต้องมี cookie consent banner
+if (__ANALYTICS_SRC__) {
+  const s = document.createElement('script');
+  s.defer = true;
+  s.src = __ANALYTICS_SRC__;
+  if (__ANALYTICS_DOMAIN__) s.setAttribute('data-domain', __ANALYTICS_DOMAIN__); // Plausible
+  if (__ANALYTICS_WEBSITE_ID__) s.setAttribute('data-website-id', __ANALYTICS_WEBSITE_ID__); // Umami
+  document.head.appendChild(s);
+}
+
 // ---------- PWA: ลงทะเบียน service worker (เฉพาะ build จริง) ----------
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));

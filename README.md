@@ -5,7 +5,7 @@
 
 ## 🎮 เล่นเลย
 
-👉 **[slave-card-game-5les.onrender.com](https://slave-card-game-5les.onrender.com/)**
+👉 **[slave-card-game.danglebz.com](https://slave-card-game.danglebz.com/)**
 
 > โฮสต์บน Render (free) — ถ้าไม่มีคนเล่น 15 นาที server จะหลับ คนเข้าครั้งแรกอาจรอ ~30 วิให้ตื่นก่อน
 

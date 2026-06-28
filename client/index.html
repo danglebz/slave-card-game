@@ -7,7 +7,59 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
     />
     <meta name="theme-color" content="#0f5132" />
-    <title>เกมส์ไพ่สลาฟ</title>
+
+    <!-- ===== SEO ===== -->
+    <title>เกมส์ไพ่สลาฟออนไลน์ — เล่นกับเพื่อน 2–6 คน ฟรี ไม่ต้องโหลด</title>
+    <meta
+      name="description"
+      content="เกมไพ่สลาฟ (President / Daifugo) เล่นออนไลน์พร้อมกัน 2–6 คนผ่านเบราว์เซอร์ ฟรี ไม่ต้องติดตั้ง สร้างห้องแล้วแชร์ลิงก์ให้เพื่อนเข้ามาเล่นได้ทันที"
+    />
+    <link rel="canonical" href="https://slave-card-game.danglebz.com/" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- ===== Open Graph (LINE / Facebook) ===== -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="เกมส์ไพ่สลาฟ" />
+    <meta property="og:title" content="เกมส์ไพ่สลาฟออนไลน์ — เล่นกับเพื่อน 2–6 คน" />
+    <meta
+      property="og:description"
+      content="เกมไพ่สลาฟ (President / Daifugo) เล่นพร้อมกันผ่านเบราว์เซอร์ ฟรี ไม่ต้องโหลด สร้างห้องแล้วแชร์ลิงก์ได้เลย"
+    />
+    <meta property="og:url" content="https://slave-card-game.danglebz.com/" />
+    <meta property="og:image" content="https://slave-card-game.danglebz.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="th_TH" />
+
+    <!-- ===== Twitter Card ===== -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="เกมส์ไพ่สลาฟออนไลน์ — เล่นกับเพื่อน 2–6 คน" />
+    <meta
+      name="twitter:description"
+      content="เกมไพ่สลาฟ (President / Daifugo) เล่นพร้อมกันผ่านเบราว์เซอร์ ฟรี ไม่ต้องโหลด"
+    />
+    <meta name="twitter:image" content="https://slave-card-game.danglebz.com/og-image.png" />
+
+    <!-- ===== JSON-LD structured data ===== -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "เกมส์ไพ่สลาฟ",
+        "alternateName": ["Slave Card Game", "President", "Daifugo"],
+        "url": "https://slave-card-game.danglebz.com/",
+        "description": "เกมไพ่สลาฟ (President / Daifugo) เล่นออนไลน์พร้อมกัน 2–6 คนผ่านเบราว์เซอร์ ฟรี ไม่ต้องติดตั้ง",
+        "inLanguage": "th",
+        "image": "https://slave-card-game.danglebz.com/og-image.png",
+        "applicationCategory": "Game",
+        "operatingSystem": "Web Browser",
+        "playMode": "MultiPlayer",
+        "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 2, "maxValue": 6 },
+        "genre": ["Card Game", "Multiplayer"],
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "THB" }
+      }
+    </script>
+
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -24,7 +76,49 @@
     />
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      เนื้อหา SEO แบบ pre-render (static): crawler และผู้ใช้ที่ไม่มี JS เห็นข้อความนี้ทันที
+      พอ React mount เสร็จจะ replace เนื้อหาใน #root ทั้งหมด (ทำหน้าที่เป็น loading screen ไปในตัว)
+    -->
+    <div id="root">
+      <main
+        style="
+          max-width: 720px;
+          margin: 0 auto;
+          padding: 2rem 1.25rem;
+          font-family: Sarabun, system-ui, sans-serif;
+          color: #e8f3ec;
+          background: #0c3f26;
+          min-height: 100vh;
+        "
+      >
+        <img
+          src="/logo.png"
+          alt="โลโก้เกมส์ไพ่สลาฟ"
+          width="120"
+          height="120"
+          style="display: block; margin: 0 auto 1rem; border-radius: 16px"
+        />
+        <h1 style="text-align: center; font-size: 1.6rem">เกมส์ไพ่สลาฟออนไลน์</h1>
+        <p style="text-align: center; opacity: 0.85">
+          เกมไพ่สลาฟ (President / Daifugo) เล่นพร้อมกัน 2–6 คนผ่านเบราว์เซอร์ — ฟรี ไม่ต้องโหลด
+        </p>
+        <p style="text-align: center; opacity: 0.7; font-size: 0.9rem">กำลังโหลดเกม…</p>
+
+        <h2 style="font-size: 1.2rem; margin-top: 2rem">วิธีเล่นเกมไพ่สลาฟ</h2>
+        <ul style="line-height: 1.8; opacity: 0.9">
+          <li>สร้างห้องแล้วแชร์โค้ด/ลิงก์ให้เพื่อนเข้ามาเล่นพร้อมกัน 2–6 คน</li>
+          <li>ลงไพ่ให้สูงกว่ากองบนโต๊ะ ใครหมดไพ่ก่อนเป็น "ประธาน" (President)</li>
+          <li>ลงได้ทั้งใบเดี่ยว คู่ ตอง โฟร์การ์ด และสเตรท (เปิด/ปิดได้ตามกติกาห้อง)</li>
+          <li>เล่นได้บนมือถือและคอมพิวเตอร์ รองรับติดตั้งเป็นแอป (PWA)</li>
+        </ul>
+        <noscript>
+          <p style="color: #ffd; margin-top: 1.5rem">
+            เกมนี้ต้องเปิดใช้งาน JavaScript ในเบราว์เซอร์เพื่อเล่น
+          </p>
+        </noscript>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://slave-card-game.danglebz.com/sitemap.xml

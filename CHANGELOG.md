@@ -2,6 +2,14 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.20.1](https://github.com/Danglebz/slave-card-game/compare/v1.20.0...v1.20.1) (2026-07-02)
+
+
+### 🐛 Bug Fixes
+
+* skeleton loading placeholder matching the lobby (stops refresh flicker) ([c5c34dc](https://github.com/Danglebz/slave-card-game/commit/c5c34dc3563432489d53320f09f127e515510d5a)), closes [#0c3f26](https://github.com/Danglebz/slave-card-game/issues/0c3f26)
+* กันหน้าจอเด้งตอนไพ่ลงกอง (layout shift) ([df7a351](https://github.com/Danglebz/slave-card-game/commit/df7a351522121f2fd1b9661ee64ff0dab0b2941a))
+
 ## [1.20.0](https://github.com/Danglebz/slave-card-game/compare/v1.19.0...v1.20.0) (2026-07-02)
 
 

@@ -2,6 +2,14 @@
 
 ไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.20.0](https://github.com/Danglebz/slave-card-game/compare/v1.19.0...v1.20.0) (2026-07-02)
+
+
+### ✨ Features
+
+* add SEO meta/OG, cookieless analytics, custom domain ([e98c987](https://github.com/Danglebz/slave-card-game/commit/e98c98783e7c255ddc052f884aa425d1e457262f))
+* shadcn dialog migration + full-width pile row ([fa4d704](https://github.com/Danglebz/slave-card-game/commit/fa4d704688b7d38a86894881ef480d18361c5d6c))
+
 ## [1.19.0](https://github.com/Danglebz/slave-card-game/compare/v1.18.0...v1.19.0) (2026-06-27)
 
 

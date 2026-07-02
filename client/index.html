@@ -74,6 +74,30 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sarabun:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+
+    <!--
+      Skeleton ของ loading placeholder (inline เพราะต้องเรนเดอร์ก่อน CSS bundle/React)
+      เลียนแบบ shadcn <Skeleton/> = animate-pulse + rounded — ไม่มีข้อความ จึงไม่ขึ้นกับภาษา
+    -->
+    <style>
+      @keyframes sk-pulse {
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .sk {
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 6px;
+        animation: sk-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      .sk-field {
+        border-radius: 9px;
+      }
+      .sk-btn {
+        background: rgba(245, 197, 66, 0.32);
+        border-radius: 9px;
+      }
+    </style>
   </head>
   <body>
     <!--
@@ -83,40 +107,84 @@
     <div id="root">
       <main
         style="
-          max-width: 720px;
-          margin: 0 auto;
-          padding: 2rem 1.25rem;
+          min-height: 100dvh;
           font-family: Sarabun, system-ui, sans-serif;
-          color: #e8f3ec;
-          background: #0c3f26;
-          min-height: 100vh;
+          color: #fff;
+          background: radial-gradient(circle at 50% 16%, #1f8a52 0%, #0c3f26 72%);
         "
       >
-        <img
-          src="/logo.png"
-          alt="โลโก้เกมส์ไพ่สลาฟ"
-          width="120"
-          height="120"
-          style="display: block; margin: 0 auto 1rem; border-radius: 16px"
-        />
-        <h1 style="text-align: center; font-size: 1.6rem">เกมส์ไพ่สลาฟออนไลน์</h1>
-        <p style="text-align: center; opacity: 0.85">
-          เกมไพ่สลาฟ (President / Daifugo) เล่นพร้อมกัน 2–6 คนผ่านเบราว์เซอร์ — ฟรี ไม่ต้องโหลด
-        </p>
-        <p style="text-align: center; opacity: 0.7; font-size: 0.9rem">กำลังโหลดเกม…</p>
-
-        <h2 style="font-size: 1.2rem; margin-top: 2rem">วิธีเล่นเกมไพ่สลาฟ</h2>
-        <ul style="line-height: 1.8; opacity: 0.9">
-          <li>สร้างห้องแล้วแชร์โค้ด/ลิงก์ให้เพื่อนเข้ามาเล่นพร้อมกัน 2–6 คน</li>
-          <li>ลงไพ่ให้สูงกว่ากองบนโต๊ะ ใครหมดไพ่ก่อนเป็น "ประธาน" (President)</li>
-          <li>ลงได้ทั้งใบเดี่ยว คู่ ตอง โฟร์การ์ด และสเตรท (เปิด/ปิดได้ตามกติกาห้อง)</li>
-          <li>เล่นได้บนมือถือและคอมพิวเตอร์ รองรับติดตั้งเป็นแอป (PWA)</li>
-        </ul>
-        <noscript>
-          <p style="color: #ffd; margin-top: 1.5rem">
-            เกมนี้ต้องเปิดใช้งาน JavaScript ในเบราว์เซอร์เพื่อเล่น
+        <!-- จำลอง card-panel ล็อบบี้ (โลโก้/ชื่อ/กำลังโหลด) วางตำแหน่งเดียวกับฟอร์มจริง → React สลับแล้วแทบไม่ขยับ -->
+        <div
+          style="
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+          "
+        >
+          <div
+            style="
+              box-sizing: border-box;
+              width: 100%;
+              max-width: 420px;
+              min-height: 490px;
+              padding: 30px 26px;
+              border-radius: 14px;
+              background: rgba(0, 0, 0, 0.34);
+              border: 1px solid rgba(255, 255, 255, 0.12);
+              box-shadow: 0 20px 50px rgba(16, 24, 40, 0.22);
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              text-align: center;
+              gap: 12px;
+            "
+          >
+            <img
+              src="/logo.png"
+              alt="โลโก้เกมส์ไพ่สลาฟ"
+              width="84"
+              height="84"
+              style="
+                margin-top: 14px;
+                border-radius: 18px;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                box-shadow: 0 6px 18px rgba(16, 24, 40, 0.12);
+              "
+            />
+            <!-- skeleton เลียนแบบฟอร์มล็อบบี้ (ชื่อ/tagline/อินพุต/ปุ่ม/ลิงก์) — ไม่มีข้อความ ไม่ขึ้นกับภาษา -->
+            <div class="sk" style="width: 168px; height: 26px; margin-top: 4px"></div>
+            <div class="sk" style="width: 232px; height: 15px"></div>
+            <div class="sk sk-field" style="width: 100%; height: 44px; margin-top: 10px"></div>
+            <div class="sk sk-btn" style="width: 100%; height: 44px"></div>
+            <div class="sk" style="width: 150px; height: 12px; margin: 4px 0"></div>
+            <div style="display: flex; gap: 8px; width: 100%">
+              <div class="sk sk-field" style="flex: 1; height: 44px"></div>
+              <div class="sk sk-btn" style="width: 92px; height: 44px"></div>
+            </div>
+            <div class="sk" style="width: 116px; height: 12px; margin-top: 2px"></div>
+          </div>
+        </div>
+        <!-- เนื้อหา SEO ใต้ fold: crawler อ่านได้ครบ ผู้ใช้แทบไม่เห็นก่อน React mount -->
+        <div style="max-width: 720px; margin: 0 auto; padding: 0 1.25rem 2rem">
+          <h2 style="font-size: 1.2rem">วิธีเล่นเกมไพ่สลาฟออนไลน์</h2>
+          <p style="opacity: 0.85">
+            เกมไพ่สลาฟ (President / Daifugo) เล่นพร้อมกัน 2–6 คนผ่านเบราว์เซอร์ — ฟรี ไม่ต้องโหลด
           </p>
-        </noscript>
+          <ul style="line-height: 1.8; opacity: 0.9">
+            <li>สร้างห้องแล้วแชร์โค้ด/ลิงก์ให้เพื่อนเข้ามาเล่นพร้อมกัน 2–6 คน</li>
+            <li>ลงไพ่ให้สูงกว่ากองบนโต๊ะ ใครหมดไพ่ก่อนเป็น "ประธาน" (President)</li>
+            <li>ลงได้ทั้งใบเดี่ยว คู่ ตอง โฟร์การ์ด และสเตรท (เปิด/ปิดได้ตามกติกาห้อง)</li>
+            <li>เล่นได้บนมือถือและคอมพิวเตอร์ รองรับติดตั้งเป็นแอป (PWA)</li>
+          </ul>
+          <noscript>
+            <p style="color: #ffd; margin-top: 1.5rem">
+              เกมนี้ต้องเปิดใช้งาน JavaScript ในเบราว์เซอร์เพื่อเล่น
+            </p>
+          </noscript>
+        </div>
       </main>
     </div>
     <script type="module" src="/src/main.tsx"></script>

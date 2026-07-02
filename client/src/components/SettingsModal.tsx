@@ -2,7 +2,14 @@
 // ห้อง (timer/autopass/turnSeconds) = หัวห้องคุม → emit settings
 // ส่วนตัว: ภาษา, สีประจำตัว (react-colorful), แจ้งเตือน (เสียง/สั่น), เสียงเอฟเฟกต์
 import { useState } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { ColorPicker } from '@/components/ColorPicker';
 import { Switch } from '@/components/ui/switch';
 import { Icon } from '@/lib/icons';
@@ -103,16 +110,13 @@ export function SettingsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        open={open}
-        id="settings-modal"
-        className="settings-box"
-        ariaLabelledby="settings-title"
-      >
-        <h2 id="settings-title">
-          <Icon name="settings" /> <span>{t(lang, 'set.title')}</span>
-        </h2>
-        <div className="settings-list">
+      <DialogContent id="settings-modal" className="settings-box" aria-describedby={undefined}>
+        <DialogHeader>
+          <DialogTitle>
+            <Icon name="settings" /> <span>{t(lang, 'set.title')}</span>
+          </DialogTitle>
+        </DialogHeader>
+        <DialogBody className="settings-list">
           <p className="settings-group-label">
             <Icon name="users" /> <span>{t(lang, 'set.room')}</span>
             {!isHost && (
@@ -352,15 +356,17 @@ export function SettingsModal({
             </span>
             <span className="setting-soon">{t(lang, 'set.soon')}</span>
           </div>
-        </div>
-        <button
-          id="logout-btn"
-          className="btn-destructive settings-logout"
-          type="button"
-          onClick={onLeave}
-        >
-          <Icon name="door-open" /> <span>{t(lang, 'set.logout')}</span>
-        </button>
+        </DialogBody>
+        <DialogFooter>
+          <button
+            id="logout-btn"
+            className="btn-destructive settings-logout"
+            type="button"
+            onClick={onLeave}
+          >
+            <Icon name="door-open" /> <span>{t(lang, 'set.logout')}</span>
+          </button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

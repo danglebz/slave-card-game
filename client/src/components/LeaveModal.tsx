@@ -1,5 +1,14 @@
 // LeaveModal.tsx — ยืนยันออกจากห้อง (AlertDialog) (port leave-modal)
-import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogClose,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Icon } from '@/lib/icons';
 import { socket } from '@/lib/socket';
 import { useStore } from '@/store';
@@ -18,21 +27,23 @@ export function LeaveModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        open={open}
         id="leave-modal"
         className="alert-box"
-        alert
+        role="alertdialog"
         showClose={false}
-        ariaLabelledby="leave-title"
-        ariaDescribedby="leave-desc"
+        onInteractOutside={(e) => e.preventDefault()}
       >
-        <h2 id="leave-title">
-          <Icon name="door-open" /> {t(lang, 'leave.title')}
-        </h2>
-        <p id="leave-desc" className="alert-desc">
-          {playing ? t(lang, 'leave.descPlaying') : t(lang, 'leave.desc')}
-        </p>
-        <div className="alert-actions">
+        <DialogHeader>
+          <DialogTitle>
+            <Icon name="door-open" /> {t(lang, 'leave.title')}
+          </DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <DialogDescription className="alert-desc">
+            {playing ? t(lang, 'leave.descPlaying') : t(lang, 'leave.desc')}
+          </DialogDescription>
+        </DialogBody>
+        <DialogFooter className="alert-actions">
           <DialogClose asChild>
             <button className="btn-secondary" type="button">
               <Icon name="x" /> <span>{t(lang, 'leave.cancel')}</span>
@@ -49,7 +60,7 @@ export function LeaveModal({
           >
             <Icon name="log-out" /> <span>{t(lang, 'leave.confirm')}</span>
           </button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

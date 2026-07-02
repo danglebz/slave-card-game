@@ -1,5 +1,13 @@
 // RulesModal.tsx — กติกาเกมส์ไพ่สลาฟ (สลับ TH/EN ตาม store.lang)
-import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogClose,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Icon } from '@/lib/icons';
 import { useStore } from '@/store';
 
@@ -15,16 +23,13 @@ export function RulesModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        open={open}
-        id="rules-modal"
-        className="rules-box"
-        ariaLabelledby="rules-title"
-      >
-        <h2 id="rules-title">
-          <Icon name="book-open" /> {th ? 'กติกาเกมส์ไพ่สลาฟ' : 'How to Play Slave'}
-        </h2>
-        <div className="rules-content">
+      <DialogContent id="rules-modal" className="rules-box" aria-describedby={undefined}>
+        <DialogHeader>
+          <DialogTitle>
+            <Icon name="book-open" /> {th ? 'กติกาเกมส์ไพ่สลาฟ' : 'How to Play Slave'}
+          </DialogTitle>
+        </DialogHeader>
+        <DialogBody className="rules-content">
           <h3>
             <Icon name="layers" /> {th ? 'อันดับไพ่' : 'Card ranking'}
           </h3>
@@ -163,12 +168,14 @@ export function RulesModal({
               redeal immediately, then exchange with the new King
             </p>
           )}
-        </div>
-        <DialogClose asChild>
-          <button id="rules-close" className="primary" type="button">
-            <Icon name="x" /> <span>{th ? 'ปิด' : 'Close'}</span>
-          </button>
-        </DialogClose>
+        </DialogBody>
+        <DialogFooter>
+          <DialogClose asChild>
+            <button id="rules-close" className="primary" type="button">
+              <Icon name="x" /> <span>{th ? 'ปิด' : 'Close'}</span>
+            </button>
+          </DialogClose>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

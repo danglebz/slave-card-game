@@ -1,89 +1,114 @@
-// dialog.tsx — thin shadcn-pattern wrapper รอบ Radix Dialog
-// ใช้ Radix เพื่อ a11y (focus-trap, ESC, overlay-click) แต่คงคลาส .modal/.modal-box เดิม
-// เพื่อให้ดีไซน์ + อนิเมชัน (.open) เหมือนต้นฉบับเป๊ะ
+// dialog.tsx — shadcn Dialog (Radix + Tailwind) พร้อม scrollable body
+// โครงสร้าง shadcn: Header ปักบน, Footer ปักล่าง, Body ตรงกลางเลื่อนได้ (max-h ทั้งกล่อง)
+// สีดึงจาก token bridge ใน style.css (bg-background/border-border ฯลฯ) เพื่อคงลุคเดิม
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import type { ComponentProps } from 'react';
 import { Icon } from '@/lib/icons';
 import { useStore } from '@/store';
 import { t } from '@/lib/i18n';
+import { cn } from '@/lib/utils';
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogClose = DialogPrimitive.Close;
+export const DialogPortal = DialogPrimitive.Portal;
 
-interface DialogContentProps {
-  open: boolean;
-  className?: string; // เพิ่มคลาสบน .modal-box (เช่น rules-box / share-box)
-  /** alertdialog = ไม่ปิดเมื่อคลิก overlay (ต้องเลือกปุ่มเอง) */
-  alert?: boolean;
-  id?: string;
-  ariaLabelledby?: string;
-  ariaDescribedby?: string;
+function DialogOverlay({ className, ...props }: ComponentProps<typeof DialogPrimitive.Overlay>) {
+  return (
+    <DialogPrimitive.Overlay
+      data-slot="dialog-overlay"
+      className={cn(
+        'fixed inset-0 z-50 bg-[rgba(10,15,12,0.55)] backdrop-blur-[3px]',
+        'data-[state=open]:animate-in data-[state=open]:fade-in-0',
+        'data-[state=closed]:animate-out data-[state=closed]:fade-out-0',
+        'duration-200',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+interface DialogContentProps extends ComponentProps<typeof DialogPrimitive.Content> {
+  /** แสดงปุ่มปิด X มุมขวาบน (default: true) */
   showClose?: boolean;
-  children: ReactNode;
 }
 
 /**
- * เนื้อ dialog — .modal เป็น overlay เต็มจอ, .modal-box เป็นกล่อง
- * จัดการ class .open เองเพื่อให้ transition เข้า/ออกเล่นเหมือนเดิม (เปิด→reflow→add .open)
+ * เนื้อ dialog — กล่อง fixed กึ่งกลางจอ, flex column + max-h เพื่อให้ DialogBody เลื่อนได้
+ * ส่งชื่อกล่อง (settings-box / rules-box …) ผ่าน className เพื่อ override max-width
  */
-export function DialogContent({
-  open,
-  className = '',
-  alert = false,
-  id,
-  ariaLabelledby,
-  ariaDescribedby,
-  showClose = true,
-  children,
-}: DialogContentProps) {
-  // mounted คุมการ render (รอ exit-animation จบก่อน unmount), shown คุมคลาส .open
+function DialogContent({ className, children, showClose = true, ...props }: DialogContentProps) {
   const lang = useStore((s) => s.lang);
-  const [mounted, setMounted] = useState(open);
-  const [shown, setShown] = useState(false);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (open) {
-      if (closeTimer.current) clearTimeout(closeTimer.current);
-      setMounted(true);
-      // reflow ให้ transition เข้าทำงาน
-      requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
-    } else if (mounted) {
-      setShown(false);
-      closeTimer.current = setTimeout(() => setMounted(false), 200); // รอ exit animation
-    }
-    return () => {
-      if (closeTimer.current) clearTimeout(closeTimer.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  if (!mounted) return null;
-
   return (
-    <DialogPrimitive.Portal forceMount>
+    <DialogPortal>
+      <DialogOverlay />
       <DialogPrimitive.Content
-        id={id}
-        role={alert ? 'alertdialog' : 'dialog'}
-        aria-labelledby={ariaLabelledby}
-        aria-describedby={ariaDescribedby}
-        // ปิด default outline + ให้คลาส .modal คุมสไตล์ overlay เอง
-        className={`modal${shown ? ' open' : ''}`}
-        onInteractOutside={(e) => {
-          if (alert) e.preventDefault(); // alertdialog ไม่ปิดเมื่อคลิกนอก
-        }}
+        data-slot="dialog-content"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        className={cn(
+          'fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2',
+          'flex w-[calc(100%-2.5rem)] max-w-[360px] max-h-[calc(100dvh-2.5rem)] flex-col',
+          'rounded-[var(--radius)] border border-border bg-background p-[26px] text-center text-foreground',
+          'shadow-[var(--shadow-lg)]',
+          'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
+          'duration-200',
+          className,
+        )}
+        {...props}
       >
-        <div className={`modal-box ${className}`.trim()}>
-          {showClose && (
-            <DialogPrimitive.Close className="dialog-close" aria-label={t(lang, 'dialog.close')}>
-              <Icon name="x" />
-            </DialogPrimitive.Close>
-          )}
-          {children}
-        </div>
+        {children}
+        {showClose && (
+          <DialogPrimitive.Close className="dialog-close" aria-label={t(lang, 'dialog.close')}>
+            <Icon name="x" />
+          </DialogPrimitive.Close>
+        )}
       </DialogPrimitive.Content>
-    </DialogPrimitive.Portal>
+    </DialogPortal>
   );
 }
+
+/** หัว dialog — ปักไว้ไม่เลื่อน */
+function DialogHeader({ className, ...props }: ComponentProps<'div'>) {
+  return <div data-slot="dialog-header" className={cn('flex-none', className)} {...props} />;
+}
+
+/** เนื้อหาตรงกลาง — เลื่อนได้เมื่อยาวเกินจอ (ส่วนที่แก้บั๊ก scroll) */
+function DialogBody({ className, ...props }: ComponentProps<'div'>) {
+  return (
+    <div
+      data-slot="dialog-body"
+      className={cn('min-h-0 flex-1 overflow-y-auto overflow-x-hidden', className)}
+      {...props}
+    />
+  );
+}
+
+/** ท้าย dialog (ปุ่ม) — ปักไว้ไม่เลื่อน */
+function DialogFooter({ className, ...props }: ComponentProps<'div'>) {
+  return <div data-slot="dialog-footer" className={cn('flex-none', className)} {...props} />;
+}
+
+function DialogTitle({ className, ...props }: ComponentProps<typeof DialogPrimitive.Title>) {
+  return <DialogPrimitive.Title data-slot="dialog-title" className={className} {...props} />;
+}
+
+function DialogDescription({
+  className,
+  ...props
+}: ComponentProps<typeof DialogPrimitive.Description>) {
+  return (
+    <DialogPrimitive.Description data-slot="dialog-description" className={className} {...props} />
+  );
+}
+
+export {
+  DialogContent,
+  DialogOverlay,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+};

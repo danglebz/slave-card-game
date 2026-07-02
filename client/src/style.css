@@ -2,6 +2,27 @@
 @layer theme, base, components, utilities;
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
+@import 'tw-animate-css'; /* animate-in/out utilities สำหรับ shadcn dialog */
+
+/* Bridge: map design token เดิม → ชื่อสี shadcn เพื่อให้ utility (bg-background ฯลฯ) ใช้ได้ */
+@theme inline {
+  --color-background: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--foreground);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--foreground);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--surface-2);
+  --color-accent-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-destructive: var(--red);
+}
 
 /* ============ Design tokens (พื้นเขียว felt / primary ทอง) ============ */
 :root {
@@ -47,11 +68,14 @@
   --chip-btn-border: rgba(255, 255, 255, 0.15);
   --chip-btn-hover: rgba(255, 255, 255, 0.14);
 }
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
+/* reset อยู่ใน base layer → Tailwind utilities (layer utilities) ทับได้ แต่คลาสที่เขียนเอง (unlayered) ยังชนะ */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 html,
 body {
@@ -656,7 +680,7 @@ button.loading:disabled {
 }
 
 /* ============ กล่องตั้งค่า ============ */
-.modal-box.settings-box {
+.settings-box {
   max-width: 450px;
   text-align: left;
 }
@@ -1182,12 +1206,6 @@ button.loading:disabled {
 #seat-tr {
   grid-area: tr;
 }
-#seat-left {
-  grid-area: left;
-}
-#seat-right {
-  grid-area: right;
-}
 #seat-bl {
   grid-area: bl;
 }
@@ -1281,10 +1299,12 @@ button.loading:disabled {
   min-height: 240px;
   padding: 12px;
   display: grid;
+  /* แถวกลาง = กองไพ่กินเต็มความกว้าง (seat-left/right ไม่เคยถูกใช้ในเลย์เอาต์ 2–6 คน)
+     → ไพ่เรียง 3/5/6 ใบมีที่พอ ไม่ถูกบีบเป็นคอลัมน์กลาง */
   grid-template-areas:
-    'tl   top    tr'
-    'left center right'
-    'bl   bottom br';
+    'tl     top     tr'
+    'center center  center'
+    'bl     bottom  br';
   align-content: center;
   justify-content: center; /* ดึงทุกที่นั่งเข้ามาชิดกองไพ่ */
   align-items: center;
@@ -1341,9 +1361,12 @@ button.loading:disabled {
 }
 #pile-cards {
   display: flex;
+  flex-wrap: wrap; /* เรียง 6 ใบล้นจอแคบ → ตกบรรทัด ไม่พังเลย์เอาต์ */
+  justify-content: center;
   gap: 8px;
   min-height: 92px;
   align-items: center;
+  max-width: min(560px, 90vw); /* คุมไม่ให้กองไพ่ดันโต๊ะล้นจอ */
 }
 
 /* อนิเมชันไพ่ลงกอง — สไลด์เข้าจากทิศที่นั่งคนลง (--from-x/--from-y ตั้งจาก Pile.tsx) */
@@ -1652,46 +1675,7 @@ button.loading:disabled {
 }
 
 /* ============ Dialog (shadcn) — overlay + content, enter/exit transition ============ */
-.modal {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: rgba(10, 15, 12, 0.55);
-  -webkit-backdrop-filter: blur(3px);
-  backdrop-filter: blur(3px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s ease;
-}
-.modal.open {
-  opacity: 1;
-  pointer-events: auto;
-}
-.modal-box {
-  position: relative;
-  background: var(--surface);
-  color: var(--foreground);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 26px;
-  width: 100%;
-  max-width: 360px;
-  text-align: center;
-  box-shadow: var(--shadow-lg);
-  opacity: 0;
-  transform: translateY(8px) scale(0.96);
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.modal.open .modal-box {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
+/* .modal / .modal-box shell ย้ายไปเป็น Tailwind ใน ui/dialog.tsx (shadcn DialogOverlay/DialogContent) */
 /* ปุ่มปิด X มุมขวาบน (เหมือน shadcn DialogClose) */
 .dialog-close {
   position: absolute;
@@ -1712,7 +1696,7 @@ button.loading:disabled {
   background: var(--surface-2);
   color: var(--foreground);
 }
-.modal-box h2 {
+[data-slot='dialog-content'] h2 {
   margin-bottom: 18px;
   padding-right: 1.5rem;
   font-weight: 800;
@@ -1837,10 +1821,8 @@ button.loading:disabled {
   text-align: left;
 }
 .rules-content {
-  max-height: 60vh;
-  overflow-y: auto;
-  margin: 4px -6px 0;
-  padding: 0 10px;
+  margin: 4px 0 0;
+  padding: 0 2px;
   font-size: 0.9rem;
   line-height: 1.6;
 }

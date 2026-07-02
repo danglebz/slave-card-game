@@ -5,16 +5,7 @@ import { Pile } from './Pile';
 import { Icon } from '@/lib/icons';
 import { seatFor } from '@/lib/gameLogic';
 
-const SEAT_IDS = [
-  'seat-tl',
-  'seat-top',
-  'seat-tr',
-  'seat-left',
-  'seat-right',
-  'seat-bl',
-  'seat-bottom',
-  'seat-br',
-] as const;
+const SEAT_IDS = ['seat-tl', 'seat-top', 'seat-tr', 'seat-bl', 'seat-bottom', 'seat-br'] as const;
 
 export function Table({ s }: { s: RoomState }) {
   // map seat-id → ผู้เล่นที่นั่งช่องนั้น
@@ -47,9 +38,7 @@ export function Table({ s }: { s: RoomState }) {
       {seat('seat-tl')}
       {seat('seat-top')}
       {seat('seat-tr')}
-      {seat('seat-left')}
       <Pile s={s} />
-      {seat('seat-right')}
       {seat('seat-bl')}
       {seat('seat-bottom')}
       {seat('seat-br')}

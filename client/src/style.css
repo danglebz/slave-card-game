@@ -103,6 +103,13 @@ body {
   flex-direction: column;
   position: relative;
 }
+/* หน้าโต๊ะเล่น: ล็อกให้พอดีจอ ไม่ให้ body เลื่อนได้เอง → กันหน้าจอ "เด้ง" ตอนไพ่ลงกอง/อนิเมชัน
+   โต๊ะ (#table flex:1, min-height:0) เป็นตัวยืดหด ดูดการเปลี่ยนความสูงไว้แทน */
+#game-screen {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
 .hidden {
   display: none !important;
 }
@@ -1296,7 +1303,7 @@ button.loading:disabled {
 #table {
   flex: 1;
   position: relative;
-  min-height: 240px;
+  min-height: 0; /* ยอมให้โต๊ะหดเมื่อจอเตี้ย → คุมความสูงรวมไม่ให้ล้น (กันเด้ง) */
   padding: 12px;
   display: grid;
   /* แถวกลาง = กองไพ่กินเต็มความกว้าง (seat-left/right ไม่เคยถูกใช้ในเลย์เอาต์ 2–6 คน)
@@ -1453,6 +1460,8 @@ button.loading:disabled {
   justify-content: safe center;
   font-size: 0.8rem;
   padding: 8px 16px;
+  min-height: 2.5rem; /* จองความสูงไว้คงที่ กันแถวไพ่เด้งตอนกองว่าง↔มีไพ่ (log-item ยุบ/ยืด) */
+  flex: none;
   color: rgba(255, 255, 255, 0.72);
   white-space: nowrap;
   overflow-x: auto;

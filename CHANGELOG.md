@@ -7,67 +7,67 @@ This file is generated automatically by [commit-and-tag-version](https://github.
 
 ### 🐛 Bug Fixes
 
-* reliable service-worker updates so users aren't stuck on an old cached version ([6b7d14e](https://github.com/Danglebz/slave-card-game/commit/6b7d14e8ff7137a2413a19306341da7598bd98cd))
+* reliable service-worker updates so users aren't stuck on an old cached version ([6d0a4d3](https://github.com/Danglebz/slave-card-game/commit/6d0a4d3122d8c2d28a9177d5a2d974e5302d3f04))
 
 ## [1.20.1](https://github.com/Danglebz/slave-card-game/compare/v1.20.0...v1.20.1) (2026-07-02)
 
 
 ### 🐛 Bug Fixes
 
-* skeleton loading placeholder matching the lobby (stops refresh flicker) ([c5c34dc](https://github.com/Danglebz/slave-card-game/commit/c5c34dc3563432489d53320f09f127e515510d5a))
-* prevent screen bounce when cards land on the pile (layout shift) ([df7a351](https://github.com/Danglebz/slave-card-game/commit/df7a351522121f2fd1b9661ee64ff0dab0b2941a))
+* skeleton loading placeholder matching the lobby (stops refresh flicker) ([d1fb2dd](https://github.com/Danglebz/slave-card-game/commit/d1fb2dd8adafe62294fbb7a78372933f7d7c975a))
+* prevent screen bounce when cards land on the pile (layout shift) ([d373433](https://github.com/Danglebz/slave-card-game/commit/d3734339ad8bca77753e309d0d2dd7c72f1ae1af))
 
 ## [1.20.0](https://github.com/Danglebz/slave-card-game/compare/v1.19.0...v1.20.0) (2026-07-02)
 
 
 ### ✨ Features
 
-* add SEO meta/OG, cookieless analytics, custom domain ([e98c987](https://github.com/Danglebz/slave-card-game/commit/e98c98783e7c255ddc052f884aa425d1e457262f))
-* shadcn dialog migration + full-width pile row ([fa4d704](https://github.com/Danglebz/slave-card-game/commit/fa4d704688b7d38a86894881ef480d18361c5d6c))
+* add SEO meta/OG, cookieless analytics, custom domain ([f42e4fd](https://github.com/Danglebz/slave-card-game/commit/f42e4fda554bc23dedf62c884d473b94f8b45977))
+* shadcn dialog migration + full-width pile row ([231e891](https://github.com/Danglebz/slave-card-game/commit/231e89168c9c9851fe3956e44a7bcaf53dcb66f4))
 
 ## [1.19.0](https://github.com/Danglebz/slave-card-game/compare/v1.18.0...v1.19.0) (2026-06-27)
 
 
 ### ✨ Features
 
-* **client:** show QR/share button in topbar (was hidden) ([2c8554b](https://github.com/Danglebz/slave-card-game/commit/2c8554b5a4e52725d89e3478162fed925feff97b))
-* **game:** cross-round scoreboard — cumulative rank tally + history ([08fd69e](https://github.com/Danglebz/slave-card-game/commit/08fd69e6fc692446678988610e9e004d7536f216))
+* **client:** show QR/share button in topbar (was hidden) ([cea864b](https://github.com/Danglebz/slave-card-game/commit/cea864ba89f8833feab6af123af863d566946303))
+* **game:** cross-round scoreboard — cumulative rank tally + history ([bb169b8](https://github.com/Danglebz/slave-card-game/commit/bb169b84408631bc4b6e8c080dcbab2c4b2d1635))
 
 
 ### 💄 Styling
 
-* **client:** change vice-slave rank icon from award to meh face ([4dbc5e2](https://github.com/Danglebz/slave-card-game/commit/4dbc5e2a60774d511ffd38d63294b335ed2cbbad))
-* **client:** king rank icon crown → trophy (medals only for king/queen) ([573d93f](https://github.com/Danglebz/slave-card-game/commit/573d93ff731d1a07f8913fa31a7219a5fcc0bcc5))
+* **client:** change vice-slave rank icon from award to meh face ([1e835c5](https://github.com/Danglebz/slave-card-game/commit/1e835c5a57f5fc811d9627926f301f11b6d1387c))
+* **client:** king rank icon crown → trophy (medals only for king/queen) ([b997c3e](https://github.com/Danglebz/slave-card-game/commit/b997c3e423cb5db47a271aef3a2358e3c964c900))
 
 ## [1.18.1](https://github.com/Danglebz/slave-card-game/compare/v1.18.0...v1.18.1) (2026-06-27)
 
 
 ### 💄 Styling
 
-* **client:** change vice-slave rank icon from award to meh face ([4dbc5e2](https://github.com/Danglebz/slave-card-game/commit/4dbc5e2a60774d511ffd38d63294b335ed2cbbad))
-* **client:** king rank icon crown → trophy (medals only for king/queen) ([573d93f](https://github.com/Danglebz/slave-card-game/commit/573d93ff731d1a07f8913fa31a7219a5fcc0bcc5))
+* **client:** change vice-slave rank icon from award to meh face ([1e835c5](https://github.com/Danglebz/slave-card-game/commit/1e835c5a57f5fc811d9627926f301f11b6d1387c))
+* **client:** king rank icon crown → trophy (medals only for king/queen) ([b997c3e](https://github.com/Danglebz/slave-card-game/commit/b997c3e423cb5db47a271aef3a2358e3c964c900))
 
 ## [1.18.0](https://github.com/Danglebz/slave-card-game/compare/v1.17.0...v1.18.0) (2026-06-27)
 
 
 ### ✨ Features
 
-* **client:** add TH/EN language switcher to lobby home screen ([0c639d0](https://github.com/Danglebz/slave-card-game/commit/0c639d037555f85ffc2173d2cf2c76cde6655940))
+* **client:** add TH/EN language switcher to lobby home screen ([d327b60](https://github.com/Danglebz/slave-card-game/commit/d327b6074ed1c6aede98bb777f1eca0205baf1bc))
 * **game:** auto-pass when player has no legal move ([e628fbd](https://github.com/Danglebz/slave-card-game/commit/e628fbd1e2bb70a817bf10b77b10de9dfc5a3027))
 * **game:** make auto-pass-when-stuck a host setting (autoPassStuck) ([97aac5d](https://github.com/Danglebz/slave-card-game/commit/97aac5df4f5952c8696f1f27fdd5dbf5f93d954d))
-* **i18n:** server emits i18n keys+vars for errors/notices/titles, client translates ([5d65f60](https://github.com/Danglebz/slave-card-game/commit/5d65f60d358aeaf57bef9260cbbc6e61417671ce))
-* **i18n:** translate rules modal and game title to EN ([0ccd41f](https://github.com/Danglebz/slave-card-game/commit/0ccd41f7902f29fd2e9b31da4e079b569ad8554c))
+* **i18n:** server emits i18n keys+vars for errors/notices/titles, client translates ([66d78e6](https://github.com/Danglebz/slave-card-game/commit/66d78e61d05aed656c66d31242a447ed98e8eabb))
+* **i18n:** translate rules modal and game title to EN ([83b4625](https://github.com/Danglebz/slave-card-game/commit/83b4625fcfbb9b489aa6dd906d64a3222c100ef0))
 
 
 ### 🐛 Bug Fixes
 
-* **settings:** make widened modal width actually apply (.modal-box override) ([65c16b4](https://github.com/Danglebz/slave-card-game/commit/65c16b4f147b9e3b9340267020b1473cb1c931e2))
+* **settings:** make widened modal width actually apply (.modal-box override) ([70a853b](https://github.com/Danglebz/slave-card-game/commit/70a853bd88f73a324e0d2657aab666eb0ea8d14c))
 
 
 ### 💄 Styling
 
-* **settings:** set settings modal width to 450px ([53180fc](https://github.com/Danglebz/slave-card-game/commit/53180fcabd54ed09566acc828c1a06489b96e10e))
-* **settings:** widen settings modal 420px → 520px ([0b9d7fd](https://github.com/Danglebz/slave-card-game/commit/0b9d7fd62a40937fc358dab21b5a4a10fe275ca8))
+* **settings:** set settings modal width to 450px ([59b547e](https://github.com/Danglebz/slave-card-game/commit/59b547e5463666f44139b1ec5fb7f49c087aaefe))
+* **settings:** widen settings modal 420px → 520px ([19396f5](https://github.com/Danglebz/slave-card-game/commit/19396f5962a3e14888a2ee29f91ddc35681f511f))
 
 ## [1.17.0](https://github.com/Danglebz/slave-card-game/compare/v1.16.0...v1.17.0) (2026-06-27)
 

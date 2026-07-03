@@ -1,5 +1,5 @@
 {
-  "header": "# Changelog\n\nไฟล์นี้สร้างอัตโนมัติด้วย [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) ตามมาตรฐาน [Conventional Commits](https://www.conventionalcommits.org/).\n",
+  "header": "# Changelog\n\nThis file is generated automatically by [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) following the [Conventional Commits](https://www.conventionalcommits.org/) standard.\n",
   "types": [
     { "type": "feat", "section": "✨ Features" },
     { "type": "fix", "section": "🐛 Bug Fixes" },

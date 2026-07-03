@@ -1,1 +1,4 @@
+# Reject non-English (Thai) commit messages — keep git history / CHANGELOG / releases in English
+node -e 'const fs=require("fs");const msg=fs.readFileSync(process.argv[1],"utf8").split("\n").filter((l)=>!l.startsWith("#")).join("\n");if(/[฀-๿]/.test(msg)){console.error("\n✖ Commit message must be in English (Thai characters detected).\n");process.exit(1)}' "$1"
+
 pnpm exec commitlint --edit "$1"

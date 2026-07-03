@@ -2,6 +2,13 @@
 
 This file is generated automatically by [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) following the [Conventional Commits](https://www.conventionalcommits.org/) standard.
 
+## [1.20.2](https://github.com/Danglebz/slave-card-game/compare/v1.20.1...v1.20.2) (2026-07-03)
+
+
+### 🐛 Bug Fixes
+
+* reliable service-worker updates so users aren't stuck on an old cached version ([6b7d14e](https://github.com/Danglebz/slave-card-game/commit/6b7d14e8ff7137a2413a19306341da7598bd98cd))
+
 ## [1.20.1](https://github.com/Danglebz/slave-card-game/compare/v1.20.0...v1.20.1) (2026-07-02)
 
 

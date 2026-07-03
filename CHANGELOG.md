@@ -2,6 +2,18 @@
 
 This file is generated automatically by [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) following the [Conventional Commits](https://www.conventionalcommits.org/) standard.
 
+## [1.20.3](https://github.com/Danglebz/slave-card-game/compare/v1.20.2...v1.20.3) (2026-07-03)
+
+
+### 💄 Styling
+
+* **lobby:** remove divider between language switch buttons ([6cd9c57](https://github.com/Danglebz/slave-card-game/commit/6cd9c5744c2aa71f6425efc824dbeb42238edf22))
+
+
+### 📝 Documentation
+
+* refresh changelog commit links after history rewrite ([1ae7f92](https://github.com/Danglebz/slave-card-game/commit/1ae7f9253aed38b1b56d8ae9b0a625f106686bbc))
+
 ## [1.20.2](https://github.com/Danglebz/slave-card-game/compare/v1.20.1...v1.20.2) (2026-07-03)
 
 

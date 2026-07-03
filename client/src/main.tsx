@@ -42,7 +42,21 @@ if (__ANALYTICS_SRC__) {
 
 // ---------- PWA: ลงทะเบียน service worker (เฉพาะ build จริง) ----------
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+  // reload หนึ่งครั้งเมื่อ SW ตัวใหม่เข้าคุมหน้า (มีเวอร์ชันใหม่) → ผู้ใช้ไม่ค้างเวอร์ชันเก่า
+  // ข้ามครั้งติดตั้งแรก (ยังไม่มี controller เดิม) เพื่อไม่ให้ reload เปล่า ๆ
+  let reloading = false;
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloading || !hadController) return;
+    reloading = true;
+    location.reload();
+  });
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((reg) => reg.update()) // บังคับเช็กเวอร์ชันใหม่ทุกครั้งที่โหลด
+      .catch(() => {});
+  });
 }
 
 createRoot(document.getElementById('root')!).render(

@@ -170,3 +170,27 @@ dist/                        ผลลัพธ์ build (gitignored) — Fastif
 >
 > ⚠️ **อย่า**ใช้ Vercel/Netlify (serverless ใช้ Socket.IO ไม่ได้)
 > free tier ของ Render หลับหลังไม่มีคน 15 นาที (คนเข้าครั้งแรกรอ ~30 วิ) และ `rooms.json` รีเซ็ตตอน redeploy
+
+---
+
+## 📈 Scaling & load
+
+ตอนนี้แอปรันแบบ **process เดียว in-memory** (rooms อยู่ใน `Map`, Socket.IO adapter ในหน่วยความจำ, เซฟลง `rooms.json`) — เหมาะกับโหลดปัจจุบันแล้ว
+เอกสาร [`docs/SCALING.md`](docs/SCALING.md) อธิบายสถาปัตยกรรมปัจจุบัน, ข้อจำกัดตายตัว (event loop เดียว, ไฟล์เซฟใช้ได้อินสแตนซ์เดียว, timer per-room รันในโปรเซส) และเส้นทางสเกลออกแนวนอนแบบเรียงตามความคุ้ม (externalize state → Redis adapter → sticky/websocket-only → ⚠️ single-owner timers → observability)
+
+### ยิงโหลด (load test)
+
+`scripts/loadtest.mjs` เป็นสคริปต์ Node ESM สแตนด์อโลน (ใช้ `socket.io-client` ที่มีอยู่แล้ว) — เปิดไคลเอนต์ WebSocket จริง `ROOMS × PER` ตัว, สร้าง/เข้าห้อง/เติมบอท/เริ่มเกม, เล่นตามกติกาแบบจำกัดจำนวนแอ็กชัน แล้วพิมพ์สรุป connect p50/p95, state msgs/sec, จำนวน error และ wall-clock (exit != 0 ถ้าอัตราพังสูง)
+
+```bash
+pnpm start          # รันเซิร์ฟเวอร์ก่อน (หรือชี้ TARGET ไปที่ deploy จริง)
+
+# 20 ห้อง × 4 คน
+ROOMS=20 PER=4 node scripts/loadtest.mjs http://localhost:3000
+
+# smoke สั้น ๆ
+ROOMS=3 PER=3 node scripts/loadtest.mjs http://localhost:3000
+```
+
+> ปุ่มปรับ (env/argv): `TARGET`/`argv[2]`, `ROOMS`, `PER`, `ACTIONS`, `DURATION_MS`, `ERROR_RATE_MAX`, `CONNECT_TIMEOUT`
+> ดูตัวเลขสด ๆ ระหว่างยิงได้ที่ `GET /metrics` (rooms/players/sockets)

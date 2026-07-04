@@ -97,6 +97,16 @@ export interface HistoryEntry {
   auto?: boolean;
 }
 
+/** Web Push subscription (ผลของ PushSubscription.toJSON() ฝั่งเบราว์เซอร์) */
+export interface PushSubJSON {
+  endpoint: string;
+  expirationTime?: number | null;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}
+
 export interface ExchangeInfo {
   role: 'winner' | 'loser' | 'none';
   myCount: number;
@@ -164,6 +174,10 @@ export interface ClientToServerEvents {
   give: (p: { cards: string[] }) => void;
   again: () => void;
   leave: () => void;
+  /** ลงทะเบียนรับ Web Push (เด้งแจ้งเตือนแม้ปิดแอป) — ผูกกับที่นั่งในห้องปัจจุบัน */
+  pushSubscribe: (p: { sub: PushSubJSON; lang: string }) => void;
+  /** ยกเลิกรับ Web Push ของที่นั่งในห้องปัจจุบัน */
+  pushUnsubscribe: () => void;
 }
 
 export interface ServerToClientEvents {

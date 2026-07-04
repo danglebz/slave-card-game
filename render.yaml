@@ -18,3 +18,11 @@ services:
         sync: false
       - key: METRICS_TOKEN
         sync: false
+      # Web Push (แจ้งเตือนแม้ปิดแอป) — ต้องตั้ง VAPID_PUBLIC_KEY + VAPID_PRIVATE_KEY ให้ครบถึงจะเปิด
+      # gen: node -e "console.log(require('web-push').generateVAPIDKeys())"
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false

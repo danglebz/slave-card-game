@@ -27,6 +27,7 @@ import {
   setNotifVibrate,
   type SfxKey,
 } from '@/lib/audio';
+import { pushSupported, pushState, enablePush, disablePush, type PushState } from '@/lib/push';
 import type { RoomState } from '@shared/types';
 
 const AVATAR_COLORS = [
@@ -53,10 +54,12 @@ export function SettingsModal({
 }) {
   const lang = useStore((st) => st.lang);
   const setLang = useStore((st) => st.setLang);
+  const showToast = useStore((st) => st.showToast);
 
   // prefs ส่วนตัว (local state สะท้อน lib/audio singleton + localStorage)
   const [notifSound, setNotifSoundS] = useState(notifPref.sound);
   const [notifVibrate, setNotifVibrateS] = useState(notifPref.vibrate);
+  const [push, setPushS] = useState<PushState>(() => pushState());
   const [sfxState, setSfxState] = useState<Record<SfxKey, boolean>>({ ...sfxPref });
   const [color, setColor] = useState(() => {
     const c = localStorage.getItem('color') || '#3b82f6';
@@ -102,6 +105,22 @@ export function SettingsModal({
     if (on) {
       primeAudio();
       sfx(demo); // ตัวอย่างเสียง
+    }
+  }
+
+  // Web Push: เปิด = ขอสิทธิ์ + subscribe (ต้องมาจากการกดปุ่มนี้); ปิด = ยกเลิก
+  async function togglePush(on: boolean) {
+    if (on) {
+      const r = await enablePush(lang);
+      setPushS(r);
+      if (r === 'on') showToast(t(lang, 'toast.pushOn'), 'success');
+      else if (r === 'denied') showToast(t(lang, 'toast.pushDenied'), 'error');
+      else if (r === 'off')
+        void 0; // ผู้ใช้กดยกเลิก dialog สิทธิ์ → เงียบ
+      else showToast(t(lang, 'toast.pushFail'), 'error');
+    } else {
+      await disablePush();
+      setPushS('off');
     }
   }
 
@@ -317,6 +336,26 @@ export function SettingsModal({
               }}
             />
           </label>
+          {pushSupported() && (
+            <>
+              <label className="setting-row setting-row-sub" htmlFor="set-notif-push">
+                <span className="setting-label">
+                  <Icon name="bell" /> <span>{t(lang, 'set.notifPush')}</span>
+                </span>
+                <Switch
+                  id="set-notif-push"
+                  checked={push === 'on'}
+                  disabled={push === 'denied'}
+                  onCheckedChange={togglePush}
+                />
+              </label>
+              {push === 'denied' && (
+                <div className="setting-row setting-row-sub">
+                  <span className="setting-sub">{t(lang, 'set.notifPushDenied')}</span>
+                </div>
+              )}
+            </>
+          )}
           <p className="settings-sub-label">
             <Icon name="volume-2" /> <span>{t(lang, 'set.sfx')}</span>
           </p>

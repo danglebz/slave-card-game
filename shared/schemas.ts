@@ -84,6 +84,24 @@ export const PlaySchema = v.object({ cards: CardsSchema });
 
 export const GiveSchema = v.object({ cards: CardsSchema });
 
+/** Web Push subscription จาก client — validate โครง + จำกัดความยาวกัน payload ใหญ่ */
+export const PushSubscribeSchema = v.object({
+  sub: v.object({
+    endpoint: v.pipe(
+      v.string('err.generic'),
+      v.url('err.generic'),
+      v.maxLength(1024, 'err.generic'),
+    ),
+    // expirationTime: เบราว์เซอร์ส่ง number | null — ยอมรับแบบหลวม ไม่ได้ใช้ต่อ
+    expirationTime: v.optional(v.nullable(v.number())),
+    keys: v.object({
+      p256dh: v.pipe(v.string('err.generic'), v.maxLength(256, 'err.generic')),
+      auth: v.pipe(v.string('err.generic'), v.maxLength(256, 'err.generic')),
+    }),
+  }),
+  lang: v.picklist(['th', 'en'], 'err.generic'),
+});
+
 // ----- types ที่ infer ออกมา (output หลัง transform) -----
 export type CreatePayload = v.InferOutput<typeof CreateSchema>;
 export type JoinPayload = v.InferOutput<typeof JoinSchema>;

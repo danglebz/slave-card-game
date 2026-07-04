@@ -6,6 +6,7 @@ import { GameScreen } from './components/GameScreen';
 import { ConnBanner } from './components/ConnBanner';
 import { Toast } from './components/Toast';
 import { t } from './lib/i18n';
+import { syncPushSubscription } from './lib/push';
 
 /**
  * App shell — เดินสาย socket events เข้า store (single source of truth)
@@ -30,6 +31,8 @@ export default function App() {
       const url = new URL(location.href);
       url.searchParams.set('room', code);
       history.replaceState(null, '', url);
+      // เข้าห้องแล้ว server รู้จักที่นั่งเรา → ผูก Web Push subscription เข้ากับที่นั่งนี้
+      void syncPushSubscription(useStore.getState().lang);
     };
     const onLeft = () => {
       useStore.getState().goLobby();

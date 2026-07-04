@@ -56,3 +56,55 @@ self.addEventListener('fetch', (e: FetchEvent) => {
     ),
   );
 });
+
+// ----- Web Push: เด้งแจ้งเตือนแม้ปิดแอป (ถึงตา/เกมเริ่ม/จบ/เข้า-ออกห้อง) -----
+// payload จาก server: { title, body?, tag, url }
+interface PushPayload {
+  title?: string;
+  body?: string;
+  tag?: string;
+  url?: string;
+}
+
+self.addEventListener('push', (e: PushEvent) => {
+  let data: PushPayload = {};
+  try {
+    data = e.data?.json() ?? {};
+  } catch {
+    data = { title: e.data?.text() };
+  }
+  e.waitUntil(
+    (async () => {
+      // แอปเปิดอยู่และเห็นหน้าจอ → ไม่ต้องเด้ง (UI ในเกมอัปเดต + มีเสียง/สั่นเองแล้ว)
+      const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const visible = wins.some((c) => c.visibilityState === 'visible');
+      if (visible) return;
+      await self.registration.showNotification(data.title || 'เกมส์ไพ่สลาฟ', {
+        body: data.body,
+        icon: '/logo.png',
+        badge: '/favicon-32x32.png',
+        tag: data.tag || 'game',
+        renotify: true, // tag เดิม → เด้ง/สั่นซ้ำได้ (ไม่เงียบทับของเก่า)
+        vibrate: [90, 40, 90],
+        data: { url: data.url || '/' },
+      } as NotificationOptions);
+    })(),
+  );
+});
+
+// แตะการแจ้งเตือน → โฟกัสแท็บที่เปิดอยู่ (พาไปห้อง) หรือเปิดใหม่
+self.addEventListener('notificationclick', (e: NotificationEvent) => {
+  e.notification.close();
+  const url = (e.notification.data as { url?: string } | null)?.url || '/';
+  e.waitUntil(
+    (async () => {
+      const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const c of wins) {
+        // มีแท็บเปิดอยู่แล้ว → พาไป url แล้วโฟกัส (ไม่เปิดซ้ำ)
+        await c.navigate(url).catch(() => undefined);
+        return c.focus();
+      }
+      return self.clients.openWindow(url);
+    })(),
+  );
+});

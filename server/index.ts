@@ -12,6 +12,7 @@ import { anyLegalMove, disallowedComboTypes } from './game';
 import { GameError, gerr } from './errors';
 import { createSocketLimiter } from './ratelimit';
 import { initSentry, logger, captureError, metrics, snapshot } from './observability';
+import { pushEnabled, vapidPublicKey, saveSub, dropSub, dropRoom, notifyRoom } from './push';
 import * as v from 'valibot';
 import {
   CreateSchema,
@@ -21,6 +22,7 @@ import {
   KickSchema,
   PlaySchema,
   GiveSchema,
+  PushSubscribeSchema,
 } from '../shared/schemas';
 import type { ClientToServerEvents, ServerToClientEvents } from '../shared/types';
 
@@ -59,6 +61,16 @@ fastify.get<{ Querystring: { token?: string } }>('/metrics', async (req, reply) 
   return snapshot(rooms);
 });
 
+// ----- Web Push: ให้ client ดึง VAPID public key ไป subscribe (404 ถ้าไม่ได้เปิดใช้) -----
+fastify.get('/push/vapidPublicKey', async (_req, reply) => {
+  if (!pushEnabled) {
+    reply.code(404);
+    return { error: 'push-disabled' };
+  }
+  reply.header('Cache-Control', 'no-store');
+  return { key: vapidPublicKey };
+});
+
 // ----- เซฟ/โหลดสถานะห้องลงไฟล์ (กัน server restart แล้วเกมหาย) -----
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 function scheduleSave(): void {
@@ -84,7 +96,10 @@ function loadRooms(): void {
       rooms.set(room.code, room);
       // ทุกคนออฟไลน์ตอนโหลด → ตั้งเวลาเก็บกวาดถ้าไม่มีใคร reconnect ใน 10 นาที
       room._cleanupTimer = setTimeout(() => {
-        if (rooms.get(room.code)?.isEmpty()) rooms.delete(room.code);
+        if (rooms.get(room.code)?.isEmpty()) {
+          rooms.delete(room.code);
+          dropRoom(room.code);
+        }
       }, 600000);
     }
     if (rooms.size) logger.info(`↩️  โหลดห้องที่ค้างไว้ ${rooms.size} ห้อง`);
@@ -222,6 +237,7 @@ function broadcast(room: Room): void {
     if (p.connected && !p.isBot) io.to(p.id).emit('state', room.stateFor(p.id));
   }
   for (const s of room.spectators) io.to(s.id).emit('state', room.stateFor(s.id)); // ผู้ชม
+  notifyRoom(room); // ยิง Web Push ตาม transition (ถึงตา/เกมเริ่ม/จบ/เข้า-ออก) ถ้าเปิดใช้
   scheduleSave(); // สถานะเปลี่ยน → เซฟ
 }
 
@@ -386,6 +402,25 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     }),
   );
 
+  // ----- Web Push: ผูก subscription กับที่นั่งในห้องปัจจุบัน (ผู้เล่นหรือผู้ชม) -----
+  const seatName = (room: Room): string | null => {
+    const idx = room.indexOf(socket.id);
+    if (idx >= 0) return room.players[idx].name;
+    return room.spectators.find((s) => s.id === socket.id)?.name ?? null;
+  };
+  socket.on('pushSubscribe', (raw) => {
+    const p = parse(PushSubscribeSchema, raw);
+    if (!p) return;
+    const room = joinedCode ? rooms.get(joinedCode) : undefined;
+    const name = room ? seatName(room) : null;
+    if (room && name) saveSub(room.code, name, p.sub, p.lang);
+  });
+  socket.on('pushUnsubscribe', () => {
+    const room = joinedCode ? rooms.get(joinedCode) : undefined;
+    const name = room ? seatName(room) : null;
+    if (room && name) dropSub(room.code, name);
+  });
+
   // ออกจากห้องโดยตั้งใจ (กดปุ่ม) — ลบที่นั่งถ้าอยู่ล็อบบี้, พักที่นั่ง(ออฟไลน์)ถ้ากำลังเล่น
   socket.on('leave', () => {
     const room = joinedCode ? rooms.get(joinedCode) : undefined;
@@ -394,6 +429,8 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     const code = joinedCode!;
     joinedCode = null;
     socket.leave(code);
+    const leftName = seatName(room); // ออกเองตั้งใจ → เลิกส่ง push ให้ที่นั่งนี้
+    if (leftName) dropSub(code, leftName);
     room.removeSpectator(socket.id); // เผื่อเป็นผู้ชม
     room.removePlayer(socket.id);
     if (room.players.length === 0 || room.isEmpty()) {
@@ -405,6 +442,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         const r = rooms.get(code);
         if (r && (r.players.length === 0 || r.isEmpty())) {
           rooms.delete(code);
+          dropRoom(code);
           saveRooms();
         }
       }, 60000);
@@ -430,6 +468,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         const r = rooms.get(code);
         if (r && (r.players.length === 0 || r.isEmpty())) {
           rooms.delete(code);
+          dropRoom(code);
           saveRooms();
         }
       }, 60000);

@@ -80,6 +80,12 @@
       เลียนแบบ shadcn <Skeleton/> = animate-pulse + rounded — ไม่มีข้อความ จึงไม่ขึ้นกับภาษา
     -->
     <style>
+      /* iOS PWA: ให้ html/body มีสีพื้น (ปลาย felt) ตั้งแต่ paint แรกเลย — กันพื้น "ขาว" โผล่ตอนเปิดแอป
+         (บริเวณ safe-area/นอก #root ที่ iOS ไม่ paint พื้นหลังจาก external CSS จนกว่าจะ repaint) */
+      html,
+      body {
+        background: #0c3f26;
+      }
       @keyframes sk-pulse {
         50% {
           opacity: 0.5;

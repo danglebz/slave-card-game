@@ -378,6 +378,9 @@ export class Room {
   beginPlay(): void {
     this.phase = 'playing';
     this.giveTasks = null;
+    // one-shot flag: clear it here too, so a dethrone re-deal that falls back to the first-game
+    // path (e.g. a spectator promotion changed the player count) can't leak it into a later round
+    this._miyakoExchange = false;
     const prev = this._prevOrder;
     if (prev && prev.length === this.players.length) {
       // round 2+: slave leads, no 3♣ required, direction "rotates away from the King"
@@ -518,6 +521,19 @@ export class Room {
     const ids = this.players[idx].hand.slice(0, task.count).map(cardId);
     this._give(idx, ids);
     return true;
+  }
+
+  // a winner still owing exchange cards who can't pick for themselves (a bot, or a disconnected
+  // human) → index.ts auto-resolves via botGive so an AFK/dropped winner can't stall the exchange
+  // phase forever (there is no turn timer in 'exchange' — see armTurnTimer)
+  pendingAutoGiver(): number | null {
+    if (this.phase !== 'exchange' || !this.giveTasks) return null;
+    for (const key of Object.keys(this.giveTasks)) {
+      const i = +key;
+      const p = this.players[i];
+      if (!this.giveTasks[i].cards && (p?.isBot || !p?.connected)) return i;
+    }
+    return null;
   }
 
   activeCount(): number {

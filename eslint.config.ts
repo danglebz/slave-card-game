@@ -1,11 +1,11 @@
-// @ts-nocheck — flat config (โหลดผ่าน jiti); บาง plugin ไม่มี type declaration
+// @ts-nocheck — flat config (loaded via jiti); some plugins have no type declaration
 import js from '@eslint/js';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-config-prettier';
 
-// โค้ดเป็น TypeScript → lint ด้วย typescript-eslint; type หลักตรวจด้วย tsc (pnpm typecheck)
+// code is TypeScript → lint with typescript-eslint; main type-checking via tsc (pnpm typecheck)
 export default tseslint.config(
   {
     ignores: [
@@ -22,14 +22,15 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
 
-  // โค้ด .ts/.tsx (server + client + test + e2e + config)
+  // .ts/.tsx code (server + client + test + e2e + config)
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       globals: { ...globals.node, ...globals.browser },
     },
     rules: {
-      'no-undef': 'off', // tsc เช็ค undefined ให้แล้ว (รู้จัก global จาก vite-env.d.ts)
+      // tsc already checks undefined (knows globals from vite-env.d.ts)
+      'no-undef': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',
@@ -38,7 +39,7 @@ export default tseslint.config(
     },
   },
 
-  // React hooks (ฝั่ง client)
+  // React hooks (client side)
   {
     files: ['client/src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },
@@ -48,12 +49,12 @@ export default tseslint.config(
     },
   },
 
-  // config files อนุญาต @ts-nocheck (บาง plugin ไม่มี type declaration)
+  // config files allow @ts-nocheck (some plugins have no type declaration)
   {
     files: ['*.config.ts'],
     rules: { '@typescript-eslint/ban-ts-comment': 'off' },
   },
 
-  // ปิด rule ที่ชนกับ Prettier (ให้ Prettier จัดการ format ทั้งหมด)
+  // turn off rules that conflict with Prettier (let Prettier handle all formatting)
   prettier,
 );

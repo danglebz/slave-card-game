@@ -1,5 +1,5 @@
-// ComboHints.tsx — บอมบ์ในมือ (port detectCombos + renderCombos)
-// กดชิป = เลือกชุดนั้น, กดซ้ำ = ยกเลิก (ผ่าน store.setSelected / clearSelected)
+// ComboHints.tsx — bombs in hand (port detectCombos + renderCombos)
+// tap a chip = select that combo, tap again = deselect (via store.setSelected / clearSelected)
 import type { RoomState } from '@shared/types';
 import { detectCombos, disabledComboTypes } from '@/lib/gameLogic';
 import { Icon } from '@/lib/icons';

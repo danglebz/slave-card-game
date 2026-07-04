@@ -1,4 +1,4 @@
-// ConnBanner.tsx — แบนเนอร์สถานะการเชื่อมต่อ (โผล่ตอนเน็ตหลุด) — อ่าน connDown จาก store
+// ConnBanner.tsx — connection status banner (appears when the network drops) — reads connDown from store
 import { useStore } from '@/store';
 import { Icon } from '@/lib/icons';
 import { t } from '@/lib/i18n';

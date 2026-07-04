@@ -1,6 +1,6 @@
-// dialog.tsx — shadcn Dialog (Radix + Tailwind) พร้อม scrollable body
-// โครงสร้าง shadcn: Header ปักบน, Footer ปักล่าง, Body ตรงกลางเลื่อนได้ (max-h ทั้งกล่อง)
-// สีดึงจาก token bridge ใน style.css (bg-background/border-border ฯลฯ) เพื่อคงลุคเดิม
+// dialog.tsx — shadcn Dialog (Radix + Tailwind) with a scrollable body
+// shadcn structure: Header pinned top, Footer pinned bottom, Body in the middle scrolls (max-h on the whole box)
+// colors pulled from the token bridge in style.css (bg-background/border-border etc.) to keep the original look
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import type { ComponentProps } from 'react';
 import { Icon } from '@/lib/icons';
@@ -30,13 +30,13 @@ function DialogOverlay({ className, ...props }: ComponentProps<typeof DialogPrim
 }
 
 interface DialogContentProps extends ComponentProps<typeof DialogPrimitive.Content> {
-  /** แสดงปุ่มปิด X มุมขวาบน (default: true) */
+  /** show the X close button in the top-right corner (default: true) */
   showClose?: boolean;
 }
 
 /**
- * เนื้อ dialog — กล่อง fixed กึ่งกลางจอ, flex column + max-h เพื่อให้ DialogBody เลื่อนได้
- * ส่งชื่อกล่อง (settings-box / rules-box …) ผ่าน className เพื่อ override max-width
+ * dialog content — a fixed box centered on screen, flex column + max-h so DialogBody can scroll
+ * pass the box name (settings-box / rules-box …) via className to override max-width
  */
 function DialogContent({ className, children, showClose = true, ...props }: DialogContentProps) {
   const lang = useStore((s) => s.lang);
@@ -69,12 +69,12 @@ function DialogContent({ className, children, showClose = true, ...props }: Dial
   );
 }
 
-/** หัว dialog — ปักไว้ไม่เลื่อน */
+/** dialog header — pinned, doesn't scroll */
 function DialogHeader({ className, ...props }: ComponentProps<'div'>) {
   return <div data-slot="dialog-header" className={cn('flex-none', className)} {...props} />;
 }
 
-/** เนื้อหาตรงกลาง — เลื่อนได้เมื่อยาวเกินจอ (ส่วนที่แก้บั๊ก scroll) */
+/** middle content — scrolls when it exceeds the screen height (the part that fixes the scroll bug) */
 function DialogBody({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
@@ -85,7 +85,7 @@ function DialogBody({ className, ...props }: ComponentProps<'div'>) {
   );
 }
 
-/** ท้าย dialog (ปุ่ม) — ปักไว้ไม่เลื่อน */
+/** dialog footer (buttons) — pinned, doesn't scroll */
 function DialogFooter({ className, ...props }: ComponentProps<'div'>) {
   return <div data-slot="dialog-footer" className={cn('flex-none', className)} {...props} />;
 }

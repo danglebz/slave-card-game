@@ -1,5 +1,5 @@
-// fixtures.ts — ตัวช่วยสร้าง RoomState / PlayerView / ไพ่ สำหรับ component test
-// ค่า default = เกมกำลังเล่น 2 คน, "คุณ" คือคนแรก ถึงตา
+// fixtures.ts — helpers to build RoomState / PlayerView / cards for component tests
+// default = game in progress with 2 players, "you" are the first player, your turn
 import type { CardWithId, PlayerView, RoomState, Settings } from '@shared/types';
 
 export function card(r: number, s: number): CardWithId {

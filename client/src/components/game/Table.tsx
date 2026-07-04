@@ -1,4 +1,4 @@
-// Table.tsx — โต๊ะ 3×3: 8 ที่นั่งล้อมรอบ + กองไพ่กลาง (port renderPlayers/seatFor layout)
+// Table.tsx — 3×3 table: 8 seats around the edge + center pile (port renderPlayers/seatFor layout)
 import type { RoomState } from '@shared/types';
 import { PlayerChip } from './Seat';
 import { Pile } from './Pile';
@@ -8,18 +8,19 @@ import { seatFor } from '@/lib/gameLogic';
 const SEAT_IDS = ['seat-tl', 'seat-top', 'seat-tr', 'seat-bl', 'seat-bottom', 'seat-br'] as const;
 
 export function Table({ s }: { s: RoomState }) {
-  // map seat-id → ผู้เล่นที่นั่งช่องนั้น
+  // map seat-id → the player sitting in that slot
   const occupant: Record<string, (typeof s.players)[number]> = {};
   const n = s.players.length;
   const you = s.youIndex >= 0 ? s.youIndex : 0;
   s.players.forEach((p, i) => {
-    const rel = (((i - you) % n) + n) % n; // 0 = คุณ, ไล่ตามลำดับรอบโต๊ะ
+    // 0 = you, then in order around the table
+    const rel = (((i - you) % n) + n) % n;
     occupant[seatFor(rel, n)] = p;
   });
 
-  // วงกลมบอกทิศ (rotate icon) รอบไพ่ — ผังที่นั่งวน rel เพิ่ม = ทวนเข็ม → dir=+1 = ทวนเข็ม
-  //   ทวนเข็ม (ccw): วงลอด "หลังไพ่" (z-index ใต้กองไพ่)
-  //   ตามเข็ม (cw):  วงมา "หน้าไพ่" (z-index ทับบนกองไพ่)
+  // direction ring (rotate icon) around the cards — seat layout with increasing rel = counter-clockwise → dir=+1 = counter-clockwise
+  //   counter-clockwise (ccw): ring passes "behind the cards" (z-index below the pile)
+  //   clockwise (cw):          ring comes "in front of the cards" (z-index above the pile)
   const ccw = s.dir === 1;
 
   const seat = (id: string) => (

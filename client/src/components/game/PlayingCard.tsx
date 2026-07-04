@@ -1,4 +1,4 @@
-// PlayingCard.tsx — ไพ่หนึ่งใบ (port cardHTML) + MiniCard (port miniCardHTML)
+// PlayingCard.tsx — one card (port cardHTML) + MiniCard (port miniCardHTML)
 import type { CSSProperties } from 'react';
 import type { CardWithId } from '@shared/types';
 import { SUITS, RED, rankLabel } from '@/lib/gameLogic';
@@ -36,7 +36,7 @@ export function PlayingCard({ card, selected, onClick, style }: PlayingCardProps
   );
 }
 
-// มินิการ์ดสำหรับประวัติ (เล็ก แสดงเลข+ดอก)
+// mini-card for the history log (small, shows rank + suit)
 export function MiniCard({ card }: { card: { r: number; s: number } }) {
   const red = RED.has(card.s) ? ' red' : '';
   return (

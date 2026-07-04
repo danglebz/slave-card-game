@@ -1,15 +1,16 @@
-// Integration: Room + game.js ทำงานร่วมกันตลอดหนึ่งรอบ (ไม่ผ่าน socket)
-// ตั้งมือไพ่เองให้ deterministic แล้วไล่เล่นจริงผ่าน play()/pass()
+// Integration: Room + game.js working together through one full round (no socket)
+// Set hands manually for determinism, then play through for real via play()/pass()
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Room } from '../../server/room';
 import { cardId } from '../../server/game';
 
-// helper: สร้างห้อง 2 คน เริ่มเกม แล้วเซ็ตมือไพ่แบบกำหนดเอง
+// helper: create a 2-player room, start the game, then set custom hands
 function twoPlayerRoom() {
   const room = new Room('TEST');
   room.addPlayer('sock-a', 'Alice');
   room.addPlayer('sock-b', 'Bob');
-  room.start(); // เกมแรก → beginPlay (ไม่มีเฟสแลกไพ่)
+  // first game → beginPlay (no card exchange phase)
+  room.start();
   return room;
 }
 
@@ -41,7 +42,7 @@ describe('Room: ไล่เล่นกองแรก (deterministic)', () => 
   let room;
   beforeEach(() => {
     room = twoPlayerRoom();
-    // เซ็ตมือไพ่ที่รู้แน่ ๆ: A ถือ 3♣ (คนเริ่ม), B ถือไพ่สูงกว่า
+    // set known hands: A holds 3♣ (starter), B holds higher cards
     room.players[0].hand = [
       { r: 3, s: 0 },
       { r: 5, s: 0 },
@@ -71,21 +72,25 @@ describe('Room: ไล่เล่นกองแรก (deterministic)', () => 
   });
 
   it('B กินด้วยไพ่สูงกว่า แล้ว A ลงไพ่ต่ำกว่าไม่ได้', () => {
-    room.play('sock-a', ['3.0']); // A นำ 3♣
-    room.play('sock-b', ['6.1']); // B กินด้วย 6
+    // A leads 3♣
+    room.play('sock-a', ['3.0']);
+    // B beats with 6
+    room.play('sock-b', ['6.1']);
     expect(room.pileOwner).toBe(1);
     expect(room.turn).toBe(0);
-    // A เหลือ 5,7 — 5 ต่ำกว่า 6 กินไม่ได้
+    // A has 5,7 left — 5 is lower than 6, can't beat
     expect(() => room.play('sock-a', ['5.0'])).toThrow();
-    // แต่ 7 สูงกว่า 6 ลงได้
+    // but 7 is higher than 6, can play
     room.play('sock-a', ['7.0']);
     expect(room.pile).toMatchObject({ topRank: 7 });
   });
 
   it('pass แล้วกองเคลียร์ คืนสิทธิ์นำให้เจ้าของกอง', () => {
-    room.play('sock-a', ['3.0']); // A นำ
-    room.pass('sock-b'); // B ผ่าน → ทุกคนอื่นผ่านแล้ว กองเคลียร์
-    // A เป็นเจ้าของกองล่าสุด → ได้นำกองใหม่ (pile reset)
+    // A leads
+    room.play('sock-a', ['3.0']);
+    // B passes → everyone else has passed, pile clears
+    room.pass('sock-b');
+    // A owns the last pile → gets to lead the new pile (pile reset)
     expect(room.pile).toBeNull();
     expect(room.turn).toBe(0);
   });
@@ -94,20 +99,23 @@ describe('Room: ไล่เล่นกองแรก (deterministic)', () => 
 describe('Room: จบรอบและจัดอันดับ', () => {
   it('คนหมดมือก่อนได้อันดับ 1 (คิง) เมื่อเหลือคนเดียวรอบจบ', () => {
     const room = twoPlayerRoom();
-    // A เหลือใบเดียว, B เหลือสองใบ — A ลงหมดมือ → finished
-    room.players[0].hand = [{ r: 15, s: 3 }]; // 2♠ ใบแรง
+    // A has one card left, B has two — A empties hand → finished
+    // 2♠ strong card
+    room.players[0].hand = [{ r: 15, s: 3 }];
     room.players[1].hand = [
       { r: 4, s: 0 },
       { r: 8, s: 0 },
     ];
     room.turn = 0;
-    room.everPlayed = true; // ข้ามเงื่อนไข 3♣
+    // skip the 3♣ condition
+    room.everPlayed = true;
     room.pile = null;
     room.passed = new Set();
 
     room.play('sock-a', [cardId({ r: 15, s: 3 })]);
     expect(room.players[0].finished).toBe(true);
-    expect(room.finishOrder[0]).toBe(0); // A หมดก่อน
+    // A finishes first
+    expect(room.finishOrder[0]).toBe(0);
   });
 });
 
@@ -118,7 +126,8 @@ describe('Room: บอท', () => {
     for (let i = 0; i < 5; i++) room.addBot();
     expect(room.players).toHaveLength(6);
     expect(room.hasBots()).toBe(true);
-    expect(() => room.addBot()).toThrow(); // เต็มแล้ว
+    // already full
+    expect(() => room.addBot()).toThrow();
     room.removeBot();
     expect(room.players).toHaveLength(5);
   });

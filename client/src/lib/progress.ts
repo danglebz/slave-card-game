@@ -1,5 +1,5 @@
-// progress.ts — progress bar บนสุด (shadcn) แบบ ref-count ให้ซ้อน action ได้
-// singleton ที่คอมโพเนนต์ ProgressBar subscribe; ค่าความกว้าง 0..100, active = แสดง
+// progress.ts — top progress bar (shadcn), ref-counted so actions can stack
+// singleton that the ProgressBar component subscribes to; width value 0..100, active = shown
 type Listener = (state: { width: number; active: boolean }) => void;
 
 let count = 0;
@@ -24,7 +24,8 @@ function begin() {
   emit();
   if (timer) clearInterval(timer);
   timer = setInterval(() => {
-    val += (92 - val) * 0.12; // ค่อยๆ ไต่เข้าใกล้ 92% แล้วรอจังหวะ done
+    // gradually creep toward 92% then wait for done
+    val += (92 - val) * 0.12;
     emit();
   }, 220);
 }

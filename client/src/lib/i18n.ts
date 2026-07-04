@@ -1,5 +1,5 @@
-// i18n — สลับภาษา TH/EN สำหรับทั้งแอป (lobby / game / settings / โมดัล / ข้อความจาก server)
-// server ส่งเป็น key (+ vars) แล้ว client แปลเองตามภาษาที่เลือก
+// i18n — TH/EN language switching for the whole app (lobby / game / settings / modals / messages from server)
+// server sends a key (+ vars) and the client translates it into the selected language
 
 export type Lang = 'th' | 'en';
 
@@ -332,14 +332,14 @@ export function initialLang(): Lang {
   return localStorage.getItem('lang') === 'en' ? 'en' : 'th';
 }
 
-// ชื่อบอทจาก server เป็น "บอท N" — แปลงเป็นภาษาที่เลือก ("Bot N") ตอนแสดงผล
-// (ชื่อ canonical ฝั่ง server คงเดิมเพื่อใช้เป็น key เช่น scoreboard)
+// bot names from the server are the Thai "bot N" — convert to the selected language ("Bot N") at display time
+// (the canonical server-side name is kept as-is for use as a key, e.g. scoreboard)
 export function displayName(name: string, lang: Lang): string {
   const m = /^บอท (\d+)$/.exec(name);
   return m ? `${t(lang, 'bot')} ${m[1]}` : name;
 }
 
-// แปลคีย์ + แทนค่าตัวแปร {name}
+// translate a key + substitute the {name} variable
 export function t(lang: Lang, key: string, vars?: Record<string, string | number>): string {
   let s = DICT[lang]?.[key] ?? DICT.th[key] ?? key;
   if (vars) for (const k of Object.keys(vars)) s = s.replace(`{${k}}`, String(vars[k]));

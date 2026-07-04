@@ -1,4 +1,4 @@
-// clipboard.ts — คัดลอกข้อความ (port copyText จาก app.js) + fallback สำหรับ http บน LAN
+// clipboard.ts — copy text (ported copyText from app.js) + fallback for http on LAN
 export async function copyText(text: string): Promise<boolean> {
   try {
     if (navigator.clipboard && window.isSecureContext) {
@@ -6,7 +6,7 @@ export async function copyText(text: string): Promise<boolean> {
       return true;
     }
   } catch {
-    /* ตกไป fallback */
+    /* fall through to fallback */
   }
   try {
     const ta = document.createElement('textarea');

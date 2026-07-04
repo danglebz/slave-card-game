@@ -1,4 +1,4 @@
-// Toast.tsx — แจ้งเตือนเด้ง (shadcn / Sonner) บน-กลางจอ — อ่าน toast จาก store, auto-dismiss
+// Toast.tsx — pop-up notification (shadcn / Sonner) at top-center — reads toast from store, auto-dismiss
 import { useEffect, useState } from 'react';
 import { useStore } from '@/store';
 import { Icon, iconize } from '@/lib/icons';
@@ -8,7 +8,7 @@ export function Toast() {
   const hideToast = useStore((s) => s.hideToast);
   const [show, setShow] = useState(false);
 
-  // toast เปลี่ยน (id ใหม่) → โชว์ + ตั้งเวลาเก็บ
+  // toast changed (new id) → show + schedule dismissal
   useEffect(() => {
     if (!toast) {
       setShow(false);
@@ -17,7 +17,8 @@ export function Toast() {
     setShow(true);
     const dur = toast.variant === 'error' ? 2500 : 1800;
     const showTimer = setTimeout(() => setShow(false), dur);
-    const hideTimer = setTimeout(() => hideToast(), dur + 200); // รอ exit animation
+    // wait for exit animation
+    const hideTimer = setTimeout(() => hideToast(), dur + 200);
     return () => {
       clearTimeout(showTimer);
       clearTimeout(hideTimer);

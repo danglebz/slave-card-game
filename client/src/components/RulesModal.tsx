@@ -1,4 +1,4 @@
-// RulesModal.tsx — กติกาเกมส์ไพ่สลาฟ (สลับ TH/EN ตาม store.lang)
+// RulesModal.tsx — Slave card game rules (switches TH/EN based on store.lang)
 import {
   Dialog,
   DialogContent,

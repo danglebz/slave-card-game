@@ -9,15 +9,15 @@ export interface ToastMsg {
 }
 
 interface GameStore {
-  // ----- เกม -----
-  /** state ก้อนเดียวจาก server (event 'state') — single source of truth */
+  // ----- game -----
+  /** single state blob from the server (event 'state') — single source of truth */
   state: RoomState | null;
   screen: 'lobby' | 'game';
   roomCode: string;
-  /** ไพ่ที่เลือกอยู่ในมือ (cardId) */
+  /** cards currently selected in hand (cardId) */
   selected: Set<string>;
 
-  // ----- การเชื่อมต่อ -----
+  // ----- connection -----
   connDown: boolean;
 
   // ----- UI -----

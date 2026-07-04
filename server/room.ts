@@ -1,4 +1,4 @@
-// room.ts — สถานะห้องและรอบเล่นเกมส์ไพ่สลาฟ (server-authoritative)
+// room.ts — room and round state for the Slave card game (server-authoritative)
 import {
   deal,
   sortHand,
@@ -33,9 +33,10 @@ import type {
 
 const RANK_KEYS: RankKey[] = ['king', 'queen', 'commoner', 'viceslave', 'slave'];
 const emptyTally = (): RankTally => ({ king: 0, queen: 0, commoner: 0, viceslave: 0, slave: 0 });
-const MAX_HISTORY = 40; // เก็บประวัติรอบล่าสุดกี่รอบ (กัน state บวม)
+// how many recent rounds to keep (prevent state bloat)
+const MAX_HISTORY = 40;
 
-// ----- โครงสร้างภายใน -----
+// ----- internal structures -----
 interface Player {
   id: string;
   name: string;
@@ -59,7 +60,7 @@ interface GiveTask {
 
 type GiveTasks = Record<number, GiveTask>;
 
-// ยศแต่ละอันดับเป็น i18n key (client แปลเป็น 'คิง'/'King' + emoji เอง)
+// each rank title is an i18n key (client renders 'King' + emoji itself)
 const RANK_TITLES: Record<number, string[]> = {
   2: ['king', 'slave'],
   3: ['king', 'commoner', 'slave'],
@@ -71,7 +72,8 @@ const RANK_TITLES: Record<number, string[]> = {
 let roomSeq = 0;
 
 export class Room {
-  static TURN_MS = Number(process.env.TURN_MS) || 30000; // เวลาต่อตา (ms) ก่อน auto-pass/auto-play
+  // time per turn (ms) before auto-pass/auto-play
+  static TURN_MS = Number(process.env.TURN_MS) || 30000;
 
   code: string;
   id: number;
@@ -95,12 +97,12 @@ export class Room {
   turnDeadline: number | null;
   spectators: Spectator[];
   settings: Settings;
-  /** สถิติสะสมข้ามรอบ (key = ชื่อผู้เล่น) — นับยศแต่ละแบบทั้ง session */
+  /** cumulative stats across rounds (key = player name) — counts each title for the whole session */
   sessionStats: Record<string, RankTally>;
-  /** ประวัติผลแต่ละรอบ (ใหม่สุดท้าย) — จำกัด MAX_HISTORY */
+  /** per-round results history (newest last) — capped at MAX_HISTORY */
   roundHistory: RoundRecord[];
 
-  // ฟิลด์ภายใน (ไม่ได้ประกาศใน type สาธารณะ — ใช้ภายในเกม/timer)
+  // internal fields (not declared in the public type — used within game/timer logic)
   _prevOrder: number[] | null;
   everPlayed: boolean;
   _lastPileCards: (Card & { id: string })[] | null;
@@ -114,32 +116,52 @@ export class Room {
   constructor(code: string) {
     this.code = code;
     this.id = ++roomSeq;
-    this.players = []; // { id(socket), name, connected, hand:[], finished:false }
+    // { id(socket), name, connected, hand:[], finished:false }
+    this.players = [];
     this.hostId = null;
-    this.phase = 'lobby'; // lobby | playing | finished
-    this.turn = 0; // index ใน players ของคนที่ถึงตา
-    this.pile = null; // combo ปัจจุบันบนโต๊ะ {type,len,value,...}
-    this.pileOwner = null; // index ผู้เล่นที่ลงกองล่าสุด
-    this.passed = new Set(); // index คนที่ผ่านในกองนี้แล้ว → ข้ามจนกว่ากองจะเคลียร์
-    this.dir = 1; // ทิศการวน: 1 = ขวา (ปกติ), -1 = ซ้าย (หลังสลับทิศ)
-    this.finishOrder = []; // index เรียงตามคนหมดมือก่อน
-    this.lastResult = null; // ผลรอบก่อน (ตำแหน่ง)
-    this.log = []; // ประวัติย่อ (ข้อความ) — สำรอง
-    this.history = []; // ประวัติแบบมีโครงสร้าง: {name,cards} | {name,pass} | {event}
-    this.giveTasks = null; // เฟสแลกไพ่: { [playerIdx]: { to, count, cards|null } }
-    this._prevOrder = null; // อันดับรอบก่อน (ใช้กำหนดสลาฟขึ้นก่อน + ทิศหนีคิง)
-    this.roundOrder = null; // คิง/สลาฟ ของรอบปัจจุบัน (ใช้กฎคิงตกบัลลังก์)
-    this.noticeSeq = 0; // ตัวนับแจ้งเตือนเด้ง (toast) ฝั่ง client
+    // lobby | playing | finished
+    this.phase = 'lobby';
+    // index in players of whose turn it is
+    this.turn = 0;
+    // current combo on the table {type,len,value,...}
+    this.pile = null;
+    // index of the player who last played the pile
+    this.pileOwner = null;
+    // indices of players who passed this pile → skipped until the pile clears
+    this.passed = new Set();
+    // rotation direction: 1 = right (normal), -1 = left (after a reverse)
+    this.dir = 1;
+    // indices ordered by who finished first
+    this.finishOrder = [];
+    // previous round result (positions)
+    this.lastResult = null;
+    // short history (text) — backup
+    this.log = [];
+    // structured history: {name,cards} | {name,pass} | {event}
+    this.history = [];
+    // card-exchange phase: { [playerIdx]: { to, count, cards|null } }
+    this.giveTasks = null;
+    // previous round ranking (used to make the slave lead + rotate away from the King)
+    this._prevOrder = null;
+    // King/Slave of the current round (used for the King-dethroned rule)
+    this.roundOrder = null;
+    // counter for pop-up notifications (toast) on the client
+    this.noticeSeq = 0;
     this.noticeKey = null;
     this.noticeVars = null;
-    this.turnDeadline = null; // timestamp(ms) ที่ตาปัจจุบันจะหมดเวลา (ตั้งโดย server, ไม่เซฟลงไฟล์)
-    this.spectators = []; // ผู้ชมที่เข้ามากลางรอบ: { id, name } — จะเข้าเล่นรอบหน้า
+    // timestamp(ms) when the current turn expires (set by server, not saved to file)
+    this.turnDeadline = null;
+    // spectators who joined mid-round: { id, name } — will play next round
+    this.spectators = [];
     this.everPlayed = false;
     this._lastPileCards = null;
-    this.sessionStats = {}; // สถิติสะสมข้ามรอบ
-    this.roundHistory = []; // ประวัติผลแต่ละรอบ
-    this._cleanupTimer = null; // ตัวจับเวลาลบห้องร้าง (ตั้ง/เคลียร์ใน index.js)
-    // ตั้งค่าห้อง (หัวห้องคุม)
+    // cumulative stats across rounds
+    this.sessionStats = {};
+    // per-round results history
+    this.roundHistory = [];
+    // timer to delete an abandoned room (set/cleared in index.js)
+    this._cleanupTimer = null;
+    // room settings (controlled by the host)
     this.settings = {
       timer: true,
       autoPass: true,
@@ -151,7 +173,8 @@ export class Room {
     };
   }
 
-  static MAX_PLAYERS = 6; // จำนวนผู้เล่นสูงสุดต่อห้อง
+  // max players per room
+  static MAX_PLAYERS = 6;
   static TURN_SECONDS_CHOICES = [15, 30, 45, 60];
   static COLORS = [
     '#ef4444',
@@ -164,14 +187,14 @@ export class Room {
     '#ec4899',
   ];
 
-  // ตั้งสีประจำตัวของผู้เล่น (ตัวเองเท่านั้น) — รับ hex #rrggbb ใดๆ (validate กัน injection)
+  // set the player's own color (self only) — accepts any hex #rrggbb (validated to prevent injection)
   setColor(socketId: string, color?: string): void {
     const p = this.players.find((x) => x.id === socketId);
     if (p && typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color))
       p.color = color.toLowerCase();
   }
 
-  // ปรับตั้งค่าห้อง (เฉพาะค่าที่รู้จัก/ถูกต้อง)
+  // update room settings (only known/valid values)
   setSettings(patch: Partial<Settings>): void {
     if (!patch) return;
     if (typeof patch.timer === 'boolean') this.settings.timer = patch.timer;
@@ -184,7 +207,7 @@ export class Room {
       this.settings.turnSeconds = patch.turnSeconds;
   }
 
-  // เวลาต่อตาเป็น ms (ตามตั้งค่าห้อง)
+  // time per turn in ms (per room settings)
   turnMs(): number {
     return (this.settings?.turnSeconds || Math.round(Room.TURN_MS / 1000)) * 1000;
   }
@@ -194,11 +217,11 @@ export class Room {
     if (this.history.length > 50) this.history = this.history.slice(-50);
   }
 
-  // ----- บอท (AI เติมคน) -----
+  // ----- bots (AI to fill seats) -----
   addBot(): void {
     if (this.phase !== 'lobby') gerr('err.botLobbyOnly');
     if (this.players.length >= Room.MAX_PLAYERS) gerr('err.roomFull', { max: Room.MAX_PLAYERS });
-    // หาเลขบอทที่ว่างต่ำสุด เพื่อชื่อไม่ชนกัน
+    // find the lowest free bot number so names don't collide
     const used = new Set(this.players.filter((p) => p.isBot).map((p) => p.name));
     let n = 1;
     while (used.has(`บอท ${n}`)) n++;
@@ -227,7 +250,7 @@ export class Room {
     return this.players.some((p) => p.isBot);
   }
 
-  // หัวห้องเตะผู้เล่น (เฉพาะในล็อบบี้) — อ้างอิงด้วยชื่อ; คืน socket id ที่ถูกเตะ (ให้ index.ts แจ้ง/พาออก)
+  // host kicks a player (lobby only) — referenced by name; returns the kicked socket id (for index.ts to notify/remove)
   kick(name: string): string | null {
     if (this.phase !== 'lobby') gerr('err.kickLobbyOnly');
     const idx = this.players.findIndex((p) => p.name === name);
@@ -237,7 +260,7 @@ export class Room {
     return removed.id;
   }
 
-  // สลับลำดับที่นั่ง (เปลี่ยนลำดับการวน) — เฉพาะในล็อบบี้
+  // shuffle seat order (change rotation order) — lobby only
   shuffleSeats(): void {
     if (this.phase !== 'lobby') gerr('err.shuffleLobbyOnly');
     if (this.players.length < 2) gerr('err.needTwo');
@@ -247,29 +270,29 @@ export class Room {
     }
   }
 
-  // เข้าห้อง → คืน 'player' หรือ 'spectator'
+  // join room → returns 'player' or 'spectator'
   addPlayer(socketId: string, name: string): 'player' | 'spectator' {
-    // reconnect / รีเฟรช: ชื่อซ้ำ → ยึดที่นั่งเดิม (ไม่สนว่า socket เก่า disconnect ทันหรือยัง)
-    // กัน race ตอนรีเฟรชที่ socket ใหม่ต่อก่อน socket เก่าจะหลุด (ไม่นับบอท)
+    // reconnect / refresh: duplicate name → reclaim the existing seat (regardless of whether the old socket has disconnected yet)
+    // guard against the refresh race where the new socket connects before the old one drops (bots excluded)
     const existing = this.players.find((p) => p.name === name && !p.isBot);
     if (existing) {
       const oldId = existing.id;
       existing.id = socketId;
       existing.connected = true;
-      // ย้าย host ตามถ้าคนเดิมคือ host
+      // move host along if this player was the host
       if (this.hostId === oldId) this.hostId = socketId;
       if (!this.players.some((p) => p.id === this.hostId && p.connected && !p.isBot)) {
         this.hostId = socketId;
       }
       return 'player';
     }
-    // reconnect ผู้ชมที่ค้างอยู่
+    // reconnect a lingering spectator
     const spec = this.spectators.find((s) => s.name === name);
     if (spec) {
       spec.id = socketId;
       return 'spectator';
     }
-    // เข้าใหม่ตอนล็อบบี้ = ผู้เล่น
+    // joining fresh during lobby = player
     if (this.phase === 'lobby') {
       if (this.players.length >= Room.MAX_PLAYERS) gerr('err.roomFull', { max: Room.MAX_PLAYERS });
       const player: Player = { id: socketId, name, connected: true, hand: [], finished: false };
@@ -277,7 +300,7 @@ export class Room {
       if (!this.hostId) this.hostId = socketId;
       return 'player';
     }
-    // เข้าระหว่างเกม = ผู้ชม (ดูก่อน เล่นรอบหน้า) — ดูได้แม้ห้องเต็ม
+    // joining mid-game = spectator (watch first, play next round) — allowed even if the room is full
     this.spectators.push({ id: socketId, name });
     return 'spectator';
   }
@@ -288,7 +311,7 @@ export class Room {
     return this.spectators.length !== n;
   }
 
-  // ดึงผู้ชมเข้าเป็นผู้เล่น (ตอนเริ่มรอบใหม่) เท่าที่นั่งว่าง
+  // promote spectators to players (at the start of a new round) as far as seats allow
   promoteSpectators(): void {
     while (this.spectators.length && this.players.length < Room.MAX_PLAYERS) {
       const s = this.spectators.shift()!;
@@ -303,7 +326,7 @@ export class Room {
     if (this.phase === 'lobby') {
       this.players = this.players.filter((x) => x.id !== socketId);
     }
-    // ย้าย host ถ้า host หลุด (ไม่ให้บอทเป็น host)
+    // move host if the host drops (don't let a bot be host)
     if (this.hostId === socketId) {
       const next = this.players.find((x) => x.connected && !x.isBot);
       this.hostId = next ? next.id : null;
@@ -315,12 +338,13 @@ export class Room {
   }
 
   isEmpty(): boolean {
-    // ห้องว่าง = ไม่มี "คนจริง" ออนไลน์ (บอทไม่นับ ไม่งั้นห้องไม่ถูกเก็บกวาด)
+    // empty room = no "real people" online (bots don't count, otherwise the room never gets reaped)
     return this.players.every((p) => p.isBot || !p.connected);
   }
 
   start(): void {
-    this.promoteSpectators(); // ดึงผู้ชมที่รออยู่เข้าเล่นรอบนี้
+    // promote waiting spectators into this round
+    this.promoteSpectators();
     if (this.players.length < 2) gerr('err.needTwoStart');
     const prevOrder = Array.isArray(this.finishOrder) ? this.finishOrder.slice() : [];
     const hands = deal(this.players.length);
@@ -332,7 +356,8 @@ export class Room {
     this.pile = null;
     this.pileOwner = null;
     this.passed = new Set();
-    this.dir = 1; // เริ่มทุกรอบด้วยการวนขวา
+    // every round starts rotating right
+    this.dir = 1;
     this.everPlayed = false;
     this._lastPileCards = null;
     this.finishOrder = [];
@@ -341,7 +366,7 @@ export class Room {
     this.giveTasks = null;
     this._prevOrder = prevOrder.length === this.players.length ? prevOrder : null;
     this.addHistory({ event: '🆕 เริ่มรอบใหม่' });
-    // ถ้ามีรอบก่อนครบทุกคน → เข้าเฟส "แลกไพ่" (เลือกเอง) ก่อนเริ่มเล่น
+    // if a previous round covered everyone → enter the "card exchange" phase (manual pick) before play starts
     if (this._prevOrder) {
       this.setupExchange(this._prevOrder);
     } else {
@@ -349,77 +374,91 @@ export class Room {
     }
   }
 
-  // เริ่มเล่นจริง (หลังแลกไพ่เสร็จ หรือเกมแรกที่ไม่ต้องแลก)
+  // begin actual play (after the exchange finishes, or the first game with no exchange)
   beginPlay(): void {
     this.phase = 'playing';
     this.giveTasks = null;
     const prev = this._prevOrder;
     if (prev && prev.length === this.players.length) {
-      // รอบ 2+: สลาฟขึ้นก่อน, ไม่ต้องมี 3♣, ทิศ "หมุนหนีคิง"
+      // round 2+: slave leads, no 3♣ required, direction "rotates away from the King"
       const n = this.players.length;
       const slave = prev[n - 1];
       const king = prev[0];
       this.turn = slave;
-      this.everPlayed = true; // ข้ามเงื่อนไข "กองแรกต้องมี 3♣"
-      // หมุนหนีคิง: เลือกทิศที่เดินออกจากคิง (คิงอยู่ปลายแถวที่สุด)
-      const stepsCW = (king - slave + n) % n; // ก้าวไป +1 กี่ทีถึงคิง
-      this.dir = stepsCW <= n / 2 ? -1 : 1; // ถ้าคิงใกล้ทาง +1 → วน -1 (หนี)
+      // skip the "first pile must contain 3♣" condition
+      this.everPlayed = true;
+      // rotate away from the King: pick the direction leading away from the King (the King is at the far end)
+      // how many +1 steps to reach the King
+      const stepsCW = (king - slave + n) % n;
+      // if the King is near the +1 side → rotate -1 (flee)
+      this.dir = stepsCW <= n / 2 ? -1 : 1;
       this.log.push(`เริ่มรอบใหม่! ${this.players[slave].name} (สลาฟ) ขึ้นก่อน — หมุนหนีคิง`);
       this.addHistory({ event: `▶️ ${this.players[slave].name} (สลาฟ) ขึ้นก่อน` });
-      this.roundOrder = prev.slice(); // ใช้เช็ค "คิงตกบัลลังก์" (สลาฟหมดก่อนคิง)
+      // used to check "King dethroned" (slave finishes before the King)
+      this.roundOrder = prev.slice();
     } else {
-      // เกมแรก: ถือ 3♣ ขึ้นก่อน + กองแรกต้องมี 3♣
+      // first game: holder of 3♣ leads + first pile must contain 3♣
       this.everPlayed = false;
       this.turn = findStarter(this.players.map((p) => p.hand));
       this.log.push(`เริ่มเกม! ${this.players[this.turn].name} ขึ้นก่อน (ถือ 3♣)`);
       this.addHistory({ event: `▶️ ${this.players[this.turn].name} ขึ้นก่อน` });
-      this.roundOrder = null; // เกมแรกไม่มีคิง/สลาฟ → ไม่มีกฎคิงตกบัลลังก์
+      // first game has no King/Slave → no King-dethroned rule
+      this.roundOrder = null;
     }
     this._prevOrder = null;
   }
 
-  // คิงตกบัลลังก์: สลาฟ(เดิม)หมดมือก่อนคิง(เดิม) → สลับคิง↔สลาฟ จบรอบ แจกใหม่ทันที
+  // King dethroned: the (former) slave empties their hand before the (former) King → swap King↔Slave, end round, redeal immediately
   miyakoOchi(): { ok: true } {
     const n = this.roundOrder!.length;
     const order = this.roundOrder!.slice();
-    [order[0], order[n - 1]] = [order[n - 1], order[0]]; // สลับคิง↔สลาฟ
+    // swap King↔Slave
+    [order[0], order[n - 1]] = [order[n - 1], order[0]];
     this.finishOrder = order;
     const titles = RANK_TITLES[n] || [];
     this.lastResult = order.map((pIdx, rank) => ({
       name: this.players[pIdx].name,
       title: titles[rank] || 'slave',
     }));
-    this.recordRound(this.lastResult); // ← สะสมสถิติ (คิงตกบัลลังก์ก็นับเป็นจบรอบ)
+    // ← accumulate stats (a dethrone also counts as ending a round)
+    this.recordRound(this.lastResult);
     this.log.push(`dethrone: ${this.players[order[n - 1]].name} (was king) becomes slave — redeal`);
     this.noticeSeq++;
     this.noticeKey = 'notice.dethrone';
     this.noticeVars = { name: this.players[order[n - 1]].name };
-    this._miyakoExchange = true; // คิงตกบัลลังก์ → แลกไพ่เฉพาะคิง↔สลาฟ (ควีน/รองสลาฟไม่ต้องแลก)
-    this.start(); // อ่าน finishOrder เป็นอันดับใหม่ → แจก + เข้าเฟสแลกไพ่ทันที
+    // King dethroned → exchange only King↔Slave (Queen/Vice-slave don't exchange)
+    this._miyakoExchange = true;
+    // read finishOrder as the new ranking → deal + enter the exchange phase immediately
+    this.start();
     return { ok: true };
   }
 
-  // ตั้งเฟสแลกไพ่:
-  //   ผู้แพ้ (สลาฟ/รองสลาฟ) → ถูกบังคับให้ไพ่ "สูงสุด" อัตโนมัติทันที
-  //   ผู้ชนะ (คิง/ควีน) → เลือกไพ่ "คืน" ให้เองในเฟสนี้
+  // set up the card-exchange phase:
+  //   losers (slave/vice-slave) → forced to hand over their "highest" cards automatically right away
+  //   winners (king/queen) → pick which cards to "return" themselves in this phase
   setupExchange(order: number[]): void {
     const n = order.length;
     const tiers = Math.floor(n / 2);
-    // คิงตกบัลลังก์ → แลกเฉพาะคู่สุดขั้ว (คิง↔สลาฟ) เท่านั้น
+    // King dethroned → exchange only the extreme pair (King↔Slave)
     const onlyKingSlave = this._miyakoExchange;
     this._miyakoExchange = false;
-    // ปกติแลกเฉพาะคู่ "มียศ": คิง/ควีน ↔ สลาฟ/รองสลาฟ — สามัญชนไม่แลก (เช่น 6 คน คู่กลางไม่แลก)
+    // normally only "titled" pairs exchange: king/queen ↔ slave/vice-slave — commoners don't exchange (e.g. with 6 players the middle pair doesn't)
     const RANKED_TIERS = 2;
     const maxTier = onlyKingSlave ? 1 : Math.min(tiers, RANKED_TIERS);
-    this.giveTasks = {}; // เฉพาะผู้ชนะที่ต้องเลือก: { [winnerIdx]: { to, count, cards|null } }
+    // only winners who must pick: { [winnerIdx]: { to, count, cards|null } }
+    this.giveTasks = {};
     for (let i = 0; i < maxTier; i++) {
-      const count = RANKED_TIERS - i; // ตามสากล: คิง↔สลาฟ 2 ใบ, ควีน↔รองสลาฟ 1 ใบ (คงที่ทุกจำนวนคน)
-      const w = order[i]; // ผู้ชนะ
-      const l = order[n - 1 - i]; // ผู้แพ้
-      // ผู้แพ้ส่งไพ่สูงสุดอัตโนมัติ → ผู้ชนะ
+      // per convention: King↔Slave 2 cards, Queen↔Vice-slave 1 card (fixed for any player count)
+      const count = RANKED_TIERS - i;
+      // winner
+      const w = order[i];
+      // loser
+      const l = order[n - 1 - i];
+      // loser sends their highest cards automatically → winner
       const loser = this.players[l];
       sortHand(loser.hand);
-      const highest = loser.hand.slice(-count); // ไพ่สูงสุด count ใบ
+      // the highest `count` cards
+      const highest = loser.hand.slice(-count);
       const rm = new Set(highest.map(cardId));
       loser.hand = loser.hand.filter((c) => !rm.has(cardId(c)));
       this.players[w].hand.push(...highest.map((c) => ({ r: c.r, s: c.s })));
@@ -427,13 +466,13 @@ export class Room {
       this.addHistory({
         event: `⛓️ ${loser.name} ส่งไพ่สูงสุด ${count} ใบ ให้ ${this.players[w].name}`,
       });
-      // ผู้ชนะต้องเลือก count ใบ คืนให้ผู้แพ้
+      // winner must pick `count` cards to return to the loser
       this.giveTasks[w] = { to: l, count, cards: null };
     }
     this.phase = 'exchange';
   }
 
-  // ผู้ชนะส่งไพ่ที่เลือกคืนให้ผู้แพ้
+  // winner sends the chosen cards back to the loser
   giveCards(socketId: string, cardIds: string[]): { ok: true } {
     return this._give(this.indexOf(socketId), cardIds);
   }
@@ -452,7 +491,7 @@ export class Room {
     if (new Set(cardIds).size !== cardIds.length) gerr('err.dupCard');
 
     task.cards = cardIds.slice();
-    // ผู้ชนะเลือกครบทุกคนแล้ว → ย้ายไพ่คืน แล้วเริ่มเล่น
+    // all winners have picked → move the returned cards, then start play
     if (Object.values(this.giveTasks).every((t) => t.cards)) {
       this.performExchange();
     }
@@ -460,7 +499,7 @@ export class Room {
   }
 
   performExchange(): void {
-    // ย้ายเฉพาะไพ่ที่ผู้ชนะเลือกคืนให้ผู้แพ้ (ผู้แพ้ให้สูงสุดไปแล้วตอน setup)
+    // move only the cards winners chose to return to losers (losers already gave their highest during setup)
     for (const [from, t] of Object.entries(this.giveTasks!)) {
       const rm = new Set(t.cards!);
       this.players[+from].hand = this.players[+from].hand.filter((c) => !rm.has(cardId(c)));
@@ -471,7 +510,7 @@ export class Room {
     this.beginPlay();
   }
 
-  // บอทที่เป็นผู้ชนะ → เลือกไพ่ "ต่ำสุด" คืนให้ผู้แพ้อัตโนมัติ
+  // a bot that is a winner → automatically returns its "lowest" cards to the loser
   botGive(idx: number): boolean {
     const task = this.giveTasks && this.giveTasks[idx];
     if (!task || task.cards) return false;
@@ -485,7 +524,7 @@ export class Room {
     return this.players.filter((p) => !p.finished).length;
   }
 
-  // หา index คนต่อไปที่ยังไม่หมดมือ (ตามทิศการวน)
+  // find the index of the next player who hasn't finished (following rotation direction)
   nextActive(from: number): number {
     const n = this.players.length;
     for (let step = 1; step <= n; step++) {
@@ -505,7 +544,7 @@ export class Room {
     const player = this.players[idx];
 
     const cards = cardIds.map(cardFromId);
-    // ตรวจว่าไพ่ที่ลงอยู่ในมือจริง
+    // verify the played cards are actually in hand
     const handIds = new Set(player.hand.map(cardId));
     for (const id of cardIds) {
       if (!handIds.has(id)) gerr('err.noSuchCard');
@@ -515,22 +554,22 @@ export class Room {
     const combo = identifyCombo(cards);
     if (!combo) gerr('err.invalidCombo');
 
-    // house rules: ชุดพิเศษที่หัวห้องปิด → ลงไม่ได้
+    // house rules: special combos the host disabled → can't be played
     if (disallowedComboTypes(this.settings).has(combo!.type))
       gerr('err.comboDisabled', { type: combo!.type });
 
-    // ไพ่แรกสุดของเกมต้องมี 3♣ (ดอกจิก) ร่วมด้วย
+    // the very first play of the game must include 3♣ (three of clubs)
     if (!this.everPlayed && !cardIds.includes('3.0')) {
       gerr('err.first3');
     }
 
     if (!canBeat(this.pile, combo!)) {
       if (!this.pile) gerr('err.cannotPlay');
-      // ชนิด/จำนวนตรงกับกอง? (ถ้าตรง = แค่เล็กกว่า / ถ้าไม่ตรง = ผิดชนิด)
+      // same type/count as the pile? (if so = just too small / if not = wrong type)
       const sameShape =
         combo!.type === this.pile.type &&
         (combo!.type !== 'straight' || combo!.len === this.pile.len);
-      // err.mustBeat ส่ง type/len/mode ของกอง → client ประกอบชื่อชุด + hint บอมบ์ตามบริบทเอง
+      // err.mustBeat sends the pile's type/len/mode → client builds the combo name + bomb hint by context itself
       if (sameShape) gerr('err.tooSmall');
       else
         gerr('err.mustBeat', {
@@ -541,7 +580,7 @@ export class Room {
     }
     combo.mode = playMode(this.pile, combo);
 
-    // เอาไพ่ออกจากมือ
+    // remove the cards from hand
     const removeSet = new Set(cardIds);
     player.hand = player.hand.filter((c) => !removeSet.has(cardId(c)));
     sortHand(player.hand);
@@ -561,7 +600,7 @@ export class Room {
       this.log.push(`🏆 ${player.name} หมดมือแล้ว!`);
       this.addHistory({ event: `🏆 ${player.name} หมดมือ!` });
 
-      // คิงตกบัลลังก์: สลาฟ(เดิม)หมดมือก่อนคิง(เดิม) → จบรอบ แจกใหม่ทันที
+      // King dethroned: the (former) slave empties their hand before the (former) King → end round, redeal immediately
       if (this.roundOrder) {
         const king = this.roundOrder[0];
         const slave = this.roundOrder[this.roundOrder.length - 1];
@@ -571,7 +610,7 @@ export class Room {
       }
     }
 
-    // เหลือคนเดียวที่ยังไม่หมดมือ → จบรอบ
+    // only one player left who hasn't finished → end the round
     if (this.activeCount() <= 1) {
       const last = this.players.findIndex((p) => !p.finished);
       if (last >= 0) this.finishOrder.push(last);
@@ -591,7 +630,7 @@ export class Room {
     if (idx !== this.turn) gerr('err.notYourTurn');
     if (!this.pile) gerr('err.leadMustPlay');
 
-    // ผ่านแล้ว = ออกจากกองนี้ ถูกข้ามจนกว่ากองจะเคลียร์
+    // passed = out of this pile, skipped until the pile clears
     this.passed.add(idx);
     this.log.push(`${this.players[idx].name} ผ่าน${auto ? ` (${reason})` : ''}`);
     this.addHistory({ name: this.players[idx].name, pass: true, auto });
@@ -599,7 +638,7 @@ export class Room {
     return { ok: true };
   }
 
-  // หมดเวลาในตานี้ → เล่นแทนอัตโนมัติ: มีกองอยู่ = ผ่าน, นำกองอยู่ = ลงไพ่ต่ำสุด
+  // turn timed out → act automatically: pile present = pass, leading = play the lowest card
   autoAct(): boolean {
     if (this.phase !== 'playing') return false;
     const idx = this.turn;
@@ -609,20 +648,21 @@ export class Room {
       this._pass(idx, true);
     } else {
       sortHand(player.hand);
-      const lowest = player.hand[0]; // ไพ่ต่ำสุด (เกมแรกคือ 3♣ อยู่แล้ว → ผ่านเงื่อนไข 3♣)
+      // lowest card (in the first game this is 3♣ anyway → passes the 3♣ condition)
+      const lowest = player.hand[0];
       if (!lowest) return false;
       this._play(idx, [cardId(lowest)], true);
     }
     return true;
   }
 
-  // บอทเดินตา (เรียกเมื่อถึงตาบอท) — เลือกตาเดินที่ถูกกติกา หรือผ่าน
+  // bot plays its turn (called when it's a bot's turn) — picks a legal move or passes
   botAct(): boolean {
     if (this.phase !== 'playing') return false;
     const idx = this.turn;
     const bot = this.players[idx];
     if (!bot || !bot.isBot || bot.finished) return false;
-    // context ช่วยบอทตัดสินใจ: คู่แข่งเหลือไพ่น้อยสุดกี่ใบ + กองแรกต้องมี 3♣ ไหม
+    // context helps the bot decide: fewest cards any opponent has left + whether the first pile needs 3♣
     const opp = this.players.filter((p, i) => i !== idx && !p.finished);
     const minOppCards = opp.length ? Math.min(...opp.map((p) => p.hand.length)) : Infinity;
     const move = botChoose(bot.hand, this.pile, {
@@ -633,16 +673,17 @@ export class Room {
     try {
       if (move) this._play(idx, move);
       else if (this.pile) this._pass(idx);
-      else this._play(idx, [cardId(sortHand(bot.hand)[0])]); // นำกองต้องลง (กันค้าง)
+      // leading must play (prevent a stall)
+      else this._play(idx, [cardId(sortHand(bot.hand)[0])]);
     } catch {
-      // กันค้าง: ถ้าตาที่บอทเลือกผิดกติกาด้วยเหตุใด ๆ → ผ่าน หรือลงเดี่ยวต่ำสุด
+      // prevent a stall: if the bot's chosen move is illegal for any reason → pass, or play the lowest single
       if (this.pile) this._pass(idx);
       else this._play(idx, [cardId(sortHand(bot.hand)[0])]);
     }
     return true;
   }
 
-  // หาคนถัดไปที่ยังเล่นกองนี้อยู่ (ยังไม่หมดมือ และยังไม่ผ่าน, ตามทิศการวน) — คืน null ถ้าไม่มีใครเหลือ
+  // find the next player still in this pile (not finished and not passed, following rotation) — returns null if none remain
   nextInTrick(from: number): number | null {
     const n = this.players.length;
     for (let step = 1; step <= n; step++) {
@@ -656,18 +697,19 @@ export class Room {
 
   advanceTurn(): void {
     const next = this.nextInTrick(this.turn);
-    // ไม่มีใครเหลือ หรือวนกลับมาถึงเจ้าของกอง → ทุกคนอื่นผ่าน/หมดมือ → เจ้าของกองชนะกอง เคลียร์นำใหม่
+    // none left, or rotation returned to the pile owner → everyone else passed/finished → pile owner wins the pile, clear and lead anew
     if (next === null || next === this.pileOwner) {
       this.pile = null;
       this._lastPileCards = null;
       this.passed = new Set();
-      this.history = []; // เคลียร์กอง = ขึ้นกองใหม่ → ล้างประวัติให้เหลือแค่กองปัจจุบัน
+      // clearing the pile = starting a new pile → wipe history down to the current pile only
+      this.history = [];
       if (this.pileOwner != null && !this.players[this.pileOwner].finished) {
-        // เจ้าของกองยังอยู่ → นำกองใหม่เอง (ทิศเดิม)
+        // pile owner is still in → they lead the new pile (same direction)
         this.turn = this.pileOwner;
         this.log.push(`— เคลียร์กอง ${this.players[this.turn].name} นำใหม่ —`);
       } else {
-        // เจ้าของกองหมดมือ + ไม่มีใครกินกองได้ → สลับทิศ แล้วคนถัดไป(ทิศใหม่)นำ
+        // pile owner finished + nobody could beat the pile → reverse direction, then the next player (new direction) leads
         this.dir = -this.dir as 1 | -1;
         this.turn = this.nextActive(this.pileOwner == null ? this.turn : this.pileOwner);
         this.log.push(
@@ -680,7 +722,7 @@ export class Room {
     }
   }
 
-  // บันทึกผลรอบลงสถิติสะสม + ประวัติ (เรียกตอนรอบจบจริง: endRound / miyakoOchi)
+  // record the round result into cumulative stats + history (called when a round truly ends: endRound / miyakoOchi)
   recordRound(result: ResultEntry[]): void {
     if (!result?.length) return;
     for (const r of result) {
@@ -692,14 +734,14 @@ export class Room {
       this.roundHistory = this.roundHistory.slice(-MAX_HISTORY);
   }
 
-  // สร้าง scoreboard (leaderboard เรียงแล้ว + ประวัติ) สำหรับส่งให้ client
+  // build the scoreboard (sorted leaderboard + history) to send to the client
   buildScoreboard(): Scoreboard {
     const players: ScorePlayer[] = Object.entries(this.sessionStats).map(([name, tally]) => ({
       name,
       tally,
       rounds: RANK_KEYS.reduce((s, k) => s + tally[k], 0),
     }));
-    // เรียง: คิงมากสุด → สลาฟน้อยสุด → ควีนมาก → รองสลาฟน้อย → ชื่อ
+    // sort: most kings → fewest slaves → most queens → fewest vice-slaves → name
     players.sort(
       (a, b) =>
         b.tally.king - a.tally.king ||
@@ -719,7 +761,8 @@ export class Room {
       name: this.players[pIdx].name,
       title: titles[rank] || 'slave',
     }));
-    this.recordRound(this.lastResult); // ← สะสมสถิติ
+    // ← accumulate stats
+    this.recordRound(this.lastResult);
     this.log.push('🎉 จบรอบ! ' + this.lastResult.map((r) => `${r.title}: ${r.name}`).join(', '));
     this.addHistory({
       event: '🎉 จบรอบ! ' + this.lastResult.map((r) => `${r.title}:${r.name}`).join(' · '),
@@ -740,11 +783,12 @@ export class Room {
     });
   }
 
-  // มุมมองที่ส่งให้ผู้เล่นแต่ละคน (เห็นไพ่ตัวเองเท่านั้น)
+  // the view sent to each player (sees only their own hand)
   stateFor(socketId: string): RoomState {
     const meIdx = this.indexOf(socketId);
     const isSpectator = meIdx < 0 && this.spectators.some((s) => s.id === socketId);
-    const titleByName: Record<string, string> = {}; // ยศจากรอบก่อน
+    // titles from the previous round
+    const titleByName: Record<string, string> = {};
     for (const r of this.lastResult || []) titleByName[r.name] = r.title;
     return {
       code: this.code,
@@ -791,11 +835,12 @@ export class Room {
     };
   }
 
-  // ข้อมูลเฟสแลกไพ่สำหรับผู้เล่นคนนี้
+  // card-exchange phase info for this player
   exchangeFor(meIdx: number): ExchangeInfo | null {
     if (this.phase !== 'exchange' || !this.giveTasks) return null;
-    const my = this.giveTasks[meIdx]; // ผู้ชนะ (ต้องเลือกไพ่คืน)
-    // ผู้แพ้ที่รอรับไพ่คืน: มี task ที่ to === เรา
+    // winner (must pick cards to return)
+    const my = this.giveTasks[meIdx];
+    // loser waiting to receive cards back: there's a task whose to === us
     const incoming = Object.entries(this.giveTasks).find(([, t]) => t.to === meIdx);
     const waiting = Object.entries(this.giveTasks)
       .filter(([, t]) => !t.cards)
@@ -805,14 +850,15 @@ export class Room {
       role: my ? 'winner' : incoming ? 'loser' : 'none',
       myCount: my ? my.count : 0,
       toName: my ? (this.players[my.to]?.name ?? null) : null,
-      myDone: my ? !!my.cards : true, // ผู้ชนะ: เลือกแล้วหรือยัง; คนอื่น = รอ
+      // winner: whether they've picked yet; others = waiting
+      myDone: my ? !!my.cards : true,
       fromName: incoming ? (this.players[+incoming[0]]?.name ?? null) : null,
       gaveCount: incoming ? incoming[1].count : 0,
       waitingNames: waiting,
     };
   }
 
-  // ----- เซฟ/โหลดสถานะลงไฟล์ (กัน server restart แล้วห้องหาย) -----
+  // ----- save/load state to file (so rooms survive a server restart) -----
   toState(): Record<string, unknown> {
     return {
       code: this.code,
@@ -867,9 +913,10 @@ export class Room {
       turnSeconds: Math.max(1, Math.round(Room.TURN_MS / 1000)),
       ...(data.settings || {}),
     };
-    room.spectators = []; // ผู้ชมเป็น socket สดๆ ไม่กู้คืนหลัง restart
+    // spectators are live sockets, not restored after restart
+    room.spectators = [];
     room.everPlayed = data.everPlayed ?? data.phase !== 'lobby';
-    // socket หายหมดตอน restart → คนจริงออฟไลน์จนกว่าจะ reconnect; บอทออนไลน์เสมอ
+    // all sockets are gone on restart → real people are offline until they reconnect; bots are always online
     room.players.forEach((p) => {
       p.connected = !!p.isBot;
     });

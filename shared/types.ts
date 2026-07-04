@@ -1,18 +1,18 @@
 /**
- * Shared contract types — single source of truth สำหรับทั้ง server และ client
+ * Shared contract types — single source of truth for both server and client
  *
- * ห้ามเปลี่ยนชื่อ event / field โดยไม่อัปเดตทั้งสองฝั่งพร้อมกัน
- * (Socket.IO contract ผูกกันแน่น — typo เดียว = client พัง)
+ * Never rename an event / field without updating both sides at once
+ * (the Socket.IO contract is tightly coupled — a single typo = broken client)
  */
 
-// ----- ไพ่ -----
+// ----- Cards -----
 /** suit 0=♣ 1=♦ 2=♥ 3=♠ ; rank 3..10, J=11, Q=12, K=13, A=14, 2=15 */
 export interface Card {
   r: number;
   s: number;
 }
 
-/** ไพ่ที่ส่งให้ client พร้อม id ('rank.suit' เช่น '15.3') */
+/** A card sent to the client with an id ('rank.suit', e.g. '15.3') */
 export interface CardWithId extends Card {
   id: string;
 }
@@ -25,26 +25,29 @@ export interface Combo {
   len: number;
   value: number;
   topRank: number;
-  /** กองตอนนี้เป็นโหมดระเบิดไหม (เซ็ตตอนเล่น triple/quad/straight) */
+  /** Is the pile currently in bomb mode? (set when a triple/quad/straight is played) */
   mode?: 'bomb' | 'normal';
 }
 
-// ----- เฟส / ตั้งค่า -----
+// ----- Phase / settings -----
 export type Phase = 'lobby' | 'playing' | 'exchange' | 'finished';
 
 export interface Settings {
   timer: boolean;
   autoPass: boolean;
   turnSeconds: number;
-  /** ผ่านอัตโนมัติเมื่อไม่มีไพ่ลงได้ (host ปิดได้) */
+  /** Auto-pass when no card can be played (host can disable) */
   autoPassStuck: boolean;
-  /** house rules: อนุญาตชุดพิเศษไหม (host ปิดได้) — singles/pairs ลงได้เสมอ */
-  allowTriple: boolean; // ตอง
-  allowQuad: boolean; // โฟร์ (บอมบ์)
-  allowStraight: boolean; // เรียง
+  /** house rules: whether special combos are allowed (host can disable) — singles/pairs are always playable */
+  // triple
+  allowTriple: boolean;
+  // quad (bomb)
+  allowQuad: boolean;
+  // straight
+  allowStraight: boolean;
 }
 
-// ----- มุมมองผู้เล่นใน state -----
+// ----- Player view within state -----
 export interface PlayerView {
   name: string;
   connected: boolean;
@@ -55,40 +58,40 @@ export interface PlayerView {
   isTurn: boolean;
   isBot: boolean;
   color: string | null;
-  /** ยศจากรอบก่อนเป็น i18n key ('king'|'queen'|'commoner'|'viceslave'|'slave') หรือ null */
+  /** Title from the previous round as an i18n key ('king'|'queen'|'commoner'|'viceslave'|'slave') or null */
   title: string | null;
 }
 
 export interface ResultEntry {
   name: string;
-  /** ยศเป็น i18n key ('king'|'queen'|'commoner'|'viceslave'|'slave') */
+  /** Title as an i18n key ('king'|'queen'|'commoner'|'viceslave'|'slave') */
   title: string;
 }
 
-// ----- Scoreboard สะสมข้ามรอบ (ทั้ง session ของห้อง) -----
+// ----- Scoreboard accumulated across rounds (the room's whole session) -----
 export type RankKey = 'king' | 'queen' | 'commoner' | 'viceslave' | 'slave';
 export type RankTally = Record<RankKey, number>;
 
 export interface ScorePlayer {
   name: string;
   tally: RankTally;
-  /** จำนวนรอบที่เล่นจบ */
+  /** Number of rounds played to completion */
   rounds: number;
 }
 
-/** ผลของหนึ่งรอบที่จบแล้ว (เรียงตามอันดับหมดมือ) */
+/** Result of one finished round (ordered by finishing rank) */
 export interface RoundRecord {
   order: ResultEntry[];
 }
 
 export interface Scoreboard {
-  /** เรียงแล้ว (คิงมากสุด → สลาฟน้อยสุด) */
+  /** Sorted (most Kings → fewest Slaves) */
   players: ScorePlayer[];
-  /** ประวัติรอบล่าสุด (ใหม่สุดอยู่ท้าย) — จำกัดจำนวนกันบวม */
+  /** Recent round history (newest at the end) — capped in count to prevent bloat */
   history: RoundRecord[];
 }
 
-/** รายการประวัติ — union แบบหลวม: เล่นไพ่ | ผ่าน | event ของเกม */
+/** A history entry — a loose union: play cards | pass | a game event */
 export interface HistoryEntry {
   name?: string;
   cards?: Card[];
@@ -97,7 +100,7 @@ export interface HistoryEntry {
   auto?: boolean;
 }
 
-/** Web Push subscription (ผลของ PushSubscription.toJSON() ฝั่งเบราว์เซอร์) */
+/** Web Push subscription (the result of PushSubscription.toJSON() on the browser side) */
 export interface PushSubJSON {
   endpoint: string;
   expirationTime?: number | null;
@@ -119,18 +122,18 @@ export interface ExchangeInfo {
 
 export interface Notice {
   seq: number;
-  /** i18n key + ตัวแปร (client แปลเอง) */
+  /** i18n key + variables (the client translates) */
   key: string;
   vars?: Record<string, string | number>;
 }
 
-/** ข้อความ error จาก server — เป็น i18n key + ตัวแปร (client แปลเอง) */
+/** Error message from the server — an i18n key + variables (the client translates) */
 export interface ErrorMsg {
   key: string;
   vars?: Record<string, string | number>;
 }
 
-/** payload ของ event 'state' — ผลลัพธ์ของ Room.stateFor() */
+/** Payload of the 'state' event — the result of Room.stateFor() */
 export interface RoomState {
   code: string;
   phase: Phase;
@@ -154,7 +157,7 @@ export interface RoomState {
   history: HistoryEntry[];
   exchange: ExchangeInfo | null;
   notice: Notice | null;
-  /** สถิติสะสมข้ามรอบของห้อง (leaderboard + ประวัติ) */
+  /** The room's stats accumulated across rounds (leaderboard + history) */
   scoreboard: Scoreboard;
 }
 
@@ -174,9 +177,9 @@ export interface ClientToServerEvents {
   give: (p: { cards: string[] }) => void;
   again: () => void;
   leave: () => void;
-  /** ลงทะเบียนรับ Web Push (เด้งแจ้งเตือนแม้ปิดแอป) — ผูกกับที่นั่งในห้องปัจจุบัน */
+  /** Register for Web Push (notifications even when the app is closed) — bound to the seat in the current room */
   pushSubscribe: (p: { sub: PushSubJSON; lang: string }) => void;
-  /** ยกเลิกรับ Web Push ของที่นั่งในห้องปัจจุบัน */
+  /** Unregister Web Push for the seat in the current room */
   pushUnsubscribe: () => void;
 }
 

@@ -68,6 +68,25 @@ export function sortedHand(hand: CardWithId[] | undefined, handSort: HandSort): 
   return [...left, ...right];
 }
 
+// สมาร์ทซีเลกต์: กองเป็นคู่/ตอง/โฟร์ (groupSize=2/3/4) → แตะไพ่ 1 ใบ ได้ชุด rank เดียวกันครบเลย
+// ใบที่แตะติดเสมอ + เติม "ดอกต่ำสุด" ที่เหลือให้ครบชุด (เก็บดอกสูงไว้ใช้ทีหลัง)
+// คืนรายการ id ที่ควรเลือก หรือ null ถ้าไม่เข้าเงื่อนไข (groupSize<2 หรือ rank ในมือไม่พอ → เลือกทีละใบตามปกติ)
+export function smartPick(
+  hand: CardWithId[],
+  tapped: CardWithId,
+  groupSize: number,
+): string[] | null {
+  if (groupSize < 2) return null;
+  const sameRank = hand.filter((x) => x.r === tapped.r);
+  if (sameRank.length < groupSize) return null;
+  const rest = sameRank
+    .filter((x) => x.id !== tapped.id)
+    .sort((a, b) => a.s - b.s)
+    .slice(0, groupSize - 1)
+    .map((x) => x.id);
+  return [tapped.id, ...rest];
+}
+
 // ตรวจหา "บอมบ์" ที่ทำได้จากไพ่ในมือ: ตอง, โฟร์, เรียงดอกเดียว (ยาว >=3)
 export function detectCombos(
   hand: CardWithId[],

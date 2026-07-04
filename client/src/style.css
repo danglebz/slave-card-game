@@ -81,6 +81,8 @@ html,
 body {
   height: 100%;
   /* ไม่ล็อก overscroll → เปิด pull-to-refresh (รูดลงจากบนสุด = รีเฟรช) บนมือถือ */
+  /* สีปลาย felt รองพื้นแคนวาส (html) → overscroll ตอน pull-to-refresh ไม่โผล่ขาว/gradient ซ้ำที่ขอบ */
+  background-color: #0c3f26;
 }
 body {
   font-family:

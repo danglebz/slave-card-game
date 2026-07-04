@@ -1,6 +1,25 @@
 // gameLogic.ts — client-side card logic (ported from app.js: rankLabel, sortedHand, detectCombos)
-import type { Card, CardWithId, Settings } from '@shared/types';
+import type { Card, CardWithId, RoomState, Settings } from '@shared/types';
+import { identifyCombo, canBeat } from '@shared/rules';
 import { t, type Lang } from './i18n';
+
+// auto-play the last combo: returns the card ids to auto-play (the whole hand as one winning
+// combo), or null if auto-play must NOT fire. Pure so it can be exhaustively unit-tested.
+// (mirrors the real rules from shared → covers single/pair/triple/quad/straight)
+export function autoPlayIds(s: RoomState | null): string[] | null {
+  if (!s || s.phase !== 'playing' || s.youAreSpectator) return null;
+  // not our turn → no auto
+  if (s.turn !== s.youIndex) return null;
+  // is the entire remaining hand a single legal combo?
+  const combo = identifyCombo(s.hand);
+  // not a single combo (e.g. leftovers / mixed cards) → choose manually
+  if (!combo) return null;
+  // combo type disabled by the host → no auto
+  if (disabledComboTypes(s.settings).has(combo.type)) return null;
+  // can't beat the pile → must pass manually, no auto
+  if (!canBeat(s.pile, combo)) return null;
+  return s.hand.map((c) => c.id);
+}
 
 // house rules: special combos the host disabled → Set of combo.type that can't be played (matches server/game.ts)
 export function disabledComboTypes(settings?: Partial<Settings> | null): Set<string> {

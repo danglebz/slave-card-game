@@ -1,4 +1,4 @@
-// ScoreboardModal.tsx — สถิติสะสมข้ามรอบ (leaderboard นับยศ + ประวัติรอบ)
+// ScoreboardModal.tsx — cumulative stats across rounds (leaderboard counting ranks + round history)
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import { t, displayName } from '@/lib/i18n';
 import { useStore } from '@/store';
 import type { Scoreboard, RankKey } from '@shared/types';
 
-// ยศ → ไอคอน (ตรงกับที่ใช้ในชื่อยศ/ผลรอบ)
+// rank → icon (matches the ones used in rank names / round results)
 const RANK_ICON: Record<RankKey, string> = {
   king: 'trophy',
   queen: 'medal',

@@ -1,4 +1,4 @@
-// ProgressBar.tsx — progress bar บนสุด (shadcn) — subscribe จาก lib/progress
+// ProgressBar.tsx — top progress bar (shadcn) — subscribes from lib/progress
 import { useEffect, useState } from 'react';
 import { subscribeProgress } from '@/lib/progress';
 

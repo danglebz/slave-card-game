@@ -1,5 +1,5 @@
-// errors.ts — error ที่มี i18n key + vars (client แปลเองตามภาษา)
-// throw ผ่าน gerr() แล้ว index.ts จับมา emit เป็น errorMsg { key, vars }
+// errors.ts — errors carrying an i18n key + vars (client translates per language)
+// throw via gerr(), then index.ts catches and emits as errorMsg { key, vars }
 
 export type ErrorVars = Record<string, string | number>;
 
@@ -14,7 +14,7 @@ export class GameError extends Error {
   }
 }
 
-/** โยน GameError (ใช้แทน throw new Error('ข้อความไทย')) */
+/** Throw a GameError (use instead of throw new Error('Thai text')) */
 export function gerr(key: string, vars?: ErrorVars): never {
   throw new GameError(key, vars);
 }

@@ -1,4 +1,4 @@
-// Pile.tsx — กองไพ่กลางโต๊ะ (port renderPile + animatePile) + turn-info + turn-timer
+// Pile.tsx — center pile on the table (port renderPile + animatePile) + turn-info + turn-timer
 import { useEffect, useRef } from 'react';
 import type { RoomState } from '@shared/types';
 import { PlayingCard } from './PlayingCard';
@@ -8,18 +8,20 @@ import { useStore } from '@/store';
 import { t } from '@/lib/i18n';
 import { seatFor, seatOrigin } from '@/lib/gameLogic';
 
-// ระยะที่ไพ่สไลด์เข้ากอง (px) — กว้างกว่าสูงนิดให้เข้ากับสัดส่วนโต๊ะ
+// distance cards slide into the pile (px) — a bit wider than tall to match the table's proportions
 const SLIDE_X = 96;
 const SLIDE_Y = 72;
 
-// ทิศที่ไพ่กองปัจจุบันสไลด์มา = ที่นั่งของคนลงไพ่ล่าสุด (หา name จาก history เอนทรีที่มีไพ่)
+// direction the current pile cards slide from = seat of the last player to play (find name from the history entry that has cards)
 function pileSlide(s: RoomState): [number, number] {
   const last = [...s.history].reverse().find((h) => h.cards && h.cards.length && h.name);
   const n = s.players.length;
   const i = last?.name ? s.players.findIndex((p) => p.name === last.name) : -1;
-  if (i < 0 || !n) return seatOrigin(''); // ไม่รู้คนลง → ของเดิม (เด้งลงจากบน)
+  // unknown player → default (bounce down from the top)
+  if (i < 0 || !n) return seatOrigin('');
   const you = s.youIndex >= 0 ? s.youIndex : 0;
-  const rel = (((i - you) % n) + n) % n; // 0 = คุณ (ล่างสุด)
+  // 0 = you (bottom)
+  const rel = (((i - you) % n) + n) % n;
   return seatOrigin(seatFor(rel, n));
 }
 
@@ -31,7 +33,7 @@ export function Pile({ s }: { s: RoomState }) {
   const pileCards = s.pileCards && s.pileCards.length ? s.pileCards : null;
   const label = !pileCards && s.phase === 'playing' ? t(lang, 'pile.empty') : t(lang, 'pile.label');
 
-  // อนิเมชันไพ่ลงกอง (สไลด์เข้าจากทิศคนลง + เขย่าถ้าเป็นบอมบ์) — เล่นเมื่อกองเปลี่ยนจริงเท่านั้น
+  // animate cards onto the pile (slide in from the player's direction + shake if it's a bomb) — play only when the pile actually changes
   useEffect(() => {
     const el = cardsRef.current;
     if (!el) return;
@@ -41,7 +43,8 @@ export function Pile({ s }: { s: RoomState }) {
       el.style.setProperty('--from-x', (ux * SLIDE_X).toFixed(1) + 'px');
       el.style.setProperty('--from-y', (uy * SLIDE_Y).toFixed(1) + 'px');
       el.classList.remove('deal', 'bomb-hit');
-      void el.offsetWidth; // reflow ให้ animation เล่นซ้ำได้
+      // reflow so the animation can replay
+      void el.offsetWidth;
       el.classList.add('deal');
       if (s.pile && s.pile.mode === 'bomb') el.classList.add('bomb-hit');
     } else if (!key) {

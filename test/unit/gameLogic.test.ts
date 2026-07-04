@@ -1,4 +1,4 @@
-// gameLogic.test.ts — ตรรกะ client-lib แบบ pure (รันใน node ผ่าน alias @)
+// gameLogic.test.ts — pure client-lib logic (runs in node via the @ alias)
 import { describe, it, expect } from 'vitest';
 import type { CardWithId } from '@shared/types';
 import {
@@ -82,7 +82,7 @@ describe('sortedHand', () => {
 
   it('โหมด bomb → ดันไพ่ในบอมบ์ไปขวาสุด', () => {
     const sorted = sortedHand([c(7, 0), c(5, 0), c(5, 1), c(5, 2)], 'bomb');
-    // ตอง 5 (สามใบ) ต้องอยู่ขวาสุด, ไพ่เดี่ยว 7 อยู่ซ้าย
+    // triple 5 (three cards) must be far right, the single 7 on the left
     expect(sorted[0].r).toBe(7);
     expect(sorted.slice(1).every((x) => x.r === 5)).toBe(true);
   });
@@ -118,7 +118,7 @@ describe('disabledComboTypes', () => {
 });
 
 describe('smartPick (สมาร์ทซีเลกต์คู่/ตอง/โฟร์)', () => {
-  // 7 มีสามใบ (ดอก 0,1,2), 9 กับ 5 มีใบเดียว
+  // 7 has three cards (suits 0,1,2), 9 and 5 have one each
   const hand = [c(7, 0), c(7, 1), c(7, 2), c(9, 0), c(5, 3)];
 
   it('groupSize < 2 (นำกอง/กองเดี่ยว/เรียง) → null = เลือกทีละใบตามปกติ', () => {
@@ -127,7 +127,8 @@ describe('smartPick (สมาร์ทซีเลกต์คู่/ตอง/
   });
 
   it('คู่: แตะ 1 ใบ → ได้ 2 ใบ rank เดียวกัน (ใบที่แตะติดเสมอ + เติมดอกต่ำสุด)', () => {
-    expect(smartPick(hand, c(7, 2), 2)).toEqual(['7.2', '7.0']); // แตะดอกสูง → ใบนั้นติด + เติม 7 ดอกต่ำสุด
+    // tap the high suit → that card stays + fill with the lowest-suit 7
+    expect(smartPick(hand, c(7, 2), 2)).toEqual(['7.2', '7.0']);
     expect(smartPick(hand, c(7, 0), 2)).toEqual(['7.0', '7.1']);
   });
 
@@ -136,7 +137,9 @@ describe('smartPick (สมาร์ทซีเลกต์คู่/ตอง/
   });
 
   it('rank ในมือไม่พอ → null (ตกไปเลือกทีละใบ)', () => {
-    expect(smartPick(hand, c(9, 0), 2)).toBeNull(); // มี 9 ใบเดียว ลงคู่ไม่ได้
-    expect(smartPick(hand, c(7, 0), 4)).toBeNull(); // มี 7 สามใบ ขอโฟร์ไม่ได้
+    // only one 9, can't make a pair
+    expect(smartPick(hand, c(9, 0), 2)).toBeNull();
+    // only three 7s, can't make a quad
+    expect(smartPick(hand, c(7, 0), 4)).toBeNull();
   });
 });

@@ -1,10 +1,11 @@
-// push.ts — Web Push ฝั่ง client (subscribe/unsubscribe + re-bind ตอน reconnect)
-// ต้องมี VAPID public key จาก server (/push/vapidPublicKey) ถึงจะ subscribe ได้
-// หมายเหตุ: SW ลงทะเบียนเฉพาะ PROD (main.tsx) → dev จะใช้ push ไม่ได้ (คืน state 'unavailable')
+// push.ts — client-side Web Push (subscribe/unsubscribe + re-bind on reconnect)
+// needs the VAPID public key from the server (/push/vapidPublicKey) before it can subscribe
+// note: SW is only registered in PROD (main.tsx) → push won't work in dev (returns state 'unavailable')
 import { socket } from './socket';
 import type { Lang } from './i18n';
 
-const PREF_KEY = 'pushEnabled'; // ผู้ใช้เปิด push ไว้ไหม (ใช้ตัดสินใจ re-subscribe ตอน connect)
+// did the user enable push? (used to decide whether to re-subscribe on connect)
+const PREF_KEY = 'pushEnabled';
 
 export function pushSupported(): boolean {
   return (
@@ -17,7 +18,7 @@ export function pushSupported(): boolean {
 
 export type PushState = 'unavailable' | 'denied' | 'off' | 'on';
 
-/** สถานะปุ่ม push: ปิดใช้ไม่ได้ / ถูกบล็อก / ปิดอยู่ / เปิดอยู่ */
+/** push button state: unavailable / blocked / off / on */
 export function pushState(): PushState {
   if (!pushSupported()) return 'unavailable';
   if (Notification.permission === 'denied') return 'denied';
@@ -25,8 +26,9 @@ export function pushState(): PushState {
   return 'off';
 }
 
-// ----- helper: VAPID public key (base64url → Uint8Array สำหรับ applicationServerKey) -----
-let vapidKey: string | null | undefined; // undefined=ยังไม่เช็ก, null=server ปิด push
+// ----- helper: VAPID public key (base64url → Uint8Array for applicationServerKey) -----
+// undefined=not checked yet, null=server has push off
+let vapidKey: string | null | undefined;
 async function getVapidKey(): Promise<string | null> {
   if (vapidKey !== undefined) return vapidKey;
   try {
@@ -51,7 +53,7 @@ async function getRegistration(): Promise<ServiceWorkerRegistration | null> {
   return (await navigator.serviceWorker.getRegistration()) ?? null;
 }
 
-/** subscription ปัจจุบันของเบราว์เซอร์ (สร้างใหม่ถ้ายังไม่มี) — คืน null ถ้าทำไม่ได้ */
+/** the browser's current subscription (create a new one if none) — returns null if not possible */
 async function ensureSubscription(): Promise<PushSubscription | null> {
   const reg = await getRegistration();
   if (!reg) return null;
@@ -61,11 +63,12 @@ async function ensureSubscription(): Promise<PushSubscription | null> {
   if (!key) return null;
   try {
     return await reg.pushManager.subscribe({
-      userVisibleOnly: true, // จำเป็น (โดยเฉพาะ iOS/Chrome) — ทุก push ต้องโชว์ให้ผู้ใช้เห็น
+      // required (especially iOS/Chrome) — every push must be shown to the user
+      userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(key),
     });
   } catch {
-    // key เปลี่ยน/subscription เก่าค้าง → ยกเลิกแล้วลองใหม่ครั้งเดียว
+    // key changed / stale old subscription → unsubscribe and retry once
     await (await reg.pushManager.getSubscription())?.unsubscribe().catch(() => undefined);
     try {
       return await reg.pushManager.subscribe({
@@ -88,12 +91,13 @@ function sendSub(sub: PushSubscription, lang: Lang): void {
 }
 
 /**
- * เปิด push: ขอสิทธิ์ (ต้องเรียกจาก user gesture) → subscribe → ส่งให้ server
- * คืน state ผลลัพธ์ ('on' สำเร็จ, 'denied' ถูกบล็อก, 'unavailable' ทำไม่ได้)
+ * enable push: request permission (must be called from a user gesture) → subscribe → send to server
+ * returns the resulting state ('on' success, 'denied' blocked, 'unavailable' not possible)
  */
 export async function enablePush(lang: Lang): Promise<PushState> {
   if (!pushSupported()) return 'unavailable';
-  if ((await getVapidKey()) === null) return 'unavailable'; // server ไม่ได้เปิด push
+  // server doesn't have push enabled
+  if ((await getVapidKey()) === null) return 'unavailable';
   const perm = await Notification.requestPermission();
   if (perm !== 'granted') return perm === 'denied' ? 'denied' : 'off';
   const sub = await ensureSubscription();
@@ -103,7 +107,7 @@ export async function enablePush(lang: Lang): Promise<PushState> {
   return 'on';
 }
 
-/** ปิด push: ยกเลิก subscription + แจ้ง server */
+/** disable push: cancel the subscription + notify the server */
 export async function disablePush(): Promise<void> {
   localStorage.setItem(PREF_KEY, '0');
   socket.emit('pushUnsubscribe');
@@ -113,11 +117,12 @@ export async function disablePush(): Promise<void> {
 }
 
 /**
- * ผูก subscription เข้ากับที่นั่งในห้องปัจจุบันอีกครั้ง — เรียกตอน connect/join สำเร็จ
- * (server เก็บ sub ตาม code::name; reconnect หรือเข้าห้องใหม่ต้อง re-bind)
+ * re-bind the subscription to the seat in the current room — called on a successful connect/join
+ * (server stores the sub by code::name; reconnect or joining a new room needs a re-bind)
  */
 export async function syncPushSubscription(lang: Lang): Promise<void> {
-  if (pushState() !== 'on') return; // ผู้ใช้ไม่ได้เปิด / ถูกบล็อก → ไม่ทำ
+  // user hasn't enabled it / blocked → do nothing
+  if (pushState() !== 'on') return;
   const sub = await ensureSubscription();
   if (sub) sendSub(sub, lang);
 }

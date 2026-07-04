@@ -1,5 +1,5 @@
-// audio.ts — เสียง/สั่น (port จาก app.js: primeAudio, beep, tone, sfx + sfxPref)
-// singleton: AudioContext เดียวทั้งแอป, ปลดล็อก autoplay ด้วย gesture แรก
+// audio.ts — sound/vibrate (ported from app.js: primeAudio, beep, tone, sfx + sfxPref)
+// singleton: one AudioContext for the whole app, unlock autoplay on the first gesture
 import { t, initialLang } from './i18n';
 
 let audioCtx: AudioContext | null = null;
@@ -12,11 +12,11 @@ export function primeAudio() {
     audioCtx = audioCtx || (Ctx ? new Ctx() : null);
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
   } catch {
-    /* ไม่รองรับ → เงียบ */
+    /* unsupported → stay silent */
   }
 }
 
-// ปลดล็อก autoplay ด้วย gesture แรก (เรียกครั้งเดียวตอน import)
+// unlock autoplay on the first gesture (called once on import)
 if (typeof document !== 'undefined') {
   document.addEventListener('click', primeAudio, { once: true });
 }
@@ -37,11 +37,11 @@ export function beep() {
     o.start(t);
     o.stop(t + 0.3);
   } catch {
-    /* ข้าม */
+    /* skip */
   }
 }
 
-// โน้ตเดี่ยว (สังเคราะห์สด ไม่ต้องโหลดไฟล์เสียง)
+// single note (synthesized live, no audio file to load)
 function tone(
   freq: number,
   delay: number,
@@ -66,11 +66,14 @@ function tone(
 export type SfxKey = 'play' | 'bomb' | 'win';
 export type SfxName = 'play' | 'bomb' | 'clear' | 'win' | 'lose';
 
-// เสียงเอฟเฟกต์ = ส่วนตัว แยก 3 หมวด (เปิดเป็นค่าเริ่มต้น เว้นผู้ใช้ปิดเอง)
+// sound effects = personal, split into 3 categories (on by default unless the user turns them off)
 export const sfxPref: Record<SfxKey, boolean> = {
-  play: localStorage.getItem('sfx.play') !== '0', // ลงไพ่ / เคลียร์กอง
-  bomb: localStorage.getItem('sfx.bomb') !== '0', // บอมบ์
-  win: localStorage.getItem('sfx.win') !== '0', // ชนะ / แพ้
+  // play card / clear pile
+  play: localStorage.getItem('sfx.play') !== '0',
+  // bomb
+  bomb: localStorage.getItem('sfx.bomb') !== '0',
+  // win / lose
+  win: localStorage.getItem('sfx.win') !== '0',
 };
 
 export function setSfxPref(key: SfxKey, on: boolean) {
@@ -78,7 +81,7 @@ export function setSfxPref(key: SfxKey, on: boolean) {
   localStorage.setItem(`sfx.${key}`, on ? '1' : '0');
 }
 
-// เสียงเอฟเฟกต์ตามเหตุการณ์ (เคลียร์กอง=หมวดลงไพ่, แพ้=หมวดชนะ)
+// event-based sound effects (clear pile = play category, lose = win category)
 export function sfx(name: SfxName) {
   const cat: SfxKey = name === 'clear' ? 'play' : name === 'lose' ? 'win' : (name as SfxKey);
   if (!sfxPref[cat]) return;
@@ -86,12 +89,13 @@ export function sfx(name: SfxName) {
   if (!audioCtx) return;
   try {
     switch (name) {
-      case 'play': // ลงไพ่ — คลิกสั้นๆ สดใส
+      // play card — short bright click
+      case 'play':
         tone(660, 0, 0.09, { type: 'triangle', gain: 0.18 });
         tone(990, 0.04, 0.08, { type: 'triangle', gain: 0.12 });
         break;
       case 'bomb': {
-        // บอมบ์ — ทุ้มนุ่มแต่ได้ยินบนลำโพงเล็ก
+        // bomb — soft low tone but audible on small speakers
         const o = audioCtx.createOscillator();
         const g = audioCtx.createGain();
         o.type = 'triangle';
@@ -105,28 +109,32 @@ export function sfx(name: SfxName) {
         g.connect(audioCtx.destination);
         o.start(t);
         o.stop(t + 0.38);
-        tone(520, 0, 0.05, { type: 'triangle', gain: 0.12 }); // หัวเสียงคลิกสั้นๆ ให้มีจังหวะ
+        // short click transient for rhythm
+        tone(520, 0, 0.05, { type: 'triangle', gain: 0.12 });
         break;
       }
-      case 'clear': // เคลียร์กอง — สวูชเบาๆ
+      // clear pile — gentle swoosh
+      case 'clear':
         tone(420, 0, 0.12, { type: 'sine', gain: 0.12 });
         tone(300, 0.06, 0.14, { type: 'sine', gain: 0.1 });
         break;
-      case 'win': // ชนะ — อาร์เพจจิโอขึ้น
+      // win — rising arpeggio
+      case 'win':
         [523, 659, 784, 1047].forEach((f, i) =>
           tone(f, i * 0.1, 0.18, { type: 'triangle', gain: 0.2 }),
         );
         break;
-      case 'lose': // แพ้ — โน้ตลง
+      // lose — descending notes
+      case 'lose':
         [392, 330, 262].forEach((f, i) => tone(f, i * 0.12, 0.2, { type: 'sine', gain: 0.18 }));
         break;
     }
   } catch {
-    /* ข้าม */
+    /* skip */
   }
 }
 
-// ---------- แจ้งเตือนถึงตา: prefs เสียง/สั่น (migrate จากคีย์เดิม 'notif') ----------
+// ---------- your-turn notification: sound/vibrate prefs (migrated from old key 'notif') ----------
 const _oldNotif = localStorage.getItem('notif');
 export const notifPref = {
   sound: (localStorage.getItem('notifSound') ?? _oldNotif) === '1',
@@ -141,7 +149,7 @@ export function setNotifVibrate(on: boolean) {
   localStorage.setItem('notifVibrate', on ? '1' : '0');
 }
 
-// ---------- แฟลช title ของแท็บเมื่อถึงตา (อยู่แท็บอื่น) ----------
+// ---------- flash the tab title on your turn (when on another tab) ----------
 const baseTitle = typeof document !== 'undefined' ? document.title : '';
 let titleFlash: ReturnType<typeof setInterval> | null = null;
 export function flashTitle() {

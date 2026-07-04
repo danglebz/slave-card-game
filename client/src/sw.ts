@@ -1,12 +1,13 @@
 /// <reference lib="webworker" />
-// sw.ts — Service Worker สำหรับ PWA (โหลดเร็ว + เปิดได้แม้เน็ตหลุดชั่วคราว)
-// หมายเหตุ: เกมเป็น multiplayer ต้องต่อ server จริงถึงจะเล่นได้ — SW แค่แคช "เปลือกแอป"
-// build แยกออกไปเป็น dist/sw.js ผ่าน vite.config.sw.ts (ไฟล์ใน public/ ไม่ถูก compile)
-export {}; // ทำให้ไฟล์เป็น module → declare ด้านล่างเป็น scope ของไฟล์นี้เท่านั้น
+// sw.ts — Service Worker for the PWA (fast load + works even during a brief network drop)
+// note: the game is multiplayer and needs a live server connection to play — the SW only caches the "app shell"
+// built separately into dist/sw.js via vite.config.sw.ts (files in public/ are not compiled)
+// makes the file a module → the declare below is scoped to this file only
+export {};
 
 declare const self: ServiceWorkerGlobalScope;
 
-// bump เมื่อเปลี่ยนกลยุทธ์ SW → activate จะลบ cache เวอร์ชันเก่าทิ้ง (กันผู้ใช้ค้างของเก่า)
+// bump when the SW strategy changes → activate will delete old cache versions (keeps users off stale assets)
 const CACHE = 'slave-card-game-v3';
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -22,13 +23,13 @@ self.addEventListener('activate', (e: ExtendableEvent) => {
 
 self.addEventListener('fetch', (e: FetchEvent) => {
   const url = new URL(e.request.url);
-  // แตะเฉพาะ GET ภายในโดเมนเดียวกัน และอย่ายุ่งกับ socket.io (websocket/polling)
+  // only touch same-origin GET requests, and don't interfere with socket.io (websocket/polling)
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/socket.io')) return;
-  // อย่าแคชตัว SW เอง → เบราว์เซอร์ตรวจเจอเวอร์ชันใหม่และอัปเดตได้เสมอ (กันค้าง)
+  // don't cache the SW itself → the browser can always detect a new version and update (prevents getting stuck)
   if (url.pathname === '/sw.js') return;
 
-  // หน้า HTML → network-first (ออนไลน์ได้ของล่าสุดเสมอ; ออฟไลน์ใช้แคช)
+  // HTML pages → network-first (always get the latest when online; use cache when offline)
   if (e.request.mode === 'navigate') {
     e.respondWith(
       fetch(e.request)
@@ -41,7 +42,7 @@ self.addEventListener('fetch', (e: FetchEvent) => {
     return;
   }
 
-  // ไฟล์ asset/ไอคอน (ชื่อมี hash, ไม่เปลี่ยน) → cache-first
+  // asset/icon files (hashed names, never change) → cache-first
   e.respondWith(
     caches.match(e.request).then(
       (cached) =>
@@ -57,8 +58,8 @@ self.addEventListener('fetch', (e: FetchEvent) => {
   );
 });
 
-// ----- Web Push: เด้งแจ้งเตือนแม้ปิดแอป (ถึงตา/เกมเริ่ม/จบ/เข้า-ออกห้อง) -----
-// payload จาก server: { title, body?, tag, url }
+// ----- Web Push: show notifications even when the app is closed (your turn/game start/end/join-leave room) -----
+// payload from the server: { title, body?, tag, url }
 interface PushPayload {
   title?: string;
   body?: string;
@@ -75,7 +76,7 @@ self.addEventListener('push', (e: PushEvent) => {
   }
   e.waitUntil(
     (async () => {
-      // แอปเปิดอยู่และเห็นหน้าจอ → ไม่ต้องเด้ง (UI ในเกมอัปเดต + มีเสียง/สั่นเองแล้ว)
+      // app is open and visible → no need to notify (the in-game UI already updates + has its own sound/vibration)
       const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
       const visible = wins.some((c) => c.visibilityState === 'visible');
       if (visible) return;
@@ -84,7 +85,8 @@ self.addEventListener('push', (e: PushEvent) => {
         icon: '/logo.png',
         badge: '/favicon-32x32.png',
         tag: data.tag || 'game',
-        renotify: true, // tag เดิม → เด้ง/สั่นซ้ำได้ (ไม่เงียบทับของเก่า)
+        // same tag → allow re-notify/re-vibrate (don't silently replace the old one)
+        renotify: true,
         vibrate: [90, 40, 90],
         data: { url: data.url || '/' },
       } as NotificationOptions);
@@ -92,10 +94,10 @@ self.addEventListener('push', (e: PushEvent) => {
   );
 });
 
-// แตะการแจ้งเตือน → เปิดตัวแอป PWA แล้วเข้าห้องนั้น
-// สำคัญ (Android): ห้ามใช้ client.focus() เพราะ matchAll อาจเจอ "แท็บ Chrome" แล้วโฟกัสมัน
-//   → เด้งเปิดเบราว์เซอร์แทนแอป. ใช้ openWindow() เสมอ — บน Android มันเล็งไป installed PWA (standalone)
-// ควบคู่กับ postMessage: ถ้า PWA เปิดค้างอยู่ หน้าเว็บจะ join ห้องในที่ได้เลย (session.ts รับ event นี้)
+// tap the notification → open the PWA and join that room
+// important (Android): don't use client.focus() because matchAll may find a "Chrome tab" and focus it
+//   → opening the browser instead of the app. Always use openWindow() — on Android it targets the installed PWA (standalone)
+// paired with postMessage: if the PWA is already open, the page can join the room in place (session.ts handles this event)
 self.addEventListener('notificationclick', (e: NotificationEvent) => {
   e.notification.close();
   const url = (e.notification.data as { url?: string } | null)?.url || '/';

@@ -1,18 +1,18 @@
-// ColorPicker.tsx — เลือกสีประจำตัว (react-colorful + swatch พรีเซ็ต)
-// controlled ล้วน ไม่แตะ DOM เอง → ไม่ตีกับ React/Radix Dialog เหมือน Coloris เดิม
+// ColorPicker.tsx — pick a player color (react-colorful + preset swatches)
+// fully controlled, doesn't touch the DOM itself → no clashes with React/Radix Dialog like the old Coloris
 import { useEffect, useRef, useState } from 'react';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { useStore } from '@/store';
 import { t } from '@/lib/i18n';
 
 interface ColorPickerProps {
-  /** สีปัจจุบัน (#rrggbb) */
+  /** current color (#rrggbb) */
   value: string;
-  /** เปลี่ยนสด ๆ ระหว่างลาก/พิมพ์ */
+  /** live change while dragging/typing */
   onChange: (color: string) => void;
-  /** ยืนยัน (ตอนปิด popover / เลือก swatch) — ใช้ส่งไป server */
+  /** commit (when closing the popover / picking a swatch) — sent to the server */
   onCommit: (color: string) => void;
-  /** สีพรีเซ็ต */
+  /** preset colors */
   swatches: string[];
 }
 
@@ -21,7 +21,7 @@ export function ColorPicker({ value, onChange, onCommit, swatches }: ColorPicker
   const lang = useStore((s) => s.lang);
   const ref = useRef<HTMLDivElement>(null);
 
-  // ปิดเมื่อคลิกนอก/กด Esc แล้ว commit สีปัจจุบัน
+  // close on outside click / Esc, then commit the current color
   useEffect(() => {
     if (!open) return;
     const close = () => {
@@ -33,7 +33,8 @@ export function ColorPicker({ value, onChange, onCommit, swatches }: ColorPicker
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        e.stopPropagation(); // กันไปปิด Dialog ทั้งอัน
+        // prevent closing the whole Dialog
+        e.stopPropagation();
         close();
       }
     };

@@ -1,5 +1,5 @@
-// GameScreen.tsx — หน้าโต๊ะเล่น: topbar, spectator, โต๊ะ, log, มือ + ปุ่ม, modals
-// + เอฟเฟกต์ side: เล่นเสียงตามเหตุการณ์ (playSfx) + แจ้งเตือนถึงตา (notifyTurn) + notice toast
+// GameScreen.tsx — game table screen: topbar, spectator, table, log, hand + buttons, modals
+// + side effects: play sounds on events (playSfx) + notify on your turn (notifyTurn) + notice toast
 import { useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { useStore } from '@/store';
@@ -20,7 +20,7 @@ import { ShareModal } from './ShareModal';
 import { SettingsModal } from './SettingsModal';
 import { LeaveModal } from './LeaveModal';
 
-// เอฟเฟกต์ชนะ — โปรยกระดาษหลายช็อต (เคารพ prefers-reduced-motion)
+// win effect — multi-shot confetti (respects prefers-reduced-motion)
 function fireWinConfetti(): void {
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
   const colors = ['#f5c542', '#ffffff', '#22c55e', '#eab308'];
@@ -48,13 +48,13 @@ export function GameScreen() {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [resultDismissed, setResultDismissed] = useState(false);
 
-  // รีเซ็ตการปิดผลรอบเมื่อขึ้นรอบใหม่ (phase ออกจาก finished) → รอบหน้าโชว์ผลอีกครั้ง
+  // reset the dismissed-result flag on a new round (phase leaves finished) → next round shows the result again
   useEffect(() => {
     if (s?.phase !== 'finished') setResultDismissed(false);
   }, [s?.phase]);
 
-  // ---------- animation แจกไพ่: เพิ่ม dealId เมื่อ "เริ่มรอบใหม่จริง" (แจกไพ่สด) ----------
-  // lobby/finished → playing/exchange = แจกไพ่ใหม่ ; exchange → playing (รอบเดียวกัน) ไม่นับ
+  // ---------- deal animation: bump dealId on an "actual new round" (fresh deal) ----------
+  // lobby/finished → playing/exchange = new deal ; exchange → playing (same round) doesn't count
   const [dealId, setDealId] = useState(0);
   const prevPhaseDeal = useRef<string | null>(null);
   useEffect(() => {
@@ -62,7 +62,8 @@ export function GameScreen() {
     const prev = prevPhaseDeal.current;
     if (
       (ph === 'playing' || ph === 'exchange') &&
-      (prev === 'lobby' || prev === 'finished') // prev=null (reconnect กลางเกม) → ไม่เล่น animation
+      // prev=null (reconnect mid-game) → don't play animation
+      (prev === 'lobby' || prev === 'finished')
     ) {
       setDealId((d) => d + 1);
     }
@@ -71,10 +72,11 @@ export function GameScreen() {
 
   const code = s?.code || roomCode;
 
-  // ---------- เสียงตามเหตุการณ์ (port playSfx) ----------
-  const prevPileKey = useRef<string | null>(null); // null = ยังไม่ตั้ง baseline
+  // ---------- sounds on events (port playSfx) ----------
+  // null = baseline not set yet
+  const prevPileKey = useRef<string | null>(null);
   const prevPhaseSfx = useRef<string | null>(null);
-  // ---------- แจ้งเตือนถึงตา (port notifyTurn) ----------
+  // ---------- notify on your turn (port notifyTurn) ----------
   const prevMyTurn = useRef(false);
 
   useEffect(() => {
@@ -83,9 +85,11 @@ export function GameScreen() {
     const key = s.pileCards && s.pileCards.length ? s.pileCards.map((c) => c.id).join(',') : '';
     if (prevPileKey.current !== null && s.phase === 'playing') {
       if (key && key !== prevPileKey.current) {
-        sfx(s.pile && s.pile.mode === 'bomb' ? 'bomb' : 'play'); // มีไพ่ลงใหม่
+        // a new card was played
+        sfx(s.pile && s.pile.mode === 'bomb' ? 'bomb' : 'play');
       } else if (!key && prevPileKey.current) {
-        sfx('clear'); // กองถูกเคลียร์
+        // the pile was cleared
+        sfx('clear');
       }
     }
     prevPileKey.current = key;
@@ -94,7 +98,8 @@ export function GameScreen() {
       const rank = me ? s.result.findIndex((r) => r.name === me.name) : -1;
       if (rank === 0) {
         sfx('win');
-        fireWinConfetti(); // เอฟเฟกต์ชนะ (เฉพาะคิง)
+        // win effect (King only)
+        fireWinConfetti();
       } else if (rank === s.result.length - 1) sfx('lose');
     }
     prevPhaseSfx.current = s.phase;
@@ -113,7 +118,7 @@ export function GameScreen() {
     prevMyTurn.current = myTurn;
   }, [s]);
 
-  // ---------- notice เด้ง (เช่น คิงตกบัลลังก์) — โชว์ครั้งเดียวต่อ seq ----------
+  // ---------- notice pop-up (e.g. King dethroned) — show once per seq ----------
   const lastNoticeSeq = useRef(0);
   useEffect(() => {
     if (s?.notice && s.notice.seq !== lastNoticeSeq.current) {
@@ -122,19 +127,24 @@ export function GameScreen() {
     }
   }, [s, showToast, lang]);
 
-  // ---------- ลงชุดสุดท้ายออโต้: ถึงตาเรา + ไพ่ที่เหลือทั้งหมดเป็น "ชุดเดียว" ที่ลงชนะกองได้ ----------
-  // ใช้ identifyCombo + canBeat (กติกาตัวจริงจาก shared) → ครอบทุกชนิด: เดี่ยว/คู่/ตอง/โฟร์/เรียง
+  // ---------- auto-play the last combo: our turn + the entire remaining hand is a single combo that beats the pile ----------
+  // uses identifyCombo + canBeat (the real rules from shared) → covers every type: single/pair/triple/quad/straight
   useEffect(() => {
     if (!s || s.phase !== 'playing' || s.youAreSpectator) return;
     if (s.turn !== s.youIndex) return;
     const h = s.hand;
-    const combo = identifyCombo(h); // ไพ่ที่เหลือทั้งหมดเป็นชุดเดียวที่ถูกกติกาไหม
-    if (!combo) return; // ไม่ใช่ชุดเดียว (เช่น 2 ใบคนละอันดับ / เศษไพ่) → เลือกเอง
-    if (disabledComboTypes(s.settings).has(combo.type)) return; // ชุดที่หัวห้องปิด → ไม่ auto
-    if (!canBeat(s.pile, combo)) return; // ลงทับกองไม่ได้ → ต้อง pass เอง, ไม่ auto
+    // is the entire remaining hand a single legal combo?
+    const combo = identifyCombo(h);
+    // not a single combo (e.g. 2 cards of different rank / leftovers) → choose manually
+    if (!combo) return;
+    // combo type disabled by the host → no auto
+    if (disabledComboTypes(s.settings).has(combo.type)) return;
+    // can't beat the pile → must pass manually, no auto
+    if (!canBeat(s.pile, combo)) return;
     const ids = h.map((c) => c.id);
     const timer = setTimeout(() => {
-      const cur = useStore.getState().state; // เช็กซ้ำกันสภาพเปลี่ยนระหว่างหน่วงเวลา
+      // re-check in case state changed during the delay
+      const cur = useStore.getState().state;
       if (
         cur &&
         cur.phase === 'playing' &&
@@ -163,7 +173,7 @@ export function GameScreen() {
   }
 
   if (!s) {
-    // ยังไม่มี state (เพิ่งเข้าห้อง) — โครงหน้าเปล่าๆ ไว้ก่อน
+    // no state yet (just joined the room) — show an empty shell for now
     return <GameShell code={code} lang={lang} />;
   }
 
@@ -267,7 +277,7 @@ export function GameScreen() {
   );
 }
 
-// โครงหน้าเปล่า ขณะรอ state แรกจาก server (กัน flash) — คง id หลักไว้ให้ e2e/CSS
+// empty shell while waiting for the first state from the server (avoid flash) — keep the main ids for e2e/CSS
 function GameShell({
   code,
   lang,

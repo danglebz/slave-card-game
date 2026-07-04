@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
-// alias ให้ตรงกับ tsconfig paths (@ = client/src, @shared = shared)
-// เรียง @shared ก่อน @ เพราะ match แบบ prefix (กัน '@shared/x' โดน '@' คว้าไปก่อน)
+// alias to match tsconfig paths (@ = client/src, @shared = shared)
+// order @shared before @ because matching is prefix-based (prevents '@' grabbing '@shared/x' first)
 const alias = [
   { find: '@shared', replacement: r('./shared') },
   { find: '@', replacement: r('./client/src') },
@@ -16,7 +16,7 @@ export default defineConfig({
     globals: true,
     projects: [
       {
-        // ตรรกะฝั่ง server + client-lib ที่เป็น pure module → รันใน node
+        // server-side logic + pure-module client-lib → run in node
         extends: true,
         test: {
           name: 'node',
@@ -29,7 +29,7 @@ export default defineConfig({
         },
       },
       {
-        // React component → ต้องมี DOM → happy-dom + @testing-library
+        // React component → needs DOM → happy-dom + @testing-library
         extends: true,
         test: {
           name: 'dom',

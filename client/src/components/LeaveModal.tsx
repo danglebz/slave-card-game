@@ -1,4 +1,4 @@
-// LeaveModal.tsx — ยืนยันออกจากห้อง (AlertDialog) (port leave-modal)
+// LeaveModal.tsx — confirm leaving the room (AlertDialog) (port leave-modal)
 import {
   Dialog,
   DialogContent,

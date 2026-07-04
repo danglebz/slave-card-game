@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 3100; // พอร์ตเฉพาะ e2e (กันชน dev 3000 / smoke 3199)
+// e2e-only port (avoids clashing with dev 3000 / smoke 3199)
+const PORT = 3100;
 const BASE_URL = `http://localhost:${PORT}`;
 
 export default defineConfig({
@@ -14,7 +15,7 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  // build client + รัน server จริง (เสิร์ฟ dist/ + Socket.IO พอร์ตเดียวกัน)
+  // build client + run the real server (serves dist/ + Socket.IO on the same port)
   webServer: {
     command: 'pnpm build && pnpm start',
     url: BASE_URL,
@@ -23,7 +24,8 @@ export default defineConfig({
     env: {
       PORT: String(PORT),
       ROOMS_FILE: 'tmp/rooms.e2e.json',
-      SENTRY_DSN: '', // ปิด Sentry ตอน e2e (กันยิง event เข้า project จริง)
+      // disable Sentry during e2e (avoids sending events to the real project)
+      SENTRY_DSN: '',
     },
   },
 });

@@ -9,8 +9,8 @@ import { t } from './lib/i18n';
 import { syncPushSubscription } from './lib/push';
 
 /**
- * App shell — เดินสาย socket events เข้า store (single source of truth)
- * แล้วสลับหน้า lobby/game ตาม store.screen
+ * App shell — wire socket events into the store (single source of truth)
+ * then switch the lobby/game screen based on store.screen
  */
 export default function App() {
   const screen = useStore((s) => s.screen);
@@ -22,7 +22,7 @@ export default function App() {
       useStore.getState().setConn(false);
     };
     const onDisconnect = () => {
-      // ไม่โชว์แบนเนอร์ตอนโหลดครั้งแรก (ยังไม่เคยต่อ)
+      // don't show the banner on first load (never connected yet)
       if (everConnected.current) useStore.getState().setConn(true);
     };
     const onReconnect = () => useStore.getState().setConn(false);
@@ -31,7 +31,7 @@ export default function App() {
       const url = new URL(location.href);
       url.searchParams.set('room', code);
       history.replaceState(null, '', url);
-      // เข้าห้องแล้ว server รู้จักที่นั่งเรา → ผูก Web Push subscription เข้ากับที่นั่งนี้
+      // joined the room and the server knows our seat → bind the Web Push subscription to this seat
       void syncPushSubscription(useStore.getState().lang);
     };
     const onLeft = () => {
@@ -50,17 +50,19 @@ export default function App() {
     socket.on('errorMsg', (e) => {
       const st = useStore.getState();
       let vars = e.vars;
-      // err.mustBeat: server ส่ง type/len/mode ของกอง → ประกอบชื่อชุด + hint บอมบ์ตามบริบท
-      // (กัน "หรือบอมบ์" หลอก: กองเรียง6 ไม่มีบอมบ์กินได้, เดี่ยว/คู่กินได้แค่บอมบ์บางชนิด)
+      // err.mustBeat: server sends the pile's type/len/mode → build the combo name + a contextual bomb hint
+      // (avoid a misleading "or bomb": a 6-straight pile has no bomb that beats it; single/pair are only beaten by certain bombs)
       if (e.key === 'err.mustBeat' && e.vars) {
         const type = String(e.vars.type);
         const len = Number(e.vars.len);
         let hintKey = '';
         if (e.vars.mode === 'bomb')
-          hintKey = 'hint.bombStronger'; // โหมดบอมบ์ → บอมบ์แรงกว่ากินได้
+          // bomb mode → a stronger bomb can beat it
+          hintKey = 'hint.bombStronger';
         else if (type === 'single') hintKey = 'hint.bombOdd';
         else if (type === 'pair') hintKey = 'hint.bombEven';
-        else if (type === 'straight' && len < 6) hintKey = 'hint.bombFour'; // เรียง6+ ไม่มีบอมบ์กินได้
+        // 6+ straights have no bomb that beats them
+        else if (type === 'straight' && len < 6) hintKey = 'hint.bombFour';
         vars = {
           ...e.vars,
           want: t(st.lang, 'combo.' + type, { len }),
@@ -70,7 +72,7 @@ export default function App() {
       st.showToast(t(st.lang, e.key, vars), 'error');
     });
 
-    // auto-join จาก ?room=CODE ถ้ามีชื่อที่เคยบันทึกไว้
+    // auto-join from ?room=CODE if a previously saved name exists
     const room = new URLSearchParams(location.search).get('room');
     const savedName = localStorage.getItem('name') || '';
     if (room && savedName) {

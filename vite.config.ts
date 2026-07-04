@@ -4,22 +4,25 @@ import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
-// อ่าน version จาก package.json มาฝังตอน build (โชว์เป็น badge บนหน้าจอ)
+// read version from package.json and embed it at build time (shown as an on-screen badge)
 const { version } = createRequire(import.meta.url)('./package.json');
 
-// DSN ฝั่ง client (ฝังตอน build) — ไม่ตั้ง = '' → โค้ด Sentry ถูก tree-shake ทิ้ง (ไม่มีต้นทุน)
+// client-side DSN (embedded at build time) — unset = '' → Sentry code is tree-shaken out (no cost)
 const SENTRY_DSN = process.env.SENTRY_DSN || '';
-// อัตรา sample ของ performance tracing ฝั่ง client (0–1) — ดีฟอลต์ 10% เพื่อประหยัด quota
+// client-side performance tracing sample rate (0–1) — default 10% to save quota
 const SENTRY_TRACES_RATE = Number(process.env.SENTRY_TRACES_RATE ?? 0.1);
 
-// ----- Cookieless analytics (Plausible / Umami / Cloudflare) — ฝังตอน build -----
-// ไม่ใช้ cookie + ไม่เก็บ PII → ไม่ต้องทำ cookie consent banner
-// ไม่ตั้ง ANALYTICS_SRC = '' → โค้ดโหลด analytics ถูก tree-shake ทิ้ง (ไม่มีต้นทุน)
-const ANALYTICS_SRC = process.env.ANALYTICS_SRC || ''; // URL ของสคริปต์ เช่น https://plausible.io/js/script.js
-const ANALYTICS_DOMAIN = process.env.ANALYTICS_DOMAIN || ''; // Plausible: data-domain
-const ANALYTICS_WEBSITE_ID = process.env.ANALYTICS_WEBSITE_ID || ''; // Umami: data-website-id
+// ----- Cookieless analytics (Plausible / Umami / Cloudflare) — embedded at build time -----
+// no cookies + no PII → no cookie consent banner needed
+// unset ANALYTICS_SRC = '' → analytics-loading code is tree-shaken out (no cost)
+// script URL, e.g. https://plausible.io/js/script.js
+const ANALYTICS_SRC = process.env.ANALYTICS_SRC || '';
+// Plausible: data-domain
+const ANALYTICS_DOMAIN = process.env.ANALYTICS_DOMAIN || '';
+// Umami: data-website-id
+const ANALYTICS_WEBSITE_ID = process.env.ANALYTICS_WEBSITE_ID || '';
 
-// client (vanilla JS) อยู่ใน client/, build ออกไป dist/ (Express เสิร์ฟ)
+// client (vanilla JS) lives in client/, builds out to dist/ (served by Express)
 export default defineConfig({
   root: 'client',
   define: {
@@ -40,10 +43,10 @@ export default defineConfig({
   build: {
     outDir: '../dist',
     emptyOutDir: true,
-    // 'hidden' = สร้าง .map ไว้ upload เข้า Sentry แต่ไม่ฝัง sourceMappingURL (เบราว์เซอร์ไม่โหลดเอง)
+    // 'hidden' = generate .map to upload to Sentry but don't embed sourceMappingURL (browser won't load it)
     sourcemap: SENTRY_DSN ? 'hidden' : false,
   },
-  // dev: vite (:5173) proxy WebSocket ไปหา Express+Socket.IO (:3000)
+  // dev: vite (:5173) proxies WebSocket to Express+Socket.IO (:3000)
   server: {
     proxy: {
       '/socket.io': { target: 'http://localhost:3000', ws: true },

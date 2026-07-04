@@ -92,17 +92,20 @@ self.addEventListener('push', (e: PushEvent) => {
   );
 });
 
-// แตะการแจ้งเตือน → โฟกัสแท็บที่เปิดอยู่ (พาไปห้อง) หรือเปิดใหม่
+// แตะการแจ้งเตือน → เข้าห้องนั้น
+// มีหน้าเปิดอยู่แล้ว: postMessage บอกให้ join เอง (เชื่อถือกว่า client.navigate() ที่ reject บ่อยบน Android)
+// ไม่มีหน้าเปิด: เปิดใหม่ที่ /?room=CODE (App auto-join จาก ?room เอง)
 self.addEventListener('notificationclick', (e: NotificationEvent) => {
   e.notification.close();
   const url = (e.notification.data as { url?: string } | null)?.url || '/';
+  const m = /[?&]room=([A-Za-z0-9]{4})/.exec(url);
+  const code = m ? m[1].toUpperCase() : null;
   e.waitUntil(
     (async () => {
       const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-      for (const c of wins) {
-        // มีแท็บเปิดอยู่แล้ว → พาไป url แล้วโฟกัส (ไม่เปิดซ้ำ)
-        await c.navigate(url).catch(() => undefined);
-        return c.focus();
+      if (wins.length) {
+        for (const c of wins) if (code) c.postMessage({ type: 'join-room', code });
+        return wins[0].focus();
       }
       return self.clients.openWindow(url);
     })(),

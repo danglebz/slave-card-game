@@ -47,9 +47,22 @@ export default function App() {
     socket.on('errorMsg', (e) => {
       const st = useStore.getState();
       let vars = e.vars;
-      // err.mustBeat: server ส่ง type/len ของกอง → ประกอบชื่อชุด (combo.*) ตามภาษา
+      // err.mustBeat: server ส่ง type/len/mode ของกอง → ประกอบชื่อชุด + hint บอมบ์ตามบริบท
+      // (กัน "หรือบอมบ์" หลอก: กองเรียง6 ไม่มีบอมบ์กินได้, เดี่ยว/คู่กินได้แค่บอมบ์บางชนิด)
       if (e.key === 'err.mustBeat' && e.vars) {
-        vars = { ...e.vars, want: t(st.lang, 'combo.' + e.vars.type, { len: Number(e.vars.len) }) };
+        const type = String(e.vars.type);
+        const len = Number(e.vars.len);
+        let hintKey = '';
+        if (e.vars.mode === 'bomb')
+          hintKey = 'hint.bombStronger'; // โหมดบอมบ์ → บอมบ์แรงกว่ากินได้
+        else if (type === 'single') hintKey = 'hint.bombOdd';
+        else if (type === 'pair') hintKey = 'hint.bombEven';
+        else if (type === 'straight' && len < 6) hintKey = 'hint.bombFour'; // เรียง6+ ไม่มีบอมบ์กินได้
+        vars = {
+          ...e.vars,
+          want: t(st.lang, 'combo.' + type, { len }),
+          bombHint: hintKey ? t(st.lang, hintKey) : '',
+        };
       }
       st.showToast(t(st.lang, e.key, vars), 'error');
     });

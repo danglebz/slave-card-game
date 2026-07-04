@@ -76,3 +76,24 @@ document.addEventListener('visibilitychange', onResume);
 window.addEventListener('pageshow', onResume); // ครอบ bfcache restore
 window.addEventListener('focus', onResume);
 window.addEventListener('online', onResume); // เน็ตกลับมา → ต่อ + rejoin
+
+// (c) แตะ push notification → service worker ส่ง { type:'join-room', code } มาให้เข้าห้องนั้น
+// (เชื่อถือกว่า client.navigate() ที่ Android มัก reject → เดิมได้แค่ focus หน้าเดิม ไม่เข้าห้อง)
+navigator.serviceWorker?.addEventListener('message', (e) => {
+  const d = e.data as { type?: string; code?: string } | null;
+  if (!d || d.type !== 'join-room') return;
+  const code = String(d.code || '').toUpperCase();
+  if (!/^[A-Z0-9]{4}$/.test(code)) return;
+  localStorage.setItem(RKEY, code); // จำห้องนี้ (เผื่อ rejoin ตอน 'connect')
+  const url = new URL(location.href);
+  if (url.searchParams.get('room') !== code) {
+    url.searchParams.set('room', code);
+    history.replaceState(null, '', url);
+  }
+  if (!socket.connected) {
+    socket.connect(); // 'connect' → rejoin() อ่าน room+name จาก localStorage เอง
+  } else {
+    lastJoinAt = 0; // เป็นการกดตั้งใจ → ข้าม throttle ของ rejoin
+    rejoin();
+  }
+});

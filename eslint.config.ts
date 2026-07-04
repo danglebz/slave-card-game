@@ -55,6 +55,14 @@ export default tseslint.config(
     rules: { '@typescript-eslint/ban-ts-comment': 'off' },
   },
 
+  // standalone Node scripts (.mjs, e.g. scripts/loadtest.mjs) — Node globals, plain JS (no tsc)
+  {
+    files: ['**/*.mjs'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+  },
+
   // turn off rules that conflict with Prettier (let Prettier handle all formatting)
   prettier,
 );

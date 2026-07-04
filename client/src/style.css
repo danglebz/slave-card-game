@@ -79,8 +79,7 @@
 }
 html,
 body {
-  /* min-height (ไม่ล็อก height:100%) → เนื้อหายาวเกินจอเลื่อนได้ (กัน iOS ล็อก scroll ตอนเปิดแรก) */
-  min-height: 100%;
+  height: 100%;
   /* ไม่ล็อก overscroll → เปิด pull-to-refresh (รูดลงจากบนสุด = รีเฟรช) บนมือถือ */
   /* สีปลาย felt รองพื้นแคนวาส (html) → overscroll ตอน pull-to-refresh ไม่โผล่ขาว/gradient ซ้ำที่ขอบ */
   background-color: #0c3f26;
@@ -251,6 +250,9 @@ button.loading:disabled {
 
 /* ============ Lobby (ฟอร์มกระจกเข้ม) ============ */
 #lobby-screen {
+  /* ล็อกพอดีจอเหมือนหน้าเกม → ไม่มี scrollbar/เลื่อนขึ้น-ลง (pull-to-refresh ที่ body ยังทำงาน) */
+  height: 100dvh;
+  overflow: hidden;
   align-items: center;
   justify-content: center;
   padding: 20px;

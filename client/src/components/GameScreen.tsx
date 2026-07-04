@@ -6,8 +6,7 @@ import { useStore } from '@/store';
 import { socket } from '@/lib/socket';
 import { Icon } from '@/lib/icons';
 import { t } from '@/lib/i18n';
-import { initialHandSort, disabledComboTypes, type HandSort } from '@/lib/gameLogic';
-import { identifyCombo, canBeat } from '@shared/rules';
+import { initialHandSort, autoPlayIds, type HandSort } from '@/lib/gameLogic';
 import { sfx, primeAudio, beep, notifPref, flashTitle, stopFlash } from '@/lib/audio';
 import { Table } from './game/Table';
 import { Log } from './game/Log';
@@ -128,20 +127,10 @@ export function GameScreen() {
   }, [s, showToast, lang]);
 
   // ---------- auto-play the last combo: our turn + the entire remaining hand is a single combo that beats the pile ----------
-  // uses identifyCombo + canBeat (the real rules from shared) → covers every type: single/pair/triple/quad/straight
+  // decision lives in autoPlayIds (pure, in gameLogic) → covers every type: single/pair/triple/quad/straight
   useEffect(() => {
-    if (!s || s.phase !== 'playing' || s.youAreSpectator) return;
-    if (s.turn !== s.youIndex) return;
-    const h = s.hand;
-    // is the entire remaining hand a single legal combo?
-    const combo = identifyCombo(h);
-    // not a single combo (e.g. 2 cards of different rank / leftovers) → choose manually
-    if (!combo) return;
-    // combo type disabled by the host → no auto
-    if (disabledComboTypes(s.settings).has(combo.type)) return;
-    // can't beat the pile → must pass manually, no auto
-    if (!canBeat(s.pile, combo)) return;
-    const ids = h.map((c) => c.id);
+    const ids = autoPlayIds(s);
+    if (!ids) return;
     const timer = setTimeout(() => {
       // re-check in case state changed during the delay
       const cur = useStore.getState().state;

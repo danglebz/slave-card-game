@@ -530,9 +530,14 @@ export class Room {
       const sameShape =
         combo!.type === this.pile.type &&
         (combo!.type !== 'straight' || combo!.len === this.pile.len);
-      // err.mustBeat ส่ง type/len ของกอง → client ประกอบชื่อชุด (combo.*) เอง
+      // err.mustBeat ส่ง type/len/mode ของกอง → client ประกอบชื่อชุด + hint บอมบ์ตามบริบทเอง
       if (sameShape) gerr('err.tooSmall');
-      else gerr('err.mustBeat', { type: this.pile.type, len: this.pile.len });
+      else
+        gerr('err.mustBeat', {
+          type: this.pile.type,
+          len: this.pile.len,
+          mode: this.pile.mode === 'bomb' ? 'bomb' : 'normal',
+        });
     }
     combo.mode = playMode(this.pile, combo);
 

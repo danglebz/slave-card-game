@@ -121,26 +121,37 @@ export function GameScreen() {
     }
   }, [s, showToast, lang]);
 
-  // ---------- ลงไพ่ใบสุดท้ายออโต้ (ถึงตาเรา + เหลือ 1 ใบ + ลงได้) ----------
+  // ---------- ลงชุดสุดท้ายออโต้: ถึงตาเรา + ไพ่ที่เหลือทั้งหมดเป็น "ชุดเดียว" (เดี่ยว/คู่) ที่ลงชนะได้ ----------
   useEffect(() => {
     if (!s || s.phase !== 'playing' || s.youAreSpectator) return;
-    if (s.turn !== s.youIndex || s.hand.length !== 1) return;
-    const last = s.hand[0];
-    // ลงได้ไหม: นำกอง = ได้เสมอ · ตามกองได้เฉพาะกอง "เดี่ยว" ที่แต้มต่ำกว่า
-    // (ไพ่ใบเดียวสู้คู่/ตอง/เรียงไม่ได้ → ต้อง pass เอง, ไม่ auto)
-    const legal = !s.pile || (s.pile.type === 'single' && last.r * 4 + last.s > s.pile.value);
+    if (s.turn !== s.youIndex) return;
+    const h = s.hand;
+    // ไพ่ที่เหลือเป็นชุดเดียวไหม — เดี่ยว (1 ใบ) หรือ คู่ (2 ใบ อันดับเดียวกัน)
+    let type: 'single' | 'pair' | null = null;
+    let value = 0;
+    if (h.length === 1) {
+      type = 'single';
+      value = h[0].r * 4 + h[0].s;
+    } else if (h.length === 2 && h[0].r === h[1].r) {
+      type = 'pair';
+      value = Math.max(h[0].r * 4 + h[0].s, h[1].r * 4 + h[1].s);
+    }
+    if (!type) return; // ไม่ใช่ชุดเดียว (เช่น 2 ใบคนละอันดับ) → ปล่อยให้เลือกเอง
+    // ลงได้ไหม: นำกอง = ได้เสมอ · ตามกอง = ชนิดเดียวกัน + แต้มสูงกว่า
+    // (เดี่ยว/คู่ ไม่ใช่บอมบ์ → สู้ได้แค่ชนิดเดียวกัน; บอมบ์ตอง/โฟร์/เรียงเป็นเคสซับซ้อน ยังไม่ auto)
+    const legal = !s.pile || (s.pile.type === type && value > s.pile.value);
     if (!legal) return;
-    const id = last.id;
+    const ids = h.map((c) => c.id);
     const timer = setTimeout(() => {
       const cur = useStore.getState().state; // เช็กซ้ำกันสภาพเปลี่ยนระหว่างหน่วงเวลา
       if (
         cur &&
         cur.phase === 'playing' &&
         cur.turn === cur.youIndex &&
-        cur.hand.length === 1 &&
-        cur.hand[0].id === id
+        cur.hand.length === ids.length &&
+        ids.every((id) => cur.hand.some((c) => c.id === id))
       ) {
-        socket.emit('play', { cards: [id] });
+        socket.emit('play', { cards: ids });
         useStore.getState().clearSelected();
       }
     }, 600);

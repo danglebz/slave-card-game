@@ -6,7 +6,8 @@ import { useStore } from '@/store';
 import { socket } from '@/lib/socket';
 import { Icon } from '@/lib/icons';
 import { t } from '@/lib/i18n';
-import { initialHandSort, type HandSort } from '@/lib/gameLogic';
+import { initialHandSort, disabledComboTypes, type HandSort } from '@/lib/gameLogic';
+import { identifyCombo, canBeat } from '@shared/rules';
 import { sfx, primeAudio, beep, notifPref, flashTitle, stopFlash } from '@/lib/audio';
 import { Table } from './game/Table';
 import { Log } from './game/Log';
@@ -121,26 +122,16 @@ export function GameScreen() {
     }
   }, [s, showToast, lang]);
 
-  // ---------- ลงชุดสุดท้ายออโต้: ถึงตาเรา + ไพ่ที่เหลือทั้งหมดเป็น "ชุดเดียว" (เดี่ยว/คู่) ที่ลงชนะได้ ----------
+  // ---------- ลงชุดสุดท้ายออโต้: ถึงตาเรา + ไพ่ที่เหลือทั้งหมดเป็น "ชุดเดียว" ที่ลงชนะกองได้ ----------
+  // ใช้ identifyCombo + canBeat (กติกาตัวจริงจาก shared) → ครอบทุกชนิด: เดี่ยว/คู่/ตอง/โฟร์/เรียง
   useEffect(() => {
     if (!s || s.phase !== 'playing' || s.youAreSpectator) return;
     if (s.turn !== s.youIndex) return;
     const h = s.hand;
-    // ไพ่ที่เหลือเป็นชุดเดียวไหม — เดี่ยว (1 ใบ) หรือ คู่ (2 ใบ อันดับเดียวกัน)
-    let type: 'single' | 'pair' | null = null;
-    let value = 0;
-    if (h.length === 1) {
-      type = 'single';
-      value = h[0].r * 4 + h[0].s;
-    } else if (h.length === 2 && h[0].r === h[1].r) {
-      type = 'pair';
-      value = Math.max(h[0].r * 4 + h[0].s, h[1].r * 4 + h[1].s);
-    }
-    if (!type) return; // ไม่ใช่ชุดเดียว (เช่น 2 ใบคนละอันดับ) → ปล่อยให้เลือกเอง
-    // ลงได้ไหม: นำกอง = ได้เสมอ · ตามกอง = ชนิดเดียวกัน + แต้มสูงกว่า
-    // (เดี่ยว/คู่ ไม่ใช่บอมบ์ → สู้ได้แค่ชนิดเดียวกัน; บอมบ์ตอง/โฟร์/เรียงเป็นเคสซับซ้อน ยังไม่ auto)
-    const legal = !s.pile || (s.pile.type === type && value > s.pile.value);
-    if (!legal) return;
+    const combo = identifyCombo(h); // ไพ่ที่เหลือทั้งหมดเป็นชุดเดียวที่ถูกกติกาไหม
+    if (!combo) return; // ไม่ใช่ชุดเดียว (เช่น 2 ใบคนละอันดับ / เศษไพ่) → เลือกเอง
+    if (disabledComboTypes(s.settings).has(combo.type)) return; // ชุดที่หัวห้องปิด → ไม่ auto
+    if (!canBeat(s.pile, combo)) return; // ลงทับกองไม่ได้ → ต้อง pass เอง, ไม่ auto
     const ids = h.map((c) => c.id);
     const timer = setTimeout(() => {
       const cur = useStore.getState().state; // เช็กซ้ำกันสภาพเปลี่ยนระหว่างหน่วงเวลา

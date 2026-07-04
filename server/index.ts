@@ -438,6 +438,9 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       clearBotTimer(room); // ห้องว่าง → หยุดนาฬิกา + บอท
       clearStuckTimer(room);
       if (room._cleanupTimer) clearTimeout(room._cleanupTimer);
+      // grace ก่อนลบห้อง: ล็อบบี้ลบไว (1 นาที) · กลางเกม/แลกไพ่/จบรอบ ให้เวลานานพอสำหรับ background มือถือ
+      // (PWA ถูกพักตอนสลับแอปเกิน 60 วิเป็นปกติ — ถ้าสั้นไปห้องถูกลบก่อนผู้เล่นกลับมา rejoin)
+      const graceMs = room.phase === 'lobby' ? 60_000 : 5 * 60_000;
       room._cleanupTimer = setTimeout(() => {
         const r = rooms.get(code);
         if (r && (r.players.length === 0 || r.isEmpty())) {
@@ -445,7 +448,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
           dropRoom(code);
           saveRooms();
         }
-      }, 60000);
+      }, graceMs);
       scheduleSave();
     } else {
       broadcast(room);
@@ -464,6 +467,9 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       clearBotTimer(room); // ห้องว่าง → หยุดนาฬิกา + บอท
       clearStuckTimer(room);
       if (room._cleanupTimer) clearTimeout(room._cleanupTimer);
+      // grace ก่อนลบห้อง: ล็อบบี้ลบไว (1 นาที) · กลางเกม/แลกไพ่/จบรอบ ให้เวลานานพอสำหรับ background มือถือ
+      // (PWA ถูกพักตอนสลับแอปเกิน 60 วิเป็นปกติ — ถ้าสั้นไปห้องถูกลบก่อนผู้เล่นกลับมา rejoin)
+      const graceMs = room.phase === 'lobby' ? 60_000 : 5 * 60_000;
       room._cleanupTimer = setTimeout(() => {
         const r = rooms.get(code);
         if (r && (r.players.length === 0 || r.isEmpty())) {
@@ -471,7 +477,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
           dropRoom(code);
           saveRooms();
         }
-      }, 60000);
+      }, graceMs);
       scheduleSave(); // บันทึกสถานะ connected=false
     } else {
       broadcast(room);

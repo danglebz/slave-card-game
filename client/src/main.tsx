@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './style.css';
+import './lib/session'; // auto-rejoin ห้องเดิมเมื่อ socket ต่อใหม่/กลับมา foreground (แก้ PWA หลุดห้อง)
 
 // ----- Sentry (error tracking ฝั่ง client) — เปิดเฉพาะตอน build มี SENTRY_DSN -----
 // __SENTRY_DSN__ ฝังตอน build (ดู vite.config.js); ถ้าว่าง บล็อกนี้ถูก tree-shake ทิ้งทั้งหมด

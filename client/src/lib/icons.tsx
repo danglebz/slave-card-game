@@ -1,5 +1,5 @@
-// icons.tsx — ไอคอน Lucide ส่วนกลางของเกม (port จาก icons.js → lucide-react)
-// แทนที่ emoji เดิมทั้งหมดด้วย <svg> ของ Lucide (inherit สีจาก currentColor)
+// icons.tsx — the game's central Lucide icons (ported from icons.js → lucide-react)
+// replaces all the old emoji with Lucide <svg> (inherits color from currentColor)
 import {
   DoorOpen,
   BookOpen,
@@ -62,7 +62,7 @@ import {
 } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 
-// ชื่อไอคอน (kebab-case) → คอมโพเนนต์ lucide-react
+// icon name (kebab-case) → lucide-react component
 const ICONS: Record<string, ComponentType<LucideProps>> = {
   'door-open': DoorOpen,
   'book-open': BookOpen,
@@ -123,7 +123,7 @@ const ICONS: Record<string, ComponentType<LucideProps>> = {
   'bar-chart': BarChart3,
 };
 
-// emoji → ชื่อไอคอน lucide (kebab-case) สำหรับข้อความที่ฝั่ง server ส่งมา
+// emoji → lucide icon name (kebab-case) for messages sent from the server
 const EMOJI_ICON: Record<string, string> = {
   '🚪': 'door-open',
   '📖': 'book-open',
@@ -155,14 +155,14 @@ const EMOJI_ICON: Record<string, string> = {
   '↻': 'rotate-cw',
 };
 
-/** ไอคอนเดี่ยวตามชื่อ (kebab-case) — แทน icon(name, cls) เดิม */
+/** single icon by name (kebab-case) — replaces the old icon(name, cls) */
 export function Icon({ name, className }: { name: string; className?: string }) {
   const C = ICONS[name];
   if (!C) return null;
   return <C className={className} />;
 }
 
-// เรียง emoji ยาว→สั้น เพื่อให้ตัวที่มี variation-selector (เช่น '⛓️') ถูกแมตช์ก่อน
+// sort emoji long→short so ones with a variation-selector (e.g. '⛓️') match first
 const EMOJI_RE = new RegExp(
   Object.keys(EMOJI_ICON)
     .sort((a, b) => b.length - a.length)
@@ -172,8 +172,8 @@ const EMOJI_RE = new RegExp(
 );
 
 /**
- * แปลง emoji ที่รู้จักในสตริงให้กลายเป็น <Icon/> (ใช้กับ "ยศ"/ข้อความแจ้งเตือนจาก server)
- * คืน array ของ ReactNode (ข้อความ + ไอคอน) — ใช้ใน JSX ได้เลย
+ * convert known emoji in a string into <Icon/> (used for rank/notification messages from the server)
+ * returns an array of ReactNode (text + icons) — usable directly in JSX
  */
 export function iconize(text: string): ReactNode[] {
   const str = String(text);

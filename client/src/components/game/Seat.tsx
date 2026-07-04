@@ -1,4 +1,4 @@
-// Seat.tsx — ชิปผู้เล่นหนึ่งคน (port chipHTML + chipStyle)
+// Seat.tsx — one player's chip (port chipHTML + chipStyle)
 import type { PlayerView, RoomState } from '@shared/types';
 import { Icon, iconize } from '@/lib/icons';
 import { chipStyle } from '@/lib/gameLogic';
@@ -18,7 +18,7 @@ export function PlayerChip({ p, s }: { p: PlayerView; s: RoomState }) {
   return (
     <div className={cls.join(' ')} style={style}>
       <span className="pname">
-        {/* หัวห้อง = มงกุฎ, บอท = ไอคอนหุ่นยนต์ */}
+        {/* host = crown, bot = robot icon */}
         {p.isHost ? (
           <>
             <Icon name="crown" className="host-ico" />{' '}

@@ -1,7 +1,7 @@
-// switch.tsx — toggle แบบ shadcn
-// หมายเหตุ: CSS เดิม (.switch) อิง input[type=checkbox]:checked + appearance:none
-// เพื่อคงดีไซน์เป๊ะแบบไม่แตะ style.css เราจึง render native checkbox ที่ใช้คลาส .switch เดิม
-// (Radix Switch ใช้ data-state ซึ่งจะทำให้ต้องเขียน CSS ใหม่ — เลี่ยงเพื่อความ pixel-faithful)
+// switch.tsx — shadcn-style toggle
+// note: the existing CSS (.switch) relies on input[type=checkbox]:checked + appearance:none
+// to keep the design pixel-exact without touching style.css we render a native checkbox using the existing .switch class
+// (Radix Switch uses data-state, which would force rewriting the CSS — avoided to stay pixel-faithful)
 import type { InputHTMLAttributes } from 'react';
 
 type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange'> & {

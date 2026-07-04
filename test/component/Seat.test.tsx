@@ -1,4 +1,4 @@
-// Seat.test.tsx — PlayerChip: ชื่อ/จำนวนไพ่/สถานะ (ตา, หมดมือ, ออฟไลน์, หัวห้อง)
+// Seat.test.tsx — PlayerChip: name/card count/status (turn, finished, offline, host)
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { PlayerChip } from '@/components/game/Seat';

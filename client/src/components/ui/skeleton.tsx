@@ -1,6 +1,6 @@
 // skeleton.tsx — shadcn Skeleton (animate-pulse placeholder)
-// ใช้ในแอปเมื่ออยากได้ loading state แบบไม่มีข้อความ (ไม่ขึ้นกับภาษา)
-// หมายเหตุ: loading ก่อน React mount อยู่ใน index.html (#root) เพราะเรนเดอร์ก่อน bundle นี้
+// used in the app when you want a text-less loading state (language-independent)
+// note: the loading state before React mount lives in index.html (#root) because it renders before this bundle
 import type { ComponentProps } from 'react';
 import { cn } from '@/lib/utils';
 

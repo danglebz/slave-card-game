@@ -1,4 +1,4 @@
-// TurnTimer.tsx — นาฬิกานับถอยหลังต่อตา (port renderTurnTimer)
+// TurnTimer.tsx — per-turn countdown clock (port renderTurnTimer)
 import { useEffect, useRef, useState } from 'react';
 import type { RoomState } from '@shared/types';
 import { Icon } from '@/lib/icons';
@@ -16,7 +16,7 @@ export function TurnTimer({ s }: { s: RoomState }) {
       setSec(null);
       return;
     }
-    // sync กับเวลาที่ server บอก (กัน clock skew) แล้วเดินด้วยนาฬิกาเครื่องเรา
+    // sync with the time the server reports (guard against clock skew) then run off our local clock
     const endsAt = Date.now() + (s.turnRemainingMs as number);
     const tick = () => {
       const ms = Math.max(0, endsAt - Date.now());
@@ -31,7 +31,7 @@ export function TurnTimer({ s }: { s: RoomState }) {
     return () => {
       if (tickRef.current) clearInterval(tickRef.current);
     };
-    // re-sync ทุกครั้งที่ state เปลี่ยน (turnRemainingMs/turn/phase)
+    // re-sync every time state changes (turnRemainingMs/turn/phase)
   }, [active, s.turnRemainingMs, s.turn, s.phase, s.youIndex]);
 
   if (!active || sec == null) {
@@ -45,7 +45,8 @@ export function TurnTimer({ s }: { s: RoomState }) {
 
   const cls = ['turn-timer'];
   if (mine) cls.push('mine');
-  if (sec <= 5) cls.push('urgent'); // ใกล้หมด → แดงเต้น
+  // almost out → pulsing red
+  if (sec <= 5) cls.push('urgent');
 
   return (
     <div id="turn-timer" className={cls.join(' ')} aria-hidden="true">

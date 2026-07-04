@@ -1,6 +1,6 @@
-// ratelimit.ts — กันสแปม event ฝั่ง server (token bucket ต่อ socket)
-// แนวคิด: ทุก socket มี "ถัง token" เติมเรื่อย ๆ ตามเวลา; ส่ง event = ใช้ 1 token
-//   ถัง overall คุมทุก event (กัน flood), ถัง heavy คุม event แพง (create/join) เข้มกว่า
+// ratelimit.ts — server-side event anti-spam (token bucket per socket)
+// Idea: every socket has a "token bucket" that refills over time; sending an event = uses 1 token
+//   the overall bucket controls all events (flood protection), the heavy bucket controls expensive events (create/join) more strictly
 
 type NowFn = () => number;
 
@@ -12,9 +12,9 @@ export class TokenBucket {
   private _now: NowFn;
 
   /**
-   * @param capacity จำนวน token สูงสุด (เบิร์สต์ได้เท่านี้)
-   * @param refillPerSec เติม token กี่ใบต่อวินาที
-   * @param now ฟังก์ชันเวลา (ฉีดได้เพื่อเทส)
+   * @param capacity max number of tokens (max burst)
+   * @param refillPerSec how many tokens to refill per second
+   * @param now time function (injectable for testing)
    */
   constructor(capacity: number, refillPerSec: number, now: NowFn = () => Date.now()) {
     this.capacity = capacity;
@@ -24,7 +24,7 @@ export class TokenBucket {
     this.last = now();
   }
 
-  /** พยายามใช้ n token — คืน true ถ้าพอ (ผ่าน), false ถ้าหมด (ถูกตัด) */
+  /** Try to use n tokens — returns true if enough (pass), false if empty (dropped) */
   take(n = 1): boolean {
     const t = this._now();
     this.tokens = Math.min(
@@ -40,17 +40,19 @@ export class TokenBucket {
   }
 }
 
-// event ที่สร้าง state ใหม่/แพง → จำกัดเข้มกว่า event ทั่วไป (play/pass/setColor ฯลฯ)
+// events that create new state / are expensive → limited more strictly than regular events (play/pass/setColor, etc.)
 const HEAVY_EVENTS = new Set(['create', 'join', 'addBot', 'shuffleSeats']);
 
 /**
- * สร้างตัวตรวจ rate-limit สำหรับ 1 socket
- * @returns คืน true = อนุญาต, false = เกินลิมิต
+ * Create a rate-limit checker for one socket
+ * @returns returns true = allowed, false = over the limit
  */
 export function createSocketLimiter(now: NowFn = () => Date.now()): (event: string) => boolean {
   const overall = new TokenBucket(
-    Number(process.env.RL_BURST) || 25, // เบิร์สต์รวม
-    Number(process.env.RL_RATE) || 12, // เติม 12/วิ
+    // overall burst
+    Number(process.env.RL_BURST) || 25,
+    // refill 12/sec
+    Number(process.env.RL_RATE) || 12,
     now,
   );
   const heavy = new TokenBucket(

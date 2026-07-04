@@ -1,7 +1,7 @@
-// Smoke: รัน server จริงเป็น child process แล้วเช็คว่า "ติดและต่อได้"
-//  - HTTP เสิร์ฟไหม (ตอบ 200)
-//  - Socket.IO ต่อได้ + create ห้อง → ได้ event 'joined' และ 'state'
-// ไม่ทดสอบ logic เกม (นั่นเป็นหน้าที่ unit/integration) — แค่ยืนยันว่าระบบ "boot" ได้
+// Smoke: run the real server as a child process and check it "boots and connects"
+//  - Does HTTP serve (responds 200)
+//  - Socket.IO connects + create room → receives 'joined' and 'state' events
+// Doesn't test game logic (that's unit/integration's job) — just confirms the system "boots"
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -10,7 +10,8 @@ import { io as ioClient } from 'socket.io-client';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SERVER = join(__dirname, '..', '..', 'server', 'index.ts');
-const PORT = 3199; // พอร์ตเฉพาะเทส กันชนกับ dev server (3000)
+// test-only port, avoids clashing with the dev server (3000)
+const PORT = 3199;
 const URL = `http://localhost:${PORT}`;
 
 let child;
@@ -20,11 +21,12 @@ beforeAll(async () => {
     env: {
       ...process.env,
       PORT: String(PORT),
-      ROOMS_FILE: join(__dirname, '..', '..', 'tmp', 'rooms.smoke.json'), // ไม่เขียนทับ rooms.json จริง
+      // don't overwrite the real rooms.json
+      ROOMS_FILE: join(__dirname, '..', '..', 'tmp', 'rooms.smoke.json'),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
-  // รอจน server log ว่าพร้อม
+  // wait until the server logs that it's ready
   await new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('server ไม่ boot ใน 10 วิ')), 10_000);
     child.stdout.on('data', (buf) => {
@@ -44,7 +46,7 @@ afterAll(() => {
 describe('smoke: HTTP', () => {
   it('ตอบ request ที่ root (ไม่ล่ม)', async () => {
     const res = await fetch(URL);
-    // ยังไม่ได้ build → อาจ 404 (ไม่มี index.html) แต่ขอแค่ server ตอบกลับมา ไม่ใช่ ECONNREFUSED
+    // not built yet → may 404 (no index.html), but we just want the server to respond, not ECONNREFUSED
     expect(res.status).toBeGreaterThanOrEqual(200);
   });
 

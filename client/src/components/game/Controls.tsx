@@ -1,5 +1,5 @@
-// Controls.tsx — แถบปุ่มล่าง + bot-controls (port renderControls/updatePlayBtn)
-// แสดง/ปิดปุ่มตามเฟส + สิทธิ์หัวห้อง, emit ผ่าน socket แล้วล้าง selection
+// Controls.tsx — bottom button bar + bot-controls (port renderControls/updatePlayBtn)
+// show/hide buttons by phase + host privileges, emit via socket then clear selection
 import type { RoomState } from '@shared/types';
 import { socket } from '@/lib/socket';
 import { Icon } from '@/lib/icons';
@@ -57,7 +57,8 @@ export function Actions({ s }: { s: RoomState }) {
   const showGive = s.phase === 'exchange' && !!s.exchange && !s.exchange.myDone;
 
   const playDisabled = !myTurn || selected.size === 0;
-  const passDisabled = !myTurn || !s.pile; // นำกองไม่ให้ผ่าน
+  // leading the pile can't pass
+  const passDisabled = !myTurn || !s.pile;
   const giveDisabled = !(ex && !ex.myDone && selected.size === ex.myCount);
 
   function onPlay() {

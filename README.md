@@ -6,6 +6,7 @@
 ## 🎮 เล่นเลย
 
 👉 **[slave-card-game.danglebz.com](https://slave-card-game.danglebz.com/)**
+🔗 ลิงก์สั้น (แชร์ง่าย): **[tinyurl.com/scg-dabz](https://tinyurl.com/scg-dabz)**
 
 > โฮสต์บน Render (free) — ถ้าไม่มีคนเล่น 15 นาที server จะหลับ คนเข้าครั้งแรกอาจรอ ~30 วิให้ตื่นก่อน
 

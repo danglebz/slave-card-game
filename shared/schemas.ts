@@ -1,17 +1,17 @@
 /**
- * Valibot schemas — single source of truth สำหรับ validate payload ของ Socket.IO
+ * Valibot schemas — single source of truth for validating Socket.IO payloads
  *
- * ใช้ร่วมทั้ง client (validate ฟอร์มก่อนส่ง) และ server (validate ซ้ำตอนรับ event —
- * server-authoritative: ห้ามเชื่อ client). แก้ที่นี่ที่เดียว ได้ทั้งสองฝั่ง
+ * Shared by both client (validate the form before sending) and server (re-validate on receiving an event —
+ * server-authoritative: never trust the client). Change it here in one place, both sides get it
  *
- * ค่าคงที่ (เช่น TURN_SECONDS_CHOICES, รูปแบบ card id) ต้องตรงกับ server/room.ts + game.ts
+ * Constants (e.g. TURN_SECONDS_CHOICES, card id format) must match server/room.ts + game.ts
  */
 import * as v from 'valibot';
 
-// ----- ฟิลด์พื้นฐาน -----
+// ----- Basic fields -----
 
-/** ชื่อผู้เล่น: ตัดช่องว่างหัวท้าย, ต้องมี 1–16 ตัว */
-// หมายเหตุ: ข้อความ error เป็น i18n key — client แปลเองด้วย t(lang, key) (ดู lib/i18n.ts)
+/** Player name: trim leading/trailing whitespace, must be 1–16 chars */
+// Note: error messages are i18n keys — the client translates them via t(lang, key) (see lib/i18n.ts)
 export const NameSchema = v.pipe(
   v.string('err.nameEmpty'),
   v.trim(),
@@ -19,7 +19,7 @@ export const NameSchema = v.pipe(
   v.maxLength(16, 'err.nameTooLong'),
 );
 
-/** รหัสห้อง: ตัดช่องว่าง → ตัวพิมพ์ใหญ่ → ต้องเป็นตัวอักษร/ตัวเลข 4 ตัว */
+/** Room code: trim whitespace → uppercase → must be 4 alphanumeric chars */
 export const CodeSchema = v.pipe(
   v.string('err.codeEmpty'),
   v.trim(),
@@ -29,29 +29,29 @@ export const CodeSchema = v.pipe(
   v.regex(/^[A-Z0-9]{4}$/, 'err.codeInvalid'),
 );
 
-/** สีประจำตัว: hex #rrggbb (ตรงกับ Room.setColor) — normalize เป็นตัวพิมพ์เล็ก */
+/** Player color: hex #rrggbb (matches Room.setColor) — normalized to lowercase */
 export const ColorSchema = v.pipe(
   v.string('err.colorInvalid'),
   v.regex(/^#[0-9a-fA-F]{6}$/, 'err.colorInvalid'),
   v.toLowerCase(),
 );
 
-/** id ไพ่ 'rank.suit' — rank 3..15, suit 0..3 (ตรงกับ game.ts cardId/cardFromId) */
+/** Card id 'rank.suit' — rank 3..15, suit 0..3 (matches game.ts cardId/cardFromId) */
 export const CardIdSchema = v.pipe(
   v.string(),
   v.regex(/^(?:[3-9]|1[0-5])\.[0-3]$/, 'err.cardInvalid'),
 );
 
-/** กองไพ่ที่ส่งมา (play/give) — จำกัดความยาวกันสแปม payload ใหญ่ */
+/** Cards sent (play/give) — length-capped to rate-limit large payloads */
 export const CardsSchema = v.pipe(
   v.array(CardIdSchema, 'err.cardsType'),
   v.maxLength(27, 'err.cardsTooMany'),
 );
 
-/** turnSeconds: ต้องเป็นหนึ่งในตัวเลือกที่ server ยอมรับ (Room.TURN_SECONDS_CHOICES) */
+/** turnSeconds: must be one of the choices the server accepts (Room.TURN_SECONDS_CHOICES) */
 export const TurnSecondsSchema = v.picklist([15, 30, 45, 60], 'err.turnSecInvalid');
 
-// ----- payload ของแต่ละ event (เฉพาะ event ที่มี data จาก client) -----
+// ----- Payload of each event (only events that carry data from the client) -----
 
 export const CreateSchema = v.object({
   name: NameSchema,
@@ -64,7 +64,7 @@ export const JoinSchema = v.object({
   color: v.optional(ColorSchema),
 });
 
-/** settings เป็น patch — ทุกฟิลด์ optional, ตัด key แปลกปลอมทิ้ง */
+/** settings is a patch — every field optional, unknown keys are dropped */
 export const SettingsPatchSchema = v.object({
   timer: v.optional(v.boolean()),
   autoPass: v.optional(v.boolean()),
@@ -77,14 +77,14 @@ export const SettingsPatchSchema = v.object({
 
 export const SetColorSchema = v.object({ color: ColorSchema });
 
-/** หัวห้องเตะผู้เล่น — อ้างอิงด้วยชื่อ (กัน index เพี้ยนตอนคนเข้า/ออก) */
+/** Host kicks a player — referenced by name (guards against index drift as people join/leave) */
 export const KickSchema = v.object({ name: NameSchema });
 
 export const PlaySchema = v.object({ cards: CardsSchema });
 
 export const GiveSchema = v.object({ cards: CardsSchema });
 
-/** Web Push subscription จาก client — validate โครง + จำกัดความยาวกัน payload ใหญ่ */
+/** Web Push subscription from the client — validate the shape + cap lengths to guard against large payloads */
 export const PushSubscribeSchema = v.object({
   sub: v.object({
     endpoint: v.pipe(
@@ -92,7 +92,7 @@ export const PushSubscribeSchema = v.object({
       v.url('err.generic'),
       v.maxLength(1024, 'err.generic'),
     ),
-    // expirationTime: เบราว์เซอร์ส่ง number | null — ยอมรับแบบหลวม ไม่ได้ใช้ต่อ
+    // expirationTime: the browser sends number | null — accepted loosely, not used further
     expirationTime: v.optional(v.nullable(v.number())),
     keys: v.object({
       p256dh: v.pipe(v.string('err.generic'), v.maxLength(256, 'err.generic')),
@@ -102,7 +102,7 @@ export const PushSubscribeSchema = v.object({
   lang: v.picklist(['th', 'en'], 'err.generic'),
 });
 
-// ----- types ที่ infer ออกมา (output หลัง transform) -----
+// ----- Inferred types (output after transform) -----
 export type CreatePayload = v.InferOutput<typeof CreateSchema>;
 export type JoinPayload = v.InferOutput<typeof JoinSchema>;
 export type SettingsPatch = v.InferOutput<typeof SettingsPatchSchema>;
@@ -111,10 +111,10 @@ export type KickPayload = v.InferOutput<typeof KickSchema>;
 export type PlayPayload = v.InferOutput<typeof PlaySchema>;
 export type GivePayload = v.InferOutput<typeof GiveSchema>;
 
-// ----- helper สำหรับ validate ทีละฟิลด์ (ใช้ในฟอร์มฝั่ง client) -----
+// ----- Helper for validating one field at a time (used in client-side forms) -----
 export type FieldResult = { ok: true; value: string } | { ok: false; message: string };
 
-/** validate ค่าหนึ่งฟิลด์ → { ok, value } หรือ { ok:false, message } (ข้อความ issue แรก) */
+/** Validate one field's value → { ok, value } or { ok:false, message } (the first issue's message) */
 export function validateField(
   schema: typeof NameSchema | typeof CodeSchema,
   value: string,

@@ -1,6 +1,6 @@
-// SettingsModal.tsx — ตั้งค่า (port settings-modal + syncSettingsUI + handlers)
-// ห้อง (timer/autopass/turnSeconds) = หัวห้องคุม → emit settings
-// ส่วนตัว: ภาษา, สีประจำตัว (react-colorful), แจ้งเตือน (เสียง/สั่น), เสียงเอฟเฟกต์
+// SettingsModal.tsx — settings (port settings-modal + syncSettingsUI + handlers)
+// room (timer/autopass/turnSeconds) = host-controlled → emit settings
+// personal: language, player color (react-colorful), notifications (sound/vibrate), sound effects
 import { useState } from 'react';
 import {
   Dialog,
@@ -56,7 +56,7 @@ export function SettingsModal({
   const setLang = useStore((st) => st.setLang);
   const showToast = useStore((st) => st.showToast);
 
-  // prefs ส่วนตัว (local state สะท้อน lib/audio singleton + localStorage)
+  // personal prefs (local state reflecting the lib/audio singleton + localStorage)
   const [notifSound, setNotifSoundS] = useState(notifPref.sound);
   const [notifVibrate, setNotifVibrateS] = useState(notifPref.vibrate);
   const [push, setPushS] = useState<PushState>(() => pushState());
@@ -93,10 +93,12 @@ export function SettingsModal({
 
   function onColorInput(v: string) {
     setColor(v);
-    localStorage.setItem('color', v); // อัปเดตสดตอนเลือก
+    // update live while picking
+    localStorage.setItem('color', v);
   }
   function onColorCommit(v: string) {
-    socket.emit('setColor', { color: v }); // ส่งตอนปิด picker / เลือก swatch
+    // send when closing the picker / picking a swatch
+    socket.emit('setColor', { color: v });
   }
 
   function toggleSfx(key: SfxKey, demo: 'play' | 'bomb' | 'win', on: boolean) {
@@ -104,11 +106,12 @@ export function SettingsModal({
     setSfxState((p) => ({ ...p, [key]: on }));
     if (on) {
       primeAudio();
-      sfx(demo); // ตัวอย่างเสียง
+      // sound preview
+      sfx(demo);
     }
   }
 
-  // Web Push: เปิด = ขอสิทธิ์ + subscribe (ต้องมาจากการกดปุ่มนี้); ปิด = ยกเลิก
+  // Web Push: on = request permission + subscribe (must come from this button press); off = unsubscribe
   async function togglePush(on: boolean) {
     if (on) {
       const r = await enablePush(lang);
@@ -116,7 +119,8 @@ export function SettingsModal({
       if (r === 'on') showToast(t(lang, 'toast.pushOn'), 'success');
       else if (r === 'denied') showToast(t(lang, 'toast.pushDenied'), 'error');
       else if (r === 'off')
-        void 0; // ผู้ใช้กดยกเลิก dialog สิทธิ์ → เงียบ
+        // user dismissed the permission dialog → stay silent
+        void 0;
       else showToast(t(lang, 'toast.pushFail'), 'error');
     } else {
       await disablePush();

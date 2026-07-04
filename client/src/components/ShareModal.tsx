@@ -1,4 +1,4 @@
-// ShareModal.tsx — แชร์ห้อง (QR + คัดลอกลิงก์) (port share-modal)
+// ShareModal.tsx — share the room (QR + copy link) (port share-modal)
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import {
@@ -27,7 +27,8 @@ export function ShareModal({
   const [qr, setQr] = useState<string | null>(null);
 
   const url = `${location.origin}/?room=${encodeURIComponent(code)}`;
-  const shortUrl = url.replace(/^https?:\/\//, ''); // ตัด scheme ให้อ่านสั้น
+  // strip the scheme for a shorter display
+  const shortUrl = url.replace(/^https?:\/\//, '');
 
   useEffect(() => {
     if (!open) return;

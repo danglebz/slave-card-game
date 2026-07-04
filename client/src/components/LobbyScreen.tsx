@@ -1,4 +1,4 @@
-// LobbyScreen.tsx — หน้าเข้าห้อง: ชื่อ/รหัส, สร้าง/เข้าห้อง (valibot), color, install, version
+// LobbyScreen.tsx — room entry screen: name/code, create/join room (valibot), color, install, version
 import { useEffect, useRef, useState } from 'react';
 import { socket } from '@/lib/socket';
 import { NameSchema, CodeSchema, validateField } from '@/lib/validation';
@@ -9,7 +9,7 @@ import { progStart, progDone } from '@/lib/progress';
 import { ProgressBar } from './ProgressBar';
 import { RulesModal } from './RulesModal';
 
-// สีประจำตัว (ตรงกับ Room.COLORS ฝั่ง server) — เก็บใน localStorage, สุ่มให้ครั้งแรก
+// player colors (match Room.COLORS on the server) — stored in localStorage, randomized on first use
 const AVATAR_COLORS = [
   '#ef4444',
   '#f97316',
@@ -45,14 +45,14 @@ export function LobbyScreen() {
   const [rulesOpen, setRulesOpen] = useState(false);
   const [canInstall, setCanInstall] = useState(false);
 
-  // seed สีประจำตัว (สุ่มครั้งแรก) แล้วเก็บไว้ส่งตอน create/join
+  // seed the player color (random on first use) then keep it to send on create/join
   const colorRef = useRef<string>(initialColor());
   const lobbyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const deferredInstall = useRef<Event & { prompt?: () => void; userChoice?: Promise<unknown> }>(
     null!,
   );
 
-  // ---------- ปลดล็อกฟอร์มเมื่อ server ตอบ (joined / errorMsg) ----------
+  // ---------- unlock the form when the server responds (joined / errorMsg) ----------
   useEffect(() => {
     const end = () => endAction();
     socket.on('joined', end);
@@ -66,7 +66,8 @@ export function LobbyScreen() {
   // ---------- PWA install button ----------
   useEffect(() => {
     const onPrompt = (e: Event) => {
-      e.preventDefault(); // กัน prompt อัตโนมัติ เก็บไว้ให้ผู้ใช้กดปุ่มเอง
+      // block the automatic prompt, keep it for the user to trigger via the button
+      e.preventDefault();
       deferredInstall.current = e as never;
       setCanInstall(true);
     };
@@ -92,7 +93,8 @@ export function LobbyScreen() {
   }
 
   function startAction(which: 'create' | 'join'): boolean {
-    if (loading) return false; // มี action ค้างอยู่แล้ว
+    // an action is already pending
+    if (loading) return false;
     setLoading(which);
     progStart();
     if (lobbyTimer.current) clearTimeout(lobbyTimer.current);

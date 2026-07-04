@@ -20,11 +20,25 @@ socket.on('left', () => localStorage.removeItem(RKEY));
 socket.on('errorMsg', (e) => {
   // room was already deleted (backgrounded past the grace period) → clear stale room state + return to lobby smoothly
   if (e.key !== 'err.roomNotFound') return;
+  const failed = String(e.vars?.code ?? '').toUpperCase();
+  const st = useStore.getState();
+  const current = (st.state?.code || st.roomCode || '').toUpperCase();
+  // a stale / cross-room join failed (e.g. tapping a push for a since-deleted room) while we're
+  // still validly seated elsewhere → ignore it, and repair any room pointer the tap left behind,
+  // instead of yanking us out of the room we're actually in
+  if (failed && current && failed !== current) {
+    localStorage.setItem(RKEY, current);
+    const url = new URL(location.href);
+    url.searchParams.set('room', current);
+    history.replaceState(null, '', url);
+    return;
+  }
+  // our own room is gone → forget it + return to lobby
   localStorage.removeItem(RKEY);
   const url = new URL(location.href);
   url.searchParams.delete('room');
   history.replaceState(null, '', url);
-  useStore.getState().goLobby();
+  st.goLobby();
 });
 
 // on load (including iOS relaunch from "/") if the URL has no ?room but one is remembered → put it back in the URL before App's auto-join reads it
@@ -48,12 +62,15 @@ function wanted(): { code: string; name: string; color?: string } | null {
 }
 
 let lastJoinAt = 0;
-function rejoin(): void {
+// force = a real (re)connect handed us a NEW socket id → we MUST rejoin; never let the throttle eat it
+function rejoin(force = false): void {
   const w = wanted();
   // not connected yet → rejoin later on the 'connect' event
   if (!w || !socket.connected) return;
-  // prevent rapid duplicate emits (several events arrive together on a single resume)
-  if (Date.now() - lastJoinAt < 1500) return;
+  // prevent rapid duplicate emits (several events arrive together on a single resume) — but a fresh
+  // socket id always needs a join, so a forced rejoin skips the throttle (else we stay a ghost:
+  // server keeps talking to the dead socket and our play/pass hit err.notInRoom)
+  if (!force && Date.now() - lastJoinAt < 1500) return;
   lastJoinAt = Date.now();
   // server reclaims the old seat by name (idempotent) → sends state back
   socket.emit('join', w);
@@ -66,9 +83,10 @@ socket.on('connect', () => {
     firstConnect = false;
     return;
   }
-  rejoin();
+  // a reconnect = a brand-new socket id → force past the throttle so we never end up a ghost
+  rejoin(true);
 });
-socket.io.on('reconnect', () => rejoin());
+socket.io.on('reconnect', () => rejoin(true));
 
 // (b) return to foreground → if the socket dropped, reconnect first, then rejoin follows
 function onResume(): void {

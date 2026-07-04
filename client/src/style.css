@@ -80,6 +80,8 @@
 html,
 body {
   height: 100%;
+  /* กัน rubber-band bounce ตอนดึงหน้าจอบนมือถือ (ล็อบบี้เคย "เลื่อนขึ้น/เด้ง" ได้แม้เนื้อหาไม่ล้น) */
+  overscroll-behavior: none;
 }
 body {
   font-family:

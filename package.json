@@ -9,10 +9,10 @@
   "homepage": "https://slave-card-game.danglebz.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Danglebz/slave-card-game.git"
+    "url": "git+https://github.com/danglebz/slave-card-game.git"
   },
   "bugs": {
-    "url": "https://github.com/Danglebz/slave-card-game/issues"
+    "url": "https://github.com/danglebz/slave-card-game/issues"
   },
   "keywords": [
     "card-game",

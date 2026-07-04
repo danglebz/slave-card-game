@@ -111,24 +111,23 @@ export function identifyCombo(cards: Card[]): Combo | null {
 
 // ----- ระบบบอมบ์ -----
 // บอมบ์ = คอมโบพิเศษที่กินกองเล็ก (เดี่ยว/คู่) ได้โดยไม่สนแต้ม และมีลำดับความแรงข้ามชนิด
-// ลำดับความแรง (อ่อน→แรง): เรียงตามจำนวนใบ และตอง/โฟร์ชนะเรียงที่ใบเท่ากัน
-//   เรียง3=1 < ตอง(3ใบ)=2 < เรียง4=3 < โฟร์(4ใบ)=4 < เรียง5=5 < เรียง6=6
+// กินกองเล็ก (ตามจำนวนใบ): ชุด "ใบคี่" (ตอง/เรียง3/เรียง5) กินเดี่ยว · ชุด "ใบคู่" (โฟร์/เรียง4/เรียง6) กินคู่
+//
+// ลำดับความแรง (อ่อน→แรง): เรียง3=1 < ตอง=2 < เรียง4=3 < เรียง5=4 < โฟร์=5 < เรียง6=6 < เรียง7=7 …
+//   → โฟร์กินเรียง3/4/5 + ตอง ได้ แต่ยังแพ้ "เรียง6 ขึ้นไป" (ยิ่งยาว/หายาก ยิ่งแรง; เรียงยาวได้ถึง 12 ใบ)
 // คืน 0 ถ้าไม่ใช่บอมบ์
 export function bombPower(combo: Combo | null): number {
   if (!combo) return 0;
   if (combo.type === 'triple') return 2;
-  if (combo.type === 'quad') return 4;
+  if (combo.type === 'quad') return 5; // โฟร์เหนือเรียง5 แต่ยังต่ำกว่าเรียง6
   if (combo.type === 'straight') {
     if (combo.len === 3) return 1;
     if (combo.len === 4) return 3;
-    if (combo.len === 5) return 5;
-    if (combo.len === 6) return 6;
+    if (combo.len === 5) return 4; // เรียง5 ต่ำกว่าโฟร์
+    return combo.len; // เรียง6+ = ตามจำนวนใบ (6,7,…,12) → เหนือโฟร์เสมอ; ยิ่งยาวยิ่งแรง
   }
   return 0;
 }
-
-const SINGLE_KILLERS = new Set([1, 2, 5]); // ตอง, เรียงดอกเดียว3, เรียงดอกเดียว5 → กินไพ่เดี่ยว
-const PAIR_KILLERS = new Set([3, 4, 6]); // โฟร์, เรียงดอกเดียว4, เรียงดอกเดียว6 → กินคู่
 
 // candidate กินกอง current ได้ไหม? current = null หมายถึงเป็นคนนำ (ลงอะไรก็ได้)
 export function canBeat(current: Combo | null, candidate: Combo | null): boolean {
@@ -145,16 +144,19 @@ export function canBeat(current: Combo | null, candidate: Combo | null): boolean
     return candidate.value > current.value;
   }
 
-  // กองปกติ
+  // กองปกติ — บอมบ์กินกองเล็กตามจำนวนใบ: ชุดใบคี่ (3,5) กินเดี่ยว · ชุดใบคู่ (4,6) กินคู่
   if (current.type === 'single') {
     if (candidate.type === 'single') return candidate.value > current.value;
-    return SINGLE_KILLERS.has(candBomb); // บอมบ์กินไพ่เดี่ยวได้เลย ไม่สนแต้ม
+    return candBomb > 0 && candidate.len % 2 === 1; // ชุดใบคี่กินไพ่เดี่ยว
   }
   if (current.type === 'pair') {
     if (candidate.type === 'pair') return candidate.value > current.value;
-    return PAIR_KILLERS.has(candBomb);
+    return candBomb > 0 && candidate.len % 2 === 0; // ชุดใบคู่กินคู่
   }
   if (current.type === 'straight') {
+    // เรียงที่ "นำลง": ชนะด้วยเรียงยาวเท่ากันที่สูงกว่า
+    // + โฟร์กินเรียงได้ถ้าโฟร์แรงกว่าเรียงกองนั้น (โฟร์กินเรียง3/4/5 แต่แพ้เรียง6)
+    if (candidate.type === 'quad' && candBomb > bombPower(current)) return true;
     return (
       candidate.type === 'straight' &&
       candidate.len === current.len &&
@@ -178,6 +180,10 @@ export function playMode(current: Combo | null, candidate: Combo): 'bomb' | 'nor
   if (current.type === 'single' || current.type === 'pair') {
     // ถ้าลงชนิดเดียวกัน = ปกติ; ถ้าลงบอมบ์ทับ = บอมบ์
     return candidate.type === current.type ? 'normal' : 'bomb';
+  }
+  if (current.type === 'straight') {
+    // เรียงโดนโฟร์ทับ → กองเข้าโหมดบอมบ์ (ต่อไปต้องโฟร์สูงกว่ามาทับ); เรียงชนะเรียง = ยังปกติ
+    return candidate.type === 'straight' ? 'normal' : 'bomb';
   }
   return 'normal';
 }

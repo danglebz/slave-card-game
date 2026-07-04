@@ -76,7 +76,15 @@ export function RulesModal({
                 <br />
                 <b>คู่</b> กินด้วย: โฟร์ · เรียงดอกเดียว 4 · เรียงดอกเดียว 6
               </p>
-              <p>ความแรง: เรียง3 &lt; ตอง &lt; เรียง4 &lt; โฟร์ &lt; เรียง5 &lt; เรียง6</p>
+              <p>
+                ความแรง: เรียง3 &lt; ตอง &lt; เรียง4 &lt; เรียง5 &lt; <b>โฟร์</b> &lt; เรียง6
+                <br />
+                <b>โฟร์</b> กินเรียง3/4/5 + ตองได้ แต่ยังแพ้ <b>เรียง6</b> (ดอกเดียว 6 ใบ = แรงสุด)
+              </p>
+              <p>
+                • เรียงกินกันด้วย<b>เรียงยาวเท่ากัน</b>ที่สูงกว่าเท่านั้น — มีแต่ <b>โฟร์</b> ที่ข้ามความยาวได้
+                <br />• บันไดความแรงใช้ตอน<b>บอมบ์ชนบอมบ์</b> · นำด้วยตอง/โฟร์ = เปิดโหมดบอมบ์ทันที
+              </p>
             </>
           ) : (
             <>
@@ -86,8 +94,16 @@ export function RulesModal({
                 <b>Pair</b> beaten by: Four · 4-card flush straight · 6-card flush straight
               </p>
               <p>
-                Strength: Straight3 &lt; Triple &lt; Straight4 &lt; Four &lt; Straight5 &lt;
+                Strength: Straight3 &lt; Triple &lt; Straight4 &lt; Straight5 &lt; <b>Four</b> &lt;{' '}
                 Straight6
+                <br />
+                <b>Four</b> beats Straight3/4/5 + Triple, but still loses to <b>Straight6</b> (rarest)
+              </p>
+              <p>
+                • Straights are beaten only by a <b>higher straight of the same length</b> — only a{' '}
+                <b>Four</b> crosses lengths
+                <br />• The strength ladder applies <b>bomb-vs-bomb</b>; leading a Triple/Four opens
+                bomb mode
               </p>
             </>
           )}

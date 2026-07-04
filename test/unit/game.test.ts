@@ -164,8 +164,8 @@ describe('bombPower', () => {
     expect(bombPower(straight(3))).toBe(1);
     expect(bombPower(triple)).toBe(2);
     expect(bombPower(straight(4))).toBe(3);
-    expect(bombPower(quad)).toBe(4);
-    expect(bombPower(straight(5))).toBe(5);
+    expect(bombPower(straight(5))).toBe(4);
+    expect(bombPower(quad)).toBe(5); // โฟร์เหนือเรียง5 แต่ยังแพ้เรียง6
     expect(bombPower(single({ r: 7, s: 0 }))).toBe(0);
   });
 

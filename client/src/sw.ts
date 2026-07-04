@@ -92,9 +92,10 @@ self.addEventListener('push', (e: PushEvent) => {
   );
 });
 
-// แตะการแจ้งเตือน → เข้าห้องนั้น
-// มีหน้าเปิดอยู่แล้ว: postMessage บอกให้ join เอง (เชื่อถือกว่า client.navigate() ที่ reject บ่อยบน Android)
-// ไม่มีหน้าเปิด: เปิดใหม่ที่ /?room=CODE (App auto-join จาก ?room เอง)
+// แตะการแจ้งเตือน → เปิดตัวแอป PWA แล้วเข้าห้องนั้น
+// สำคัญ (Android): ห้ามใช้ client.focus() เพราะ matchAll อาจเจอ "แท็บ Chrome" แล้วโฟกัสมัน
+//   → เด้งเปิดเบราว์เซอร์แทนแอป. ใช้ openWindow() เสมอ — บน Android มันเล็งไป installed PWA (standalone)
+// ควบคู่กับ postMessage: ถ้า PWA เปิดค้างอยู่ หน้าเว็บจะ join ห้องในที่ได้เลย (session.ts รับ event นี้)
 self.addEventListener('notificationclick', (e: NotificationEvent) => {
   e.notification.close();
   const url = (e.notification.data as { url?: string } | null)?.url || '/';
@@ -103,10 +104,7 @@ self.addEventListener('notificationclick', (e: NotificationEvent) => {
   e.waitUntil(
     (async () => {
       const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-      if (wins.length) {
-        for (const c of wins) if (code) c.postMessage({ type: 'join-room', code });
-        return wins[0].focus();
-      }
+      for (const c of wins) if (code) c.postMessage({ type: 'join-room', code });
       return self.clients.openWindow(url);
     })(),
   );

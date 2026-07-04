@@ -80,8 +80,7 @@
 html,
 body {
   height: 100%;
-  /* กัน rubber-band bounce ตอนดึงหน้าจอบนมือถือ (ล็อบบี้เคย "เลื่อนขึ้น/เด้ง" ได้แม้เนื้อหาไม่ล้น) */
-  overscroll-behavior: none;
+  /* ไม่ล็อก overscroll → เปิด pull-to-refresh (รูดลงจากบนสุด = รีเฟรช) บนมือถือ */
 }
 body {
   font-family:
@@ -558,6 +557,8 @@ button.loading:disabled {
   align-items: center;
   gap: 12px;
   padding: 11px 16px;
+  /* iOS PWA full-bleed (viewport-fit=cover): กันแถบบนมุดใต้ status bar/notch */
+  padding-top: max(11px, env(safe-area-inset-top));
   border-bottom: 1px solid var(--topbar-border);
   background: var(--topbar-bg);
   -webkit-backdrop-filter: blur(8px);

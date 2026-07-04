@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { useStore } from '@/store';
+import { socket } from '@/lib/socket';
 import { Icon } from '@/lib/icons';
 import { t } from '@/lib/i18n';
 import { initialHandSort, type HandSort } from '@/lib/gameLogic';
@@ -119,6 +120,32 @@ export function GameScreen() {
       showToast(t(lang, s.notice.key, s.notice.vars));
     }
   }, [s, showToast, lang]);
+
+  // ---------- ลงไพ่ใบสุดท้ายออโต้ (ถึงตาเรา + เหลือ 1 ใบ + ลงได้) ----------
+  useEffect(() => {
+    if (!s || s.phase !== 'playing' || s.youAreSpectator) return;
+    if (s.turn !== s.youIndex || s.hand.length !== 1) return;
+    const last = s.hand[0];
+    // ลงได้ไหม: นำกอง = ได้เสมอ · ตามกองได้เฉพาะกอง "เดี่ยว" ที่แต้มต่ำกว่า
+    // (ไพ่ใบเดียวสู้คู่/ตอง/เรียงไม่ได้ → ต้อง pass เอง, ไม่ auto)
+    const legal = !s.pile || (s.pile.type === 'single' && last.r * 4 + last.s > s.pile.value);
+    if (!legal) return;
+    const id = last.id;
+    const timer = setTimeout(() => {
+      const cur = useStore.getState().state; // เช็กซ้ำกันสภาพเปลี่ยนระหว่างหน่วงเวลา
+      if (
+        cur &&
+        cur.phase === 'playing' &&
+        cur.turn === cur.youIndex &&
+        cur.hand.length === 1 &&
+        cur.hand[0].id === id
+      ) {
+        socket.emit('play', { cards: [id] });
+        useStore.getState().clearSelected();
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [s]);
 
   function toggleSort() {
     setHandSort((cur) => {

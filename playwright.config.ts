@@ -14,7 +14,24 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: 'on-first-retry',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: /mobile\.spec\.ts/,
+    },
+    // iPhone 13 → WebKit engine → real iOS/Safari reproduction (white-screen bug)
+    {
+      name: 'mobile-safari',
+      use: { ...devices['iPhone 13'] },
+      testMatch: /mobile\.spec\.ts/,
+    },
+    {
+      name: 'mobile-chrome',
+      use: { ...devices['Pixel 7'] },
+      testMatch: /mobile\.spec\.ts/,
+    },
+  ],
   // build client + run the real server (serves dist/ + Socket.IO on the same port)
   webServer: {
     command: 'pnpm build && pnpm start',

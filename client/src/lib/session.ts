@@ -68,7 +68,8 @@ socket.io.on('reconnect', () => rejoin());
 function onResume(): void {
   if (document.visibilityState !== 'visible') return; // iOS: กัน 'visible' หลอก (WebKit bug 202399)
   if (!navigator.onLine) return; // ออฟไลน์อยู่ → รอ event 'online' ค่อยต่อ (กันกระตุก)
-  if (!socket.connected) socket.connect(); // socket.io จะยิง 'connect' → rejoin() ตามมาเอง
+  if (!socket.connected)
+    socket.connect(); // socket.io จะยิง 'connect' → rejoin() ตามมาเอง
   else rejoin(); // ต่ออยู่แต่เป็นผี → rejoin เลย
 }
 document.addEventListener('visibilitychange', onResume);

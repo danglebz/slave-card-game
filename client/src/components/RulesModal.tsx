@@ -82,7 +82,8 @@ export function RulesModal({
                 <b>โฟร์</b> กินเรียง3/4/5 + ตองได้ แต่ยังแพ้ <b>เรียง6</b> (ดอกเดียว 6 ใบ = แรงสุด)
               </p>
               <p>
-                • เรียงกินกันด้วย<b>เรียงยาวเท่ากัน</b>ที่สูงกว่าเท่านั้น — มีแต่ <b>โฟร์</b> ที่ข้ามความยาวได้
+                • เรียงกินกันด้วย<b>เรียงยาวเท่ากัน</b>ที่สูงกว่าเท่านั้น — มีแต่ <b>โฟร์</b>{' '}
+                ที่ข้ามความยาวได้
                 <br />• บันไดความแรงใช้ตอน<b>บอมบ์ชนบอมบ์</b> · นำด้วยตอง/โฟร์ = เปิดโหมดบอมบ์ทันที
               </p>
             </>
@@ -97,7 +98,8 @@ export function RulesModal({
                 Strength: Straight3 &lt; Triple &lt; Straight4 &lt; Straight5 &lt; <b>Four</b> &lt;{' '}
                 Straight6
                 <br />
-                <b>Four</b> beats Straight3/4/5 + Triple, but still loses to <b>Straight6</b> (rarest)
+                <b>Four</b> beats Straight3/4/5 + Triple, but still loses to <b>Straight6</b>{' '}
+                (rarest)
               </p>
               <p>
                 • Straights are beaten only by a <b>higher straight of the same length</b> — only a{' '}

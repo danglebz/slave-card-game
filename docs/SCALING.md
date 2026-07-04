@@ -171,6 +171,21 @@ Invest in horizontal scale when you see, **sustained** (not a one-off spike):
 The trigger to act is **sustained** pressure on those signals — measure with the load test below and
 the `/metrics` snapshot before adding a second instance. Until then, one process is the right call.
 
+### The money trigger on Render (free-tier reality)
+
+On Render specifically, "add a second instance" is a **paid** action — it's a budget decision as much
+as a technical one:
+
+- **Horizontal scaling (multiple instances) requires the Professional plan.** Free/Hobby services run a
+  **single instance** regardless of traffic, so nothing in §3 changes the free-tier deploy — the Redis
+  adapter is dormant with one instance. It only starts earning its keep once you pay to run ≥2.
+- **Render Key Value (managed Redis)** has a free plan (~25 MB, ~50 connections) but **no persistence on
+  free** — it drops all data on restart. Fine as the Socket.IO adapter bus (§3.2); risky as the room-
+  state store (§3.1) without a paid (persisted) instance, or keep the existing `rooms.json` as a fallback.
+- **Practical path:** build and _prove_ §3 locally (Docker Redis + two Node processes) so the
+  architecture is ready and tested, but keep production on one instance until sustained load justifies
+  paying for Professional + a persisted Key Value. The work is "ready to scale," not "scaled."
+
 ---
 
 ## 5. Evidence: the load test

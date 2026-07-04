@@ -1,11 +1,11 @@
-// Hand.tsx — ไพ่ในมือ (port renderHand + sortedHand) — เลือกไพ่ผ่าน store
-// สมาร์ทซีเลกต์: ตอนกองเป็นคู่/ตอง/โฟร์ แตะไพ่ใบเดียว → เลือก rank เดียวกันให้ครบชุดเลย
+// Hand.tsx — hand cards (port renderHand + sortedHand) — select cards via store
+// smart-select: when the pile is a pair/triple/quad, tapping one card → selects the whole same-rank set
 import type { CardWithId, RoomState } from '@shared/types';
 import { PlayingCard } from './PlayingCard';
 import { sortedHand, smartPick, type HandSort } from '@/lib/gameLogic';
 import { useStore } from '@/store';
 
-// ชนิดกอง "อันดับเดียวกัน" → จำนวนใบที่ต้องเลือกให้ครบเมื่อแตะ 1 ใบ
+// "same-rank" pile types → number of cards needed to complete the set when tapping 1 card
 const SAME_RANK_SIZE: Record<string, number> = { pair: 2, triple: 3, quad: 4 };
 
 export function Hand({
@@ -22,24 +22,25 @@ export function Hand({
   const setSelected = useStore((st) => st.setSelected);
   const clearSelected = useStore((st) => st.clearSelected);
 
-  // เปิดสมาร์ทซีเลกต์เฉพาะช่วงเล่น + กองเป็นคู่/ตอง/โฟร์ (ไม่ยุ่งกับเฟสแลกไพ่ที่เลือกเองอิสระ)
+  // enable smart-select only during play + pile is a pair/triple/quad (leaves the card-exchange phase, which selects freely, alone)
   const groupSize = s.phase === 'playing' && s.pile ? (SAME_RANK_SIZE[s.pile.type] ?? 0) : 0;
 
   function onCardClick(c: CardWithId) {
     const pick = smartPick(s.hand, c, groupSize);
     if (pick) {
-      // เลือกครบชุด rank เดียวกัน — ถ้าเลือกกลุ่มนี้อยู่แล้ว แตะซ้ำ = ยกเลิก
+      // select the full same-rank set — if this group is already selected, tapping again = deselect
       const isSame = pick.length === selected.size && pick.every((id) => selected.has(id));
       if (isSame) clearSelected();
       else setSelected(pick);
       return;
     }
-    toggleCard(c.id); // ปกติ: สลับเลือกทีละใบ
+    // normal: toggle selection one card at a time
+    toggleCard(c.id);
   }
 
   return (
-    // key={dealId} → remount ทั้งมือตอนเริ่มรอบใหม่ ให้ animation แจกไพ่เล่นซ้ำ
-    // (ระหว่างรอบ dealId เดิม → ไม่ remount → เลือกไพ่ลื่นไม่กระตุก)
+    // key={dealId} → remount the whole hand at the start of a new round so the deal animation replays
+    // (within a round dealId stays the same → no remount → card selection stays smooth without stutter)
     <div id="hand" key={dealId} className="dealing">
       {sortedHand(s.hand, handSort).map((c, i) => (
         <PlayingCard

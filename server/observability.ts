@@ -1,7 +1,7 @@
-// observability.ts — logging, metrics, และ Sentry (ออปชัน)
-// - logger: log มีระดับ + timestamp (ตั้ง LOG_LEVEL=error|warn|info|debug)
-// - metrics: ตัวนับสะสม + snapshot จำนวนห้อง/ผู้เล่นแบบเรียลไทม์
-// - Sentry: เปิดเฉพาะเมื่อมี SENTRY_DSN (ต้องติดตั้ง @sentry/node เพิ่ม) — ไม่งั้น no-op
+// observability.ts — logging, metrics, and Sentry (optional)
+// - logger: leveled logs + timestamp (set LOG_LEVEL=error|warn|info|debug)
+// - metrics: cumulative counters + a real-time snapshot of room/player counts
+// - Sentry: enabled only when SENTRY_DSN is set (requires installing @sentry/node) — otherwise a no-op
 
 import type { Room } from './room';
 
@@ -19,7 +19,7 @@ export function log(level: LogLevel, msg: string, meta?: unknown): void {
   const out = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log;
   if (meta !== undefined) out(line, meta);
   else out(line);
-  // ส่งต่อเข้า Sentry Logs (ถ้าเปิดอยู่) — ข้าม debug เพื่อประหยัด quota
+  // Forward into Sentry Logs (if enabled) — skip debug to save quota
   if (Sentry?.logger && level !== 'debug') {
     const fn = Sentry.logger[level] || Sentry.logger.info;
     if (meta !== undefined) fn(msg, meta);
@@ -34,13 +34,13 @@ export const logger = {
   debug: (m: string, meta?: unknown) => log('debug', m, meta),
 };
 
-/** log error + ส่งเข้า Sentry (ถ้าเปิดอยู่) */
+/** log error + send to Sentry (if enabled) */
 export function captureError(err: unknown, context?: Record<string, unknown>): void {
   logger.error((err as Error)?.message || String(err), context);
   if (Sentry) Sentry.captureException(err, context ? { extra: context } : undefined);
 }
 
-// ----- Sentry (ออปชัน) -----
+// ----- Sentry (optional) -----
 export async function initSentry(): Promise<void> {
   const dsn = process.env.SENTRY_DSN;
   if (!dsn) {
@@ -48,14 +48,15 @@ export async function initSentry(): Promise<void> {
     return;
   }
   try {
-    // import แบบ dynamic → โหลด @sentry/node เฉพาะตอนเปิดใช้ (ไม่ถ่วง startup ถ้าไม่ใช้)
+    // dynamic import → load @sentry/node only when enabled (doesn't slow startup if unused)
     const mod = await import('@sentry/node');
     mod.init({
       dsn,
       environment: process.env.NODE_ENV || 'development',
-      // performance tracing — ดีฟอลต์ 10% (ตั้ง SENTRY_TRACES_SAMPLE_RATE=0 เพื่อปิด)
+      // performance tracing — default 10% (set SENTRY_TRACES_SAMPLE_RATE=0 to disable)
       tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1),
-      enableLogs: true, // เปิด Sentry Logs (รับ log จาก logger.* ด้านบน)
+      // enable Sentry Logs (receives logs from logger.* above)
+      enableLogs: true,
     });
     Sentry = mod;
     logger.info('Sentry: เปิดใช้งานแล้ว');
@@ -72,14 +73,19 @@ export async function initSentry(): Promise<void> {
 // ----- metrics -----
 export const metrics = {
   startedAt: Date.now(),
-  roomsCreated: 0, // จำนวนห้องที่เคยถูกสร้าง (สะสม)
-  gamesStarted: 0, // จำนวนรอบที่เริ่มเล่น (สะสม)
-  connections: 0, // จำนวน socket ที่เคยต่อ (สะสม)
-  rateLimited: 0, // จำนวน event ที่ถูกตัดเพราะเกินลิมิต (สะสม)
-  peakConcurrent: 0, // ผู้เชื่อมต่อพร้อมกันสูงสุด
+  // number of rooms ever created (cumulative)
+  roomsCreated: 0,
+  // number of rounds started (cumulative)
+  gamesStarted: 0,
+  // number of sockets ever connected (cumulative)
+  connections: 0,
+  // number of events dropped for exceeding the limit (cumulative)
+  rateLimited: 0,
+  // peak concurrent connections
+  peakConcurrent: 0,
 };
 
-/** สรุปสถานะปัจจุบันจาก rooms Map (จำนวนห้อง/ผู้เล่น/ผู้ชม ฯลฯ) */
+/** Summarize the current state from the rooms Map (room/player/spectator counts, etc.) */
 export function snapshot(rooms: Map<string, Room>) {
   let players = 0;
   let bots = 0;

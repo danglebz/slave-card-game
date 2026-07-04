@@ -3,14 +3,14 @@ import { botChoose } from '../../server/bot';
 import { cardFromId, identifyCombo } from '../../server/game';
 import type { Card, Combo } from '../../shared/types';
 
-// ช่วยสร้างไพ่จาก id "r.s"
+// helper to build a card from an id "r.s"
 const C = (id: string): Card => cardFromId(id);
 const hand = (...ids: string[]): Card[] => ids.map(C);
 const combo = (...ids: string[]): Combo => identifyCombo(ids.map(C))!;
 
 describe('botChoose — นำกอง (lead)', () => {
   it('นำด้วยคู่ต่ำแทนที่จะลงเดี่ยวอย่างเดียว', () => {
-    // มีคู่ 4 (ต่ำ) → ควรเลือกลงคู่ ไม่ใช่เดี่ยว 3
+    // has a pair of 4s (low) → should play the pair, not a single 3
     const h = hand('3.0', '4.0', '4.1', '9.2', '13.3');
     const move = botChoose(h, null);
     expect(move).not.toBeNull();
@@ -20,7 +20,7 @@ describe('botChoose — นำกอง (lead)', () => {
   });
 
   it('เก็บตอง/โฟร์ไว้ ไม่นำด้วยบอมบ์ตอนต้นเกม', () => {
-    // ตอง 5 เป็นบอมบ์ ควรถูกเก็บ → นำด้วยเดี่ยว/คู่อื่นแทน
+    // triple 5 is a bomb, should be kept → lead with another single/pair instead
     const h = hand('5.0', '5.1', '5.2', '7.0', '9.0', '11.0', '13.0', '14.0');
     const move = botChoose(h, null);
     const ids = new Set(move!);
@@ -35,7 +35,8 @@ describe('botChoose — นำกอง (lead)', () => {
   });
 
   it('ลงหมดมือได้ → ชนะทันที', () => {
-    const h = hand('4.0', '4.1'); // เหลือคู่เดียว
+    // only one pair left
+    const h = hand('4.0', '4.1');
     const move = botChoose(h, null);
     expect(new Set(move)).toEqual(new Set(['4.0', '4.1']));
   });
@@ -43,24 +44,30 @@ describe('botChoose — นำกอง (lead)', () => {
 
 describe('botChoose — ตามกอง (follow)', () => {
   it('ลงคู่ที่ชนะคู่บนกองด้วย value ต่ำสุด', () => {
-    const pile = combo('6.0', '6.1'); // คู่ 6
+    // pair of 6s
+    const pile = combo('6.0', '6.1');
     const h = hand('3.0', '8.0', '8.1', '13.0', '13.1');
     const move = botChoose(h, pile);
     const c = identifyCombo(move!.map(C))!;
     expect(c.type).toBe('pair');
-    expect(c.topRank).toBe(8); // คู่ 8 ต่ำกว่าคู่ K
+    // pair of 8s is lower than a pair of Ks
+    expect(c.topRank).toBe(8);
   });
 
   it('ไม่ทุบคู่เพื่อชนะไพ่เดี่ยว ถ้ามีใบโดด', () => {
-    const pile = combo('7.0'); // เดี่ยว 7
-    const h = hand('9.0', '9.1', '10.3'); // มีคู่ 9 และ 10 โดด
+    // single 7
+    const pile = combo('7.0');
+    // has a pair of 9s and a lone 10
+    const h = hand('9.0', '9.1', '10.3');
     const move = botChoose(h, pile);
-    expect(move).toEqual(['10.3']); // ใช้ 10 โดด ไม่ทุบคู่ 9
+    // use the lone 10, don't break the pair of 9s
+    expect(move).toEqual(['10.3']);
   });
 
   it('ไม่ทุ่มไพ่ 2 ชิงกองเดี่ยวก่อนเวลา → ผ่าน', () => {
-    const pile = combo('14.0'); // เดี่ยว A
-    // มือใหญ่ (ไม่ใช่ท้ายเกม), ชนะ A ได้แค่ไพ่ 2 → ควรเก็บไว้ ผ่าน
+    // single A
+    const pile = combo('14.0');
+    // large hand (not endgame), only a 2 can beat A → should keep it, pass
     const h = hand('15.0', '4.0', '5.0', '6.0', '7.0', '8.0', '9.0', '10.0');
     const move = botChoose(h, pile, { minOppCards: 10 });
     expect(move).toBeNull();
@@ -74,8 +81,10 @@ describe('botChoose — ตามกอง (follow)', () => {
   });
 
   it('ใช้บอมบ์ปิดเกมเมื่อคู่แข่งเหลือไพ่น้อย', () => {
-    const pile = combo('14.0'); // เดี่ยว A — ปกติแพ้
-    const h = hand('5.0', '5.1', '5.2', '9.0'); // มีตอง 5 (บอมบ์กินเดี่ยว)
+    // single A — normally loses
+    const pile = combo('14.0');
+    // has triple 5 (bomb that beats a single)
+    const h = hand('5.0', '5.1', '5.2', '9.0');
     const move = botChoose(h, pile, { minOppCards: 2 });
     const c = identifyCombo(move!.map(C))!;
     expect(c.type).toBe('triple');
@@ -85,12 +94,13 @@ describe('botChoose — ตามกอง (follow)', () => {
     const pile = combo('14.0');
     const h = hand('5.0', '5.1', '5.2', '9.0', '10.0', '11.0', '12.0', '13.3');
     const move = botChoose(h, pile, { minOppCards: 9 });
-    // เดี่ยวก็ชนะ A ไม่ได้ (ทุกใบต่ำกว่า A) และไม่ desperate → ควรผ่าน เก็บบอมบ์
+    // no single can beat A (all lower than A) and not desperate → should pass, keep the bomb
     expect(move).toBeNull();
   });
 
   it('ผ่านกองโหมดบอมบ์เมื่อไม่มีบอมบ์แรงกว่า', () => {
-    const pile = combo('10.0', '10.1', '10.2'); // ตอง 10 (โหมดบอมบ์)
+    // triple 10 (bomb mode)
+    const pile = combo('10.0', '10.1', '10.2');
     pile.mode = 'bomb';
     const h = hand('3.0', '4.0', '5.0');
     const move = botChoose(h, pile, { minOppCards: 5 });

@@ -1,4 +1,4 @@
-// TurnInfo.tsx — ชื่อคนที่ต้องลงไพ่ / ข้อความเฟสแลกไพ่ (port turn-info ใน renderPile)
+// TurnInfo.tsx — name of whose turn it is to play / card-exchange phase message (port turn-info in renderPile)
 import type { RoomState } from '@shared/types';
 import { Icon } from '@/lib/icons';
 import { t, displayName } from '@/lib/i18n';

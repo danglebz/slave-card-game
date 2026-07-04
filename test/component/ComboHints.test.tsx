@@ -1,4 +1,4 @@
-// ComboHints.test.tsx — แสดงบอมบ์ในมือ + คลิกชิปเพื่อเลือก/ยกเลิก (ผ่าน store.selected)
+// ComboHints.test.tsx — show bombs in hand + click chip to select/deselect (via store.selected)
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -11,7 +11,7 @@ beforeEach(() => {
   useStore.getState().clearSelected();
 });
 
-// ตอง 5 (สามใบ) + ไพ่อื่นที่ไม่เป็นบอมบ์
+// triple 5 (three cards) + other non-bomb cards
 const tripleHand = [card(5, 0), card(5, 1), card(5, 2), card(7, 0), card(9, 3)];
 
 describe('ComboHints', () => {

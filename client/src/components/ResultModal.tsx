@@ -1,4 +1,4 @@
-// ResultModal.tsx — ผลรอบ (port showResult) — เปิดอัตโนมัติเมื่อ phase === 'finished'
+// ResultModal.tsx — round result (port showResult) — opens automatically when phase === 'finished'
 import {
   Dialog,
   DialogContent,

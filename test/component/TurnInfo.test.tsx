@@ -1,4 +1,4 @@
-// TurnInfo.test.tsx — ข้อความบอกตา (ตาคุณ / รอคนอื่น) + เฟสแลกไพ่
+// TurnInfo.test.tsx — turn message (your turn / waiting for others) + card exchange phase
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { TurnInfo } from '@/components/game/TurnInfo';

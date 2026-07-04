@@ -1,8 +1,8 @@
-// gameLogic.ts — ตรรกะการ์ดฝั่ง client (port จาก app.js: rankLabel, sortedHand, detectCombos)
+// gameLogic.ts — client-side card logic (ported from app.js: rankLabel, sortedHand, detectCombos)
 import type { Card, CardWithId, Settings } from '@shared/types';
 import { t, type Lang } from './i18n';
 
-// house rules: ชุดพิเศษที่หัวห้องปิด → Set ของ combo.type ที่ห้ามลง (ตรงกับ server/game.ts)
+// house rules: special combos the host disabled → Set of combo.type that can't be played (matches server/game.ts)
 export function disabledComboTypes(settings?: Partial<Settings> | null): Set<string> {
   const d = new Set<string>();
   if (settings?.allowTriple === false) d.add('triple');
@@ -11,10 +11,11 @@ export function disabledComboTypes(settings?: Partial<Settings> | null): Set<str
   return d;
 }
 
-// ︎ = text-presentation selector: บังคับให้ดอกแสดงเป็นตัวอักษร (ไม่ใช่ emoji)
-// เพื่อให้สี CSS (.red) มีผลจริงบนมือถือ
+// ︎ = text-presentation selector: force suits to render as text (not emoji)
+// so the CSS color (.red) actually applies on mobile
 export const SUITS = ['♣︎', '♦︎', '♥︎', '♠︎'];
-export const RED = new Set([1, 2]); // ข้าวหลามตัด, โพแดง = สีแดง
+// diamonds, hearts = red
+export const RED = new Set([1, 2]);
 
 export function rankLabel(r: number): string {
   return (
@@ -28,7 +29,7 @@ export function isRed(c: Card): boolean {
 
 export type ComboHint = { label: string; ids: string[] };
 
-// โหมดเรียงไพ่ในมือ
+// hand sort mode
 export type HandSort = 'rank' | 'bomb';
 
 export function initialHandSort(): HandSort {
@@ -36,10 +37,11 @@ export function initialHandSort(): HandSort {
 }
 
 export function sortedHand(hand: CardWithId[] | undefined, handSort: HandSort): CardWithId[] {
-  const arr = (hand || []).slice().sort((a, b) => a.r - b.r || a.s - b.s); // เรียงตามเลขก่อนเสมอ
+  // always sort by rank first
+  const arr = (hand || []).slice().sort((a, b) => a.r - b.r || a.s - b.s);
   if (handSort !== 'bomb') return arr;
-  // โหมดบอม: ดันไพ่ที่อยู่ในบอม (ตอง/โฟร์/เรียงดอกเดียว) ไปไว้ขวาสุด ที่เหลือคงเรียงเลขเดิม
-  // บอมบ์ที่ใช้ไพ่ร่วมกันจะ "เชื่อมต่อกัน" โดยใช้ไพ่ร่วมเป็นสะพาน
+  // bomb mode: push cards that form a bomb (triple/quad/flush straight) to the far right, keep the rest in rank order
+  // bombs sharing a card get "linked" using the shared card as a bridge
   const blocks: string[][] = [];
   const idBlock = new Map<string, string[]>();
   for (const cb of detectCombos(arr)) {
@@ -63,14 +65,16 @@ export function sortedHand(hand: CardWithId[] | undefined, handSort: HandSort): 
   if (!bombIds.length) return arr;
   const inBomb = new Set(bombIds);
   const byId = new Map(arr.map((c) => [c.id, c]));
-  const left = arr.filter((c) => !inBomb.has(c.id)); // ไม่ใช่บอม → เรียงเลขปกติ (ซ้าย)
-  const right = bombIds.map((id) => byId.get(id)!); // บอม → กลุ่ม+เชื่อมต่อ (ขวา)
+  // not a bomb → normal rank order (left)
+  const left = arr.filter((c) => !inBomb.has(c.id));
+  // bomb → grouped + linked (right)
+  const right = bombIds.map((id) => byId.get(id)!);
   return [...left, ...right];
 }
 
-// สมาร์ทซีเลกต์: กองเป็นคู่/ตอง/โฟร์ (groupSize=2/3/4) → แตะไพ่ 1 ใบ ได้ชุด rank เดียวกันครบเลย
-// ใบที่แตะติดเสมอ + เติม "ดอกต่ำสุด" ที่เหลือให้ครบชุด (เก็บดอกสูงไว้ใช้ทีหลัง)
-// คืนรายการ id ที่ควรเลือก หรือ null ถ้าไม่เข้าเงื่อนไข (groupSize<2 หรือ rank ในมือไม่พอ → เลือกทีละใบตามปกติ)
+// smart select: pile is a pair/triple/quad (groupSize=2/3/4) → tapping 1 card selects the full same-rank set
+// the tapped card is always included + fill with the lowest remaining suits to complete the set (keep high suits for later)
+// returns the list of ids to select, or null if conditions aren't met (groupSize<2 or not enough of that rank in hand → select one at a time as usual)
 export function smartPick(
   hand: CardWithId[],
   tapped: CardWithId,
@@ -87,16 +91,17 @@ export function smartPick(
   return [tapped.id, ...rest];
 }
 
-// ตรวจหา "บอมบ์" ที่ทำได้จากไพ่ในมือ: ตอง, โฟร์, เรียงดอกเดียว (ยาว >=3)
+// detect "bombs" possible from the hand: triple, quad, flush straight (length >=3)
 export function detectCombos(
   hand: CardWithId[],
   lang: Lang = 'th',
   disabled?: Set<string>,
 ): ComboHint[] {
   const out: ComboHint[] = [];
-  const off = (type: string) => !!disabled?.has(type); // ชุดที่หัวห้องปิด → ไม่แสดงเป็นใบ้
+  // combos the host disabled → don't show as a hint
+  const off = (type: string) => !!disabled?.has(type);
 
-  // ตอง / โฟร์ — จัดกลุ่มตามอันดับ
+  // triple / quad — group by rank
   const byRank: Record<number, CardWithId[]> = {};
   for (const c of hand) (byRank[c.r] ||= []).push(c);
   Object.keys(byRank)
@@ -117,7 +122,7 @@ export function detectCombos(
       }
     });
 
-  // เรียงดอกเดียว (flush straight) — จัดกลุ่มตามดอก, ห้ามมีไพ่ 2 (r=15)
+  // flush straight — group by suit, no 2s allowed (r=15)
   const bySuit: Record<number, CardWithId[]> = {};
   for (const c of hand) if (c.r !== 15) (bySuit[c.s] ||= []).push(c);
   Object.keys(bySuit)
@@ -146,7 +151,7 @@ export function detectCombos(
   return out;
 }
 
-// ----- ตำแหน่งที่นั่งบนตาราง 3×3 (ใช้ร่วมกัน Table + Pile) — rel 0 = "คุณ" ที่ล่างสุด -----
+// ----- seat positions on the 3×3 grid (shared by Table + Pile) — rel 0 = "you" at the bottom -----
 export const SEAT_LAYOUTS: Record<number, string[]> = {
   2: ['seat-bottom', 'seat-top'],
   3: ['seat-bottom', 'seat-tr', 'seat-tl'],
@@ -160,7 +165,7 @@ export function seatFor(rel: number, n: number): string {
   return layout[rel] || 'seat-top';
 }
 
-// ทิศที่ไพ่ "สไลด์เข้า" กองกลาง = เวกเตอร์หน่วยจากที่นั่งของคนลงไพ่ → กลางโต๊ะ
+// direction cards "slide into" the center pile = unit vector from the player's seat → center of the table
 const SEAT_ORIGIN: Record<string, [number, number]> = {
   'seat-bottom': [0, 1],
   'seat-top': [0, -1],
@@ -173,22 +178,27 @@ const SEAT_ORIGIN: Record<string, [number, number]> = {
 };
 
 export function seatOrigin(seatId: string): [number, number] {
-  return SEAT_ORIGIN[seatId] || [0, -0.26]; // ไม่รู้ที่นั่ง → เด้งลงจากบนเล็กน้อย (ของเดิม)
+  // unknown seat → drop down slightly from the top (original behavior)
+  return SEAT_ORIGIN[seatId] || [0, -0.26];
 }
 
-// พื้นชิป = สีเต็ม + เลือกสีตัวอักษร (ขาว/ดำ) ตามความสว่างของสี ให้อ่านออกเสมอ
+// chip background = full color + pick text color (white/black) by luminance so it's always readable
 export function chipStyle(hex: string): React.CSSProperties | undefined {
   if (!/^#[0-9a-f]{6}$/i.test(hex)) return undefined;
   const ch = (i: number) => parseInt(hex.slice(i, i + 2), 16);
-  const lum = (0.2126 * ch(1) + 0.7152 * ch(3) + 0.0722 * ch(5)) / 255; // ความสว่างสัมพัทธ์
-  const dark = lum < 0.6; // พื้นเข้ม → ตัวอักษรขาว
+  // relative luminance
+  const lum = (0.2126 * ch(1) + 0.7152 * ch(3) + 0.0722 * ch(5)) / 255;
+  // dark background → white text
+  const dark = lum < 0.6;
   const fg = dark ? '#ffffff' : '#1c1c1f';
   const soft = dark ? 'rgba(255,255,255,0.82)' : 'rgba(0,0,0,0.58)';
-  const d = (i: number) => Math.round(ch(i) * 0.78); // เฉดเข้ม = สีเดียวกันแต่เข้มกว่า ~22% (ขอบ + ปลาย gradient)
-  const l = (i: number) => Math.round(ch(i) + (255 - ch(i)) * 0.16); // เฉดอ่อน = ผสมขาว ~16% (ต้น gradient)
+  // dark shade = same color but ~22% darker (border + gradient end)
+  const d = (i: number) => Math.round(ch(i) * 0.78);
+  // light shade = mixed with ~16% white (gradient start)
+  const l = (i: number) => Math.round(ch(i) + (255 - ch(i)) * 0.16);
   const dark3 = `rgb(${d(1)},${d(3)},${d(5)})`;
   const light3 = `rgb(${l(1)},${l(3)},${l(5)})`;
-  // ไล่เฉดอ่อน→สีเดิม→เข้ม ให้ป้ายดูมีมิติ (ยังอิงสีประจำตัวเดิม)
+  // gradient light→original→dark to give the label depth (still based on the player's color)
   const gradient = `linear-gradient(160deg, ${light3} 0%, ${hex} 48%, ${dark3} 100%)`;
   return {
     background: gradient,

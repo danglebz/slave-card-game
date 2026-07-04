@@ -1,12 +1,12 @@
-// game.ts — ตรรกะเกมส์ไพ่สลาฟ (กติกามาตรฐาน) แบบ pure ทดสอบ/ตรวจสอบฝั่ง server ได้
+// game.ts — logic for the Slave card game (standard rules); pure, so server-side testing/validation works
 //
-// อันดับไพ่ (rank): 3 ต่ำสุด ... 2 สูงสุด
+// Card rank: 3 lowest ... 2 highest
 //   3,4,5,6,7,8,9,10 = 3..10 | J=11 | Q=12 | K=13 | A=14 | 2=15
-// ดอก (suit) ใช้ตัดสินเมื่ออันดับเท่ากัน (เดี่ยว/คู่/เรียง): ♣ < ♦ < ♥ < ♠
+// Suit breaks ties when ranks are equal (single/pair/straight): ♣ < ♦ < ♥ < ♠
 //   0=♣ 1=♦ 2=♥ 3=♠
 
 import type { Card, Combo, ComboType, Settings } from '../shared/types';
-// กติกาแกน (identify/compare/mode) ย้ายไป shared/rules → client ใช้ร่วมได้; re-export ให้ importer เดิม (room/bot/tests) ไม่ต้องแก้
+// Core rules (identify/compare/mode) moved to shared/rules → client can share them; re-export so existing importers (room/bot/tests) don't need changes
 import { identifyCombo, bombPower, canBeat, playMode } from '../shared/rules';
 export { identifyCombo, bombPower, canBeat, playMode };
 
@@ -35,7 +35,7 @@ export function cardLabel(c: Card): string {
   return `${rankLabel(c.r)}${SUITS[c.s]}`;
 }
 
-// สร้างสำรับ 52 ใบ
+// Build a 52-card deck
 export function createDeck(): Card[] {
   const deck: Card[] = [];
   for (let r = 3; r <= 15; r++) {
@@ -46,7 +46,7 @@ export function createDeck(): Card[] {
   return deck;
 }
 
-// สับไพ่ (Fisher–Yates)
+// Shuffle the cards (Fisher–Yates)
 export function shuffle(deck: Card[]): Card[] {
   const a = deck.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -56,7 +56,7 @@ export function shuffle(deck: Card[]): Card[] {
   return a;
 }
 
-// แจกไพ่แบบวนรอบ ให้ผู้เล่น n คน (52 ใบ → 2คน=26/26, 3คน=18/17/17, 4คน=13/13/13/13)
+// Deal cards round-robin to n players (52 cards → 2p=26/26, 3p=18/17/17, 4p=13/13/13/13)
 export function deal(numPlayers: number): Card[][] {
   const deck = shuffle(createDeck());
   const hands: Card[][] = Array.from({ length: numPlayers }, () => []);
@@ -70,7 +70,7 @@ export function sortHand(hand: Card[]): Card[] {
   return hand;
 }
 
-// หา index ผู้เล่นที่ถือไพ่ 3♣ (ใบต่ำสุด) — ใช้เป็นคนเริ่มเกมแรก
+// Find the index of the player holding 3♣ (lowest card) — used as the first player to start
 export function findStarter(hands: Card[][]): number {
   for (let i = 0; i < hands.length; i++) {
     if (hands[i].some((c) => c.r === 3 && c.s === 0)) return i;
@@ -79,31 +79,34 @@ export function findStarter(hands: Card[][]): number {
 }
 
 /**
- * มีชุดไพ่ใด ๆ ในมือที่ลงทับกองปัจจุบันได้ไหม (รวมบอมบ์ ตอง โฟร์ เรียง)
- * ใช้ตัดสินว่าควร auto-pass ไหม — นำกอง (pile=null) = ลงได้เสมอ
+ * Is there any combo in hand that can be played on top of the current pile (including bomb, triple, quad, straight)
+ * Used to decide whether to auto-pass — leading the pile (pile=null) = always playable
  */
 export function anyLegalMove(hand: Card[], pile: Combo | null, disallowed?: Set<string>): boolean {
   if (!pile) return true;
-  const off = (type: string) => !!disallowed?.has(type); // ชุดที่หัวห้องปิด
+  // combos the host disabled
+  const off = (type: string) => !!disallowed?.has(type);
   const beats = (cards: Card[]): boolean => {
     const combo = identifyCombo(cards);
     return !!combo && !off(combo.type) && canBeat(pile, combo);
   };
-  // จัดกลุ่มตามอันดับ (เดี่ยว/คู่/ตอง/โฟร์)
+  // Group by rank (single/pair/triple/quad)
   const groups = new Map<number, Card[]>();
   for (const c of hand) {
     const g = groups.get(c.r);
     if (g) g.push(c);
     else groups.set(c.r, [c]);
   }
-  for (const c of hand) if (beats([c])) return true; // เดี่ยว
+  // single
+  for (const c of hand) if (beats([c])) return true;
   for (const cs of groups.values()) {
-    const hi = cs.slice().sort((a, b) => b.s - a.s); // ดอกสูงสุดก่อน → value มากสุดของอันดับนั้น
+    // highest suit first → max value of that rank
+    const hi = cs.slice().sort((a, b) => b.s - a.s);
     if (hi.length >= 2 && beats(hi.slice(0, 2))) return true;
     if (hi.length >= 3 && beats(hi.slice(0, 3))) return true;
     if (hi.length >= 4 && beats(hi.slice(0, 4))) return true;
   }
-  // เรียงดอกเดียว ยาว 3–6 (ห้ามมีไพ่ 2 / r=15)
+  // Flush straight, length 3–6 (no 2 / r=15 allowed)
   const bySuit = new Map<number, number[]>();
   for (const c of hand) {
     if (c.r >= 15) continue;
@@ -126,7 +129,7 @@ export function anyLegalMove(hand: Card[], pile: Combo | null, disallowed?: Set<
   return false;
 }
 
-// house rules: ชุดพิเศษที่หัวห้องปิด → Set ของ combo.type ที่ห้ามลง (singles/pairs ลงได้เสมอ)
+// house rules: special combos the host disabled → Set of combo.type that can't be played (singles/pairs always playable)
 export function disallowedComboTypes(settings?: Partial<Settings> | null): Set<string> {
   const d = new Set<string>();
   if (settings?.allowTriple === false) d.add('triple');

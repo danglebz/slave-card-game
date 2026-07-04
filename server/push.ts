@@ -1,9 +1,9 @@
-// push.ts — Web Push (แจ้งเตือนแม้ปิดแอป) ฝั่ง server
-// ต้องตั้ง VAPID keys ผ่าน env ถึงจะเปิดใช้ (ไม่ตั้ง = ปิดฟีเจอร์เงียบๆ ทั้งเส้น)
-//   gen ครั้งเดียว: node -e "console.log(require('web-push').generateVAPIDKeys())"
-//   VAPID_PUBLIC_KEY  — public (ส่งให้ client subscribe)
-//   VAPID_PRIVATE_KEY — private (เก็บลับบน server เท่านั้น)
-//   VAPID_SUBJECT     — mailto:you@example.com หรือ https URL (ดีฟอลต์ mailto ของ repo)
+// push.ts — Web Push (notify even when the app is closed) server side
+// VAPID keys must be set via env to enable it (unset = feature silently disabled entirely)
+//   gen once: node -e "console.log(require('web-push').generateVAPIDKeys())"
+//   VAPID_PUBLIC_KEY  — public (sent to the client to subscribe)
+//   VAPID_PRIVATE_KEY — private (kept secret on the server only)
+//   VAPID_SUBJECT     — mailto:you@example.com or an https URL (default is the repo's mailto)
 import webpush from 'web-push';
 import type { Phase, PushSubJSON, ResultEntry } from '../shared/types';
 import type { Room } from './room';
@@ -11,7 +11,7 @@ import { captureError, logger } from './observability';
 
 type Lang = 'th' | 'en';
 
-// ----- ตั้งค่า VAPID (เปิดใช้เมื่อครบทั้ง public + private) -----
+// ----- VAPID setup (enabled when both public + private are present) -----
 const PUBLIC = process.env.VAPID_PUBLIC_KEY || '';
 const PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
 const SUBJECT = process.env.VAPID_SUBJECT || 'mailto:danglebz@hotmail.com';
@@ -28,8 +28,8 @@ if (pushEnabled) {
   }
 }
 
-// ----- คลัง subscription: key = `${code}::${name}` (ที่นั่งในห้อง), เก็บในหน่วยความจำ -----
-// อายุแค่ช่วงที่ยังเล่นอยู่ — ไม่เซฟลงไฟล์ (client re-subscribe ตอน reconnect อยู่แล้ว)
+// ----- Subscription store: key = `${code}::${name}` (a seat in a room), kept in memory -----
+// Lives only while playing — not saved to disk (the client re-subscribes on reconnect anyway)
 interface Entry {
   sub: PushSubJSON;
   lang: Lang;
@@ -43,13 +43,13 @@ export function saveSub(code: string, name: string, sub: PushSubJSON, lang: Lang
 export function dropSub(code: string, name: string): void {
   store.delete(keyOf(code, name));
 }
-/** ลบ subscription ทั้งห้อง (ตอนห้องถูกเก็บกวาด) */
+/** Drop all subscriptions for a room (when the room is reaped) */
 export function dropRoom(code: string): void {
   const prefix = `${code}::`;
   for (const k of store.keys()) if (k.startsWith(prefix)) store.delete(k);
 }
 
-// ----- ข้อความแจ้งเตือน (แปลตามภาษาที่ client ส่งมาตอน subscribe) -----
+// ----- Notification text (localized per the language the client sent on subscribe) -----
 const RANK_LABEL: Record<Lang, Record<string, string>> = {
   th: { king: 'คิง', queen: 'ควีน', commoner: 'สามัญชน', viceslave: 'รองสลาฟ', slave: 'สลาฟ' },
   en: {
@@ -81,7 +81,7 @@ const TXT = {
   },
 } satisfies Record<Lang, unknown>;
 
-// สรุปผลรอบสั้นๆ: "คิง: A · สลาฟ: B" (คนแรก/คนสุดท้ายของ finishOrder)
+// Short round summary: "King: A · Slave: B" (first/last of finishOrder)
 function resultSummary(result: ResultEntry[] | null, lang: Lang): string {
   if (!result?.length) return '';
   const lbl = RANK_LABEL[lang];
@@ -101,7 +101,7 @@ interface Payload {
   urgent?: boolean;
 }
 
-// ยิง push ไปที่ที่นั่งเดียว (เงียบถ้าไม่มี subscription); endpoint ตาย (404/410) → ลบทิ้ง
+// Send a push to a single seat (silent if there's no subscription); dead endpoint (404/410) → drop it
 async function sendTo(code: string, name: string, make: (t: (typeof TXT)[Lang]) => Payload) {
   const entry = store.get(keyOf(code, name));
   if (!entry) return;
@@ -115,18 +115,20 @@ async function sendTo(code: string, name: string, make: (t: (typeof TXT)[Lang]) 
   } catch (e) {
     const status = (e as { statusCode?: number }).statusCode;
     if (status === 404 || status === 410) {
-      dropSub(code, name); // subscription หมดอายุ/ถูกยกเลิก → เลิกส่ง
+      // subscription expired/revoked → stop sending
+      dropSub(code, name);
     } else {
       captureError(e, { where: 'push.sendTo', status });
     }
   }
 }
 
-// ----- ตรวจจับ transition แล้วยิงแจ้งเตือน (เก็บ snapshot ก่อนหน้าไว้ต่อห้อง) -----
+// ----- Detect transitions and fire notifications (keep the previous snapshot per room) -----
 interface Memo {
   phase: Phase;
   turn: number;
-  seats: Map<string, boolean>; // ชื่อคนจริง → connected (บอทไม่นับ)
+  // real player name → connected (bots excluded)
+  seats: Map<string, boolean>;
 }
 const memos = new WeakMap<Room, Memo>();
 
@@ -136,28 +138,29 @@ function snapshot(room: Room): Memo {
   return { phase: room.phase, turn: room.turn, seats };
 }
 
-// คนจริงที่ยังอยู่ในห้อง (ไว้เลือกเป้าหมายแจ้งเตือน) ยกเว้นชื่อที่ระบุ
+// Real players still in the room (for picking notification targets), except the given name
 function humanNames(room: Room, except?: string): string[] {
   return room.players.filter((p) => !p.isBot && p.name !== except).map((p) => p.name);
 }
 
 /**
- * เรียกทุกครั้งหลัง state เปลี่ยน (ใน broadcast) — diff กับ snapshot ก่อนหน้าแล้วยิง push
- * ตามเหตุการณ์: ถึงตาเล่น / เกมเริ่ม / จบเกม / มีคนเข้า-ออกห้อง
- * การแสดงผลจริงตัดสินใจที่ service worker (โฟกัสอยู่ = ไม่เด้ง) — server แค่ยิงหาเป้าหมาย
+ * Called after every state change (in broadcast) — diffs against the previous snapshot and fires pushes
+ * per event: your turn / game started / game over / someone joined or left the room
+ * The actual display is decided in the service worker (focused = no popup) — the server just targets recipients
  */
 export function notifyRoom(room: Room): void {
   if (!pushEnabled) return;
   const prev = memos.get(room);
   const cur = snapshot(room);
   memos.set(room, cur);
-  if (!prev) return; // snapshot แรก = ตั้งฐาน ยังไม่แจ้งอะไร (กันเด้งตอนโหลด)
+  // first snapshot = set the baseline, notify nothing yet (avoid popups on load)
+  if (!prev) return;
 
   const code = room.code;
   const t = (name: string, make: (x: (typeof TXT)[Lang]) => Payload) =>
     void sendTo(code, name, make);
 
-  // 1) เกมเริ่ม: จากล็อบบี้/จบเกม → เข้าเล่น/แลกไพ่ (รอบใหม่)
+  // 1) Game started: from lobby/finished → playing/exchange (a new round)
   const wasIdle = prev.phase === 'lobby' || prev.phase === 'finished';
   const nowPlaying = cur.phase === 'playing' || cur.phase === 'exchange';
   const startedNow = wasIdle && nowPlaying;
@@ -173,7 +176,7 @@ export function notifyRoom(room: Room): void {
     }
   }
 
-  // 2) จบเกม
+  // 2) Game over
   if (prev.phase !== 'finished' && cur.phase === 'finished') {
     for (const name of humanNames(room)) {
       t(name, (x) => ({
@@ -186,8 +189,8 @@ export function notifyRoom(room: Room): void {
     }
   }
 
-  // 3) ถึงตาเล่น (ยิงให้เฉพาะคนที่ถึงตา ถ้าเป็นคนจริงและยังไม่หมดมือ)
-  //    ข้ามถ้าเพิ่งแจ้ง "เกมเริ่ม" ไปแล้วในรอบนี้ (กันเด้งซ้อน)
+  // 3) Your turn (only fired for the player whose turn it is, if a real player not yet finished)
+  //    Skipped if "game started" was just notified this round (avoid stacked popups)
   const turnChanged = cur.turn !== prev.turn || prev.phase !== 'playing';
   if (!startedNow && cur.phase === 'playing' && turnChanged) {
     const cp = room.players[cur.turn];
@@ -203,10 +206,10 @@ export function notifyRoom(room: Room): void {
     }
   }
 
-  // 4) เข้า/ออกห้อง (เทียบ seats) — แจ้งคนอื่นในห้อง
+  // 4) Join/leave the room (compare seats) — notify the others in the room
   for (const [name, connected] of cur.seats) {
     if (!prev.seats.has(name) && connected) {
-      // ชื่อใหม่ = เข้าห้อง (ไม่นับ reconnect ที่ชื่อเดิม)
+      // New name = joined the room (not a reconnect under the same name)
       for (const other of humanNames(room, name)) {
         t(other, (x) => ({
           title: x.join(name),
@@ -219,7 +222,7 @@ export function notifyRoom(room: Room): void {
   }
   for (const [name, wasConn] of prev.seats) {
     const nowConn = cur.seats.get(name);
-    // เคยออนไลน์ แล้วหลุด/หายไป (ล็อบบี้ = ลบที่นั่ง, กลางเกม = connected=false)
+    // Was online, then dropped/disappeared (lobby = seat removed, mid-game = connected=false)
     if (wasConn && (nowConn === undefined || nowConn === false)) {
       for (const other of humanNames(room, name)) {
         t(other, (x) => ({

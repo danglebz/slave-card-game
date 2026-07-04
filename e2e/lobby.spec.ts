@@ -1,28 +1,28 @@
 import { test, expect } from '@playwright/test';
 
-// e2e happy path: เปิดหน้า → สร้างห้อง → เติมบอท → เริ่มเกม → เห็นไพ่ในมือ
+// e2e happy path: open page → create room → add bot → start game → see cards in hand
 test('สร้างห้อง เติมบอท แล้วเริ่มเกมได้', async ({ page }) => {
   await page.goto('/');
 
-  // หน้าล็อบบี้แสดงอยู่
+  // lobby screen is showing
   await expect(page.locator('#lobby-screen')).toBeVisible();
 
-  // ใส่ชื่อ → สร้างห้อง
+  // enter name → create room
   await page.fill('#name-input', 'E2E');
   await page.click('#create-btn');
 
-  // เข้าหน้าเกม + ได้รหัสห้อง 4 ตัว
+  // enter game screen + get a 4-character room code
   await expect(page.locator('#game-screen')).toBeVisible();
   await expect(page.locator('#room-code')).toHaveText(/^[A-Z0-9]{4}$/);
 
-  // เริ่มยังไม่ได้ (มีคนเดียว) → ปุ่ม start ถูก disable
+  // can't start yet (only one player) → start button is disabled
   await expect(page.locator('#start-btn')).toBeDisabled();
 
-  // เติมบอท → ครบ 2 คน → ปุ่ม start ใช้ได้
+  // add bot → 2 players total → start button becomes enabled
   await page.click('#add-bot-btn');
   await expect(page.locator('#start-btn')).toBeEnabled();
 
-  // เริ่มเกม → มีไพ่ขึ้นในมือ
+  // start game → cards appear in hand
   await page.click('#start-btn');
   await expect(page.locator('#hand')).toBeVisible();
   await expect(page.locator('#hand > *')).not.toHaveCount(0);
@@ -34,7 +34,7 @@ test('เข้าห้องด้วยรหัสผิด แสดง err
   await page.fill('#code-input', 'ZZZZ');
   await page.click('#join-btn');
 
-  // ยังอยู่หน้าล็อบบี้ (ไม่ได้เข้าเกม)
+  // still on the lobby screen (didn't enter the game)
   await expect(page.locator('#lobby-screen')).toBeVisible();
   await expect(page.locator('#game-screen')).toBeHidden();
 });

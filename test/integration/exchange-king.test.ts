@@ -1,5 +1,5 @@
-// Integration: เฟสแลกไพ่ + กฎ "คิงตกบัลลังก์" (miyakoOchi)
-// กติกาซับซ้อนที่ข้าม Room หลายเมธอด — เทสกันพังตอนแก้
+// Integration: card exchange phase + "King dethroned" rule (miyakoOchi)
+// Complex rules spanning multiple Room methods — tests to guard against regressions
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Room } from '../../server/room';
 import { cardId } from '../../server/game';
@@ -11,45 +11,54 @@ describe('เฟสแลกไพ่ (4 คน, รอบ 2+)', () => {
   beforeEach(() => {
     room = new Room('EXCH');
     ['p0', 'p1', 'p2', 'p3'].forEach((id, i) => room.addPlayer(id, `P${i}`));
-    // จำลองอันดับรอบก่อน: คิง=0, ควีน=1, รองสลาฟ=2, สลาฟ=3
+    // Simulate previous round order: King=0, Queen=1, Vice-slave=2, Slave=3
     room.finishOrder = [0, 1, 2, 3];
-    room.start(); // มี prevOrder ครบ → เข้าเฟสแลกไพ่
+    // full prevOrder present → enter the card exchange phase
+    room.start();
   });
 
   it('เข้าเฟส exchange และมี giveTasks เฉพาะผู้ชนะ (คิง+ควีน)', () => {
     expect(room.phase).toBe('exchange');
     expect(Object.keys(room.giveTasks).sort()).toEqual(['0', '1']);
-    expect(room.giveTasks[0]).toMatchObject({ to: 3, count: 2 }); // คิง↔สลาฟ แลก 2
-    expect(room.giveTasks[1]).toMatchObject({ to: 2, count: 1 }); // ควีน↔รองสลาฟ แลก 1
+    // King↔Slave exchange 2
+    expect(room.giveTasks[0]).toMatchObject({ to: 3, count: 2 });
+    // Queen↔Vice-slave exchange 1
+    expect(room.giveTasks[1]).toMatchObject({ to: 2, count: 1 });
   });
 
   it('ผู้แพ้ถูกดึงไพ่สูงสุดอัตโนมัติ → ผู้ชนะมือใหญ่ขึ้นชั่วคราว', () => {
-    expect(room.players[0].hand.length).toBe(15); // คิง +2
-    expect(room.players[3].hand.length).toBe(11); // สลาฟ -2
-    expect(room.players[1].hand.length).toBe(14); // ควีน +1
-    expect(room.players[2].hand.length).toBe(12); // รองสลาฟ -1
+    // King +2
+    expect(room.players[0].hand.length).toBe(15);
+    // Slave -2
+    expect(room.players[3].hand.length).toBe(11);
+    // Queen +1
+    expect(room.players[1].hand.length).toBe(14);
+    // Vice-slave -1
+    expect(room.players[2].hand.length).toBe(12);
     expect(totalCards(room)).toBe(52);
   });
 
   it('สลาฟส่ง "ไพ่สูงสุด" จริง (ใบที่สูงกว่าไปอยู่กับคิง)', () => {
-    // ไพ่ที่คิงเพิ่งได้รับ ต้องสูงกว่าหรือเท่ากับไพ่สูงสุดที่สลาฟเหลือ
+    // the card the King just received must be >= the highest card the Slave has left
     const slaveTop = Math.max(...room.players[3].hand.map((c) => c.r));
     const kingHasHigher = room.players[0].hand.some((c) => c.r >= slaveTop);
     expect(kingHasHigher).toBe(true);
   });
 
   it('ผู้ชนะเลือกไพ่คืน → performExchange → เริ่มเล่น, สลาฟขึ้นก่อน', () => {
-    // คิงเลือกไพ่ต่ำสุด 2 ใบคืน, ควีนเลือก 1 ใบคืน
+    // King returns the 2 lowest cards, Queen returns 1 card
     const kingGive = room.players[0].hand.slice(0, 2).map(cardId);
     const queenGive = room.players[1].hand.slice(0, 1).map(cardId);
     room.giveCards('p0', kingGive);
-    expect(room.phase).toBe('exchange'); // ยังไม่ครบ
+    // not complete yet
+    expect(room.phase).toBe('exchange');
     room.giveCards('p1', queenGive);
 
     expect(room.phase).toBe('playing');
     expect(room.players.every((p) => p.hand.length === 13)).toBe(true);
     expect(totalCards(room)).toBe(52);
-    expect(room.turn).toBe(3); // สลาฟ (อันดับสุดท้ายรอบก่อน) ขึ้นก่อน
+    // Slave (last place last round) leads first
+    expect(room.turn).toBe(3);
   });
 
   it('เลือกไพ่จำนวนผิด → error', () => {
@@ -67,33 +76,42 @@ describe('เฟสแลกไพ่ (4 คน, รอบ 2+)', () => {
 describe('คิงตกบัลลังก์ (miyakoOchi)', () => {
   it('สลาฟหมดมือก่อนคิง → สลับคิง↔สลาฟ แล้วแจกใหม่เข้าเฟสแลกไพ่', () => {
     const room = new Room('MIYA');
-    room.addPlayer('king', 'KingP'); // index 0
-    room.addPlayer('slave', 'SlaveP'); // index 1
-    room.start(); // เกมแรก
-    // จัดฉากเป็น "รอบ 2+": กำหนด roundOrder = [คิง=0, สลาฟ=1]
+    // index 0
+    room.addPlayer('king', 'KingP');
+    // index 1
+    room.addPlayer('slave', 'SlaveP');
+    // first game
+    room.start();
+    // Set up as "round 2+": set roundOrder = [King=0, Slave=1]
     room.roundOrder = [0, 1];
     room.phase = 'playing';
     room.everPlayed = true;
-    room.turn = 1; // ตาสลาฟ
+    // Slave's turn
+    room.turn = 1;
     room.pile = null;
     room.passed = new Set();
+    // King still has cards
     room.players[0].hand = [
       { r: 9, s: 0 },
       { r: 11, s: 0 },
-    ]; // คิงยังมีไพ่
-    room.players[1].hand = [{ r: 5, s: 3 }]; // สลาฟเหลือใบเดียว
+    ];
+    // Slave has one card left
+    room.players[1].hand = [{ r: 5, s: 3 }];
 
-    room.play('slave', [cardId({ r: 5, s: 3 })]); // สลาฟลงหมดมือก่อนคิง
+    // Slave empties hand before the King
+    room.play('slave', [cardId({ r: 5, s: 3 })]);
 
-    // สลับขั้ว: SlaveP กลายเป็นคิง, KingP ตกเป็นสลาฟ
+    // Swap poles: SlaveP becomes King, KingP drops to Slave
     expect(room.noticeKey).toBe('notice.dethrone');
     expect(room.lastResult[0].name).toBe('SlaveP');
     expect(room.lastResult[0].title).toBe('king');
     expect(room.lastResult[1].name).toBe('KingP');
-    // แจกใหม่ + เข้าเฟสแลกไพ่ทันที (เฉพาะคู่คิง↔สลาฟ)
+    // Re-deal + enter card exchange phase immediately (only the King↔Slave pair)
     expect(room.phase).toBe('exchange');
-    expect(Object.keys(room.giveTasks)).toEqual(['1']); // คิงใหม่ (index 1) เป็นผู้เลือก
-    expect(room._miyakoExchange).toBe(false); // ใช้แล้วถูกรีเซ็ต
+    // new King (index 1) is the chooser
+    expect(Object.keys(room.giveTasks)).toEqual(['1']);
+    // reset after use
+    expect(room._miyakoExchange).toBe(false);
   });
 
   it('สลาฟหมดมือ "หลัง" คิง = ไม่ตกบัลลังก์ (จบรอบปกติ)', () => {
@@ -104,19 +122,23 @@ describe('คิงตกบัลลังก์ (miyakoOchi)', () => {
     room.roundOrder = [0, 1];
     room.phase = 'playing';
     room.everPlayed = true;
-    room.turn = 0; // ตาคิง
+    // King's turn
+    room.turn = 0;
     room.pile = null;
     room.passed = new Set();
     room.players[0].finished = false;
-    room.players[0].hand = [{ r: 9, s: 0 }]; // คิงเหลือใบเดียว
+    // King has one card left
+    room.players[0].hand = [{ r: 9, s: 0 }];
     room.players[1].hand = [
       { r: 5, s: 3 },
       { r: 6, s: 3 },
     ];
 
-    room.play('king', [cardId({ r: 9, s: 0 })]); // คิงหมดมือก่อน → จบรอบปกติ
+    // King empties hand first → normal round end
+    room.play('king', [cardId({ r: 9, s: 0 })]);
 
     expect(room.phase).toBe('finished');
-    expect(room.lastResult[0].name).toBe('KingP'); // คิงยังเป็นที่ 1
+    // King is still 1st
+    expect(room.lastResult[0].name).toBe('KingP');
   });
 });

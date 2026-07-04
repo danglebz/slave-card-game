@@ -2,6 +2,33 @@
 
 This file is generated automatically by [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) following the [Conventional Commits](https://www.conventionalcommits.org/) standard.
 
+## [1.23.0](https://github.com/Danglebz/slave-card-game/compare/v1.22.0...v1.23.0) (2026-07-04)
+
+
+### ✨ Features
+
+* **lobby:** add copyright to the footer ([42f4fcd](https://github.com/Danglebz/slave-card-game/commit/42f4fcda66822b891f5a7d62897b5586565a12af))
+
+
+### 🐛 Bug Fixes
+
+* **client:** harden PWA reconnect and cross-room handling ([0a2a952](https://github.com/Danglebz/slave-card-game/commit/0a2a952d17aefb39a428c798e026a968a2b0db0f))
+* **lobby:** lock the lobby to the viewport so no scrollbar appears ([0ea27de](https://github.com/Danglebz/slave-card-game/commit/0ea27dec96804ae70335234c15bba8e600ecb249))
+* **pwa:** let the lobby scroll on iOS by using min-height, not fixed height ([1ec3921](https://github.com/Danglebz/slave-card-game/commit/1ec39214ebe420439bf2b28cb8dfb0df11ba5503))
+* **server:** recover stalled exchange, stop room-switch orphans, clear dethrone flag ([43ba71c](https://github.com/Danglebz/slave-card-game/commit/43ba71c1078347330d0ac3e04e69a0ffb280aba6))
+
+
+### ♻️ Refactoring
+
+* translate code comments to English ([9c347ec](https://github.com/Danglebz/slave-card-game/commit/9c347ec9b58fc9f3f595e22ac87d182d27bba01c))
+
+
+### 📝 Documentation
+
+* add scaling & load story ([6127f1f](https://github.com/Danglebz/slave-card-game/commit/6127f1fa80cfa10cd730183f10f59c3a94d1e015))
+* note the Render cost reality in the scaling story ([def7dc1](https://github.com/Danglebz/slave-card-game/commit/def7dc19e346684eed0aec6b5a0a4b8706e5f40a))
+* **readme:** add tinyurl.com/scg-dabz short link ([16a73b6](https://github.com/Danglebz/slave-card-game/commit/16a73b6dc61dfe23648b61132c4fbbc471f923ff))
+
 ## [1.22.0](https://github.com/Danglebz/slave-card-game/compare/v1.21.0...v1.22.0) (2026-07-04)
 
 

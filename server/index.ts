@@ -183,10 +183,10 @@ function scheduleBot(room: Room): void {
   if (room.phase === 'playing' && room.players[room.turn]?.isBot) {
     act = () => room.botAct();
   } else if (room.phase === 'exchange' && room.giveTasks) {
-    const pending = Object.keys(room.giveTasks).find(
-      (i) => !room.giveTasks![+i].cards && room.players[+i]?.isBot,
-    );
-    if (pending != null) act = () => room.botGive(+pending);
+    // a bot winner, or a human winner who dropped/left mid-exchange → auto-return their lowest cards
+    // (otherwise a disconnected/AFK winner blocks performExchange and the whole room stalls forever)
+    const pending = room.pendingAutoGiver();
+    if (pending != null) act = () => room.botGive(pending);
   }
   if (!act) return;
   const base = Number(process.env.BOT_MS) || 600;
@@ -294,6 +294,8 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
   socket.on('create', (raw) => {
     const p = parse(CreateSchema, raw);
     if (!p) return;
+    // creating a new room while already in one → leave the old one first (don't orphan the seat)
+    if (joinedCode) detachRoom();
     try {
       const code = makeCode();
       const room = new Room(code);
@@ -317,7 +319,11 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     const { code, name, color } = p;
     try {
       const room = rooms.get(code);
-      if (!room) return err('err.roomNotFound');
+      // send the attempted code back so the client only clears/leaves the room it actually failed on
+      if (!room) return err('err.roomNotFound', { code });
+      // switching to a different room on the same socket → leave the old one first (only once the
+      // target is confirmed to exist, so a stale/dead-room tap can't kick us out of our real room)
+      if (joinedCode && joinedCode !== code) detachRoom();
       room.addPlayer(socket.id, name);
       room.setColor(socket.id, color);
       // cancel room deletion (someone has come back)
@@ -443,16 +449,20 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     if (room && name) dropSub(room.code, name);
   });
 
-  // Leave the room intentionally (button press) — remove the seat if in the lobby, park the seat (offline) if mid-game
-  socket.on('leave', () => {
+  // Detach this socket from its current room (server-side only, no 'left' emit) — remove the seat if
+  // in the lobby, park it (offline) if mid-game. Shared by 'leave' and by create/join when the same
+  // socket switches rooms (otherwise the old seat is orphaned: a phantom connected player that keeps
+  // the room from ever being reaped and, mid-game, keeps auto-acting forever).
+  const detachRoom = (): void => {
     const room = joinedCode ? rooms.get(joinedCode) : undefined;
-    // always send the client back to the lobby
-    socket.emit('left');
-    if (!room) return;
+    if (!room) {
+      joinedCode = null;
+      return;
+    }
     const code = joinedCode!;
     joinedCode = null;
     socket.leave(code);
-    // left on purpose → stop sending push to this seat
+    // stop sending push to this seat
     const leftName = seatName(room);
     if (leftName) dropSub(code, leftName);
     // in case they're a spectator
@@ -479,6 +489,13 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     } else {
       broadcast(room);
     }
+  };
+
+  // Leave the room intentionally (button press) — send the client back to the lobby, then detach
+  socket.on('leave', () => {
+    // always send the client back to the lobby
+    socket.emit('left');
+    detachRoom();
   });
 
   socket.on('disconnect', () => {

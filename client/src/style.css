@@ -1881,6 +1881,27 @@ button.loading:disabled {
 .app-version:empty {
   display: none;
 }
+/* ลิขสิทธิ์ในฟุตเตอร์ล็อบบี้ — โทนจางเข้าชุดกับเลขเวอร์ชัน, ชื่อเป็นลิงก์ไป danglebz.com */
+.lobby-copy {
+  font-size: 0.75rem;
+  color: var(--felt-text-faint);
+}
+.lobby-copy a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.lobby-copy a:hover {
+  color: var(--primary);
+}
+/* จุดคั่นระหว่างลิขสิทธิ์กับเวอร์ชัน */
+.foot-sep {
+  color: var(--felt-text-faint);
+  font-size: 0.75rem;
+  -webkit-user-select: none;
+  user-select: none;
+}
 
 /* ============ Scoreboard (สถิติสะสมข้ามรอบ) ============ */
 .score-empty {

@@ -64,8 +64,9 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright browser
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Install Playwright browsers
+        # chromium = desktop + mobile-chrome (Pixel) · webkit = mobile-safari (iPhone/iOS)
+        run: pnpm exec playwright install --with-deps chromium webkit
 
       - name: Run E2E
         run: pnpm test:e2e

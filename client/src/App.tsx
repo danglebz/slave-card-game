@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type { ErrorMsg, RoomState } from '@shared/types';
 import { socket } from './lib/socket';
 import { useStore } from './store';
 import { LobbyScreen } from './components/LobbyScreen';
@@ -46,8 +47,8 @@ export default function App() {
     socket.io.on('reconnect', onReconnect);
     socket.on('joined', onJoined);
     socket.on('left', onLeft);
-    socket.on('state', (s) => useStore.getState().setRoomState(s));
-    socket.on('errorMsg', (e) => {
+    const onState = (s: RoomState) => useStore.getState().setRoomState(s);
+    const onError = (e: ErrorMsg) => {
       const st = useStore.getState();
       let vars = e.vars;
       // err.mustBeat: server sends the pile's type/len/mode → build the combo name + a contextual bomb hint
@@ -70,7 +71,9 @@ export default function App() {
         };
       }
       st.showToast(t(st.lang, e.key, vars), 'error');
-    });
+    };
+    socket.on('state', onState);
+    socket.on('errorMsg', onError);
 
     // auto-join from ?room=CODE if a previously saved name exists
     const room = new URLSearchParams(location.search).get('room');
@@ -86,8 +89,8 @@ export default function App() {
       socket.io.off('reconnect', onReconnect);
       socket.off('joined', onJoined);
       socket.off('left', onLeft);
-      socket.off('state');
-      socket.off('errorMsg');
+      socket.off('state', onState);
+      socket.off('errorMsg', onError);
     };
   }, []);
 

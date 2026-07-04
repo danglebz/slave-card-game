@@ -2,6 +2,35 @@
 
 This file is generated automatically by [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) following the [Conventional Commits](https://www.conventionalcommits.org/) standard.
 
+## [1.22.0](https://github.com/Danglebz/slave-card-game/compare/v1.21.0...v1.22.0) (2026-07-04)
+
+
+### ✨ Features
+
+* **game:** auto-play any winning last combo, not just single/pair ([b402a47](https://github.com/Danglebz/slave-card-game/commit/b402a47d03c52aa2a9e5ac3fb46b426e9c44c859))
+
+
+### 🐛 Bug Fixes
+
+* **game:** auto-play the last pair, not just the last single card ([3481c3b](https://github.com/Danglebz/slave-card-game/commit/3481c3b2beaae87b6edf1009c393495d72b615f8))
+* **pwa:** auto-rejoin the room on socket reconnect and app resume ([13448bb](https://github.com/Danglebz/slave-card-game/commit/13448bbe9a4fbcdf5e04d3708cb23ca93815d4e9))
+* **pwa:** iOS status bar blends green instead of white ([17071c4](https://github.com/Danglebz/slave-card-game/commit/17071c4ec0d499ef5728c93ce342552fc0c2eb0a))
+* **pwa:** join room reliably when a push notification is tapped ([042b97c](https://github.com/Danglebz/slave-card-game/commit/042b97c5a37c6378127e00446c488cf9b7bd6454))
+* **pwa:** notification opens the installed app, not a Chrome tab ([0709441](https://github.com/Danglebz/slave-card-game/commit/07094419d45977190ef6af8194022983cd74431f))
+* **pwa:** paint html/body green inline so iOS opens without a white flash ([9dc6f2d](https://github.com/Danglebz/slave-card-game/commit/9dc6f2d66fdc8ab89293213f5914a7ba0d085d7d))
+* **pwa:** paint the canvas with felt color so overscroll shows no seam ([3b92e1b](https://github.com/Danglebz/slave-card-game/commit/3b92e1b52d268c8dc25b61136340f72c910fde16))
+* **server:** hold mid-game rooms 5 minutes before cleanup ([77d33e7](https://github.com/Danglebz/slave-card-game/commit/77d33e78b61a078b964e9b1f5e96230e7ecba11b))
+
+
+### ♻️ Refactoring
+
+* **rules:** move core card rules to shared for client reuse ([82bb14f](https://github.com/Danglebz/slave-card-game/commit/82bb14f0ff70df9beca9815bccfd5a68393269fb))
+
+
+### 💄 Styling
+
+* format session.ts with prettier ([b5459ad](https://github.com/Danglebz/slave-card-game/commit/b5459ad91339861762a99930ea0c8a6a2e1cf0e4))
+
 ## [1.21.0](https://github.com/Danglebz/slave-card-game/compare/v1.20.3...v1.21.0) (2026-07-04)
 
 

@@ -2,6 +2,27 @@
 
 This file is generated automatically by [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) following the [Conventional Commits](https://www.conventionalcommits.org/) standard.
 
+## [1.21.0](https://github.com/Danglebz/slave-card-game/compare/v1.20.3...v1.21.0) (2026-07-04)
+
+
+### ✨ Features
+
+* **game:** auto-play the last card when it is a legal move ([4e31a0a](https://github.com/Danglebz/slave-card-game/commit/4e31a0a627978d4358f28f88a55df7911ef1fa53))
+* **game:** tap one card to select the whole pair/triple/quad ([a24cce3](https://github.com/Danglebz/slave-card-game/commit/a24cce355a2fe7c183f0ba8c3ae51ffa4d6bd032))
+* **i18n:** context-aware "must beat" bomb hint ([58ddbb3](https://github.com/Danglebz/slave-card-game/commit/58ddbb3324d16561d12747edb0ce5623217d61e1))
+* **pwa:** web push notifications for turn, start, end, join/leave ([cef89f7](https://github.com/Danglebz/slave-card-game/commit/cef89f7c813a0c795f9302b784812788dcbc9ed6))
+* **rules:** four-of-a-kind now beats straights up to length 5 ([407fd84](https://github.com/Danglebz/slave-card-game/commit/407fd84b9d9375449ca08a0f8be04c1661fc9ab5))
+
+
+### 🐛 Bug Fixes
+
+* **lobby:** disable overscroll bounce on mobile ([19c77b2](https://github.com/Danglebz/slave-card-game/commit/19c77b2384f46d16bd3295a17e72b3ed7e4a2eb7))
+
+
+### 💄 Styling
+
+* **rules:** format RulesModal.tsx with prettier ([d789961](https://github.com/Danglebz/slave-card-game/commit/d789961695c82dbd42cdb604e0b759137ca2807e))
+
 ## [1.20.3](https://github.com/Danglebz/slave-card-game/compare/v1.20.2...v1.20.3) (2026-07-03)
 
 

@@ -7,6 +7,7 @@ import {
   SEAT_LAYOUTS,
   detectCombos,
   sortedHand,
+  smartPick,
   disabledComboTypes,
   rankLabel,
   chipStyle,
@@ -113,5 +114,29 @@ describe('disabledComboTypes', () => {
   it('ปิดหลายชนิดพร้อมกัน', () => {
     const d = disabledComboTypes({ allowTriple: false, allowQuad: false, allowStraight: false });
     expect([...d].sort()).toEqual(['quad', 'straight', 'triple']);
+  });
+});
+
+describe('smartPick (สมาร์ทซีเลกต์คู่/ตอง/โฟร์)', () => {
+  // 7 มีสามใบ (ดอก 0,1,2), 9 กับ 5 มีใบเดียว
+  const hand = [c(7, 0), c(7, 1), c(7, 2), c(9, 0), c(5, 3)];
+
+  it('groupSize < 2 (นำกอง/กองเดี่ยว/เรียง) → null = เลือกทีละใบตามปกติ', () => {
+    expect(smartPick(hand, c(7, 0), 0)).toBeNull();
+    expect(smartPick(hand, c(7, 0), 1)).toBeNull();
+  });
+
+  it('คู่: แตะ 1 ใบ → ได้ 2 ใบ rank เดียวกัน (ใบที่แตะติดเสมอ + เติมดอกต่ำสุด)', () => {
+    expect(smartPick(hand, c(7, 2), 2)).toEqual(['7.2', '7.0']); // แตะดอกสูง → ใบนั้นติด + เติม 7 ดอกต่ำสุด
+    expect(smartPick(hand, c(7, 0), 2)).toEqual(['7.0', '7.1']);
+  });
+
+  it('ตอง: แตะ 1 ใบ → ได้ 3 ใบ rank เดียวกัน', () => {
+    expect(smartPick(hand, c(7, 1), 3)).toEqual(['7.1', '7.0', '7.2']);
+  });
+
+  it('rank ในมือไม่พอ → null (ตกไปเลือกทีละใบ)', () => {
+    expect(smartPick(hand, c(9, 0), 2)).toBeNull(); // มี 9 ใบเดียว ลงคู่ไม่ได้
+    expect(smartPick(hand, c(7, 0), 4)).toBeNull(); // มี 7 สามใบ ขอโฟร์ไม่ได้
   });
 });

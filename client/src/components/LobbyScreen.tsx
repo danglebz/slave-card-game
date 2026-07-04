@@ -30,6 +30,9 @@ function initialColor(): string {
   return c;
 }
 
+// copyright year — dynamic so it never goes stale
+const YEAR = new Date().getFullYear();
+
 export function LobbyScreen() {
   const lang = useStore((s) => s.lang);
   const setLang = useStore((s) => s.setLang);
@@ -288,6 +291,15 @@ export function LobbyScreen() {
           </a>
         </div>
         <footer className="lobby-foot">
+          <span className="lobby-copy">
+            ©&nbsp;{YEAR}{' '}
+            <a href="https://danglebz.com" target="_blank" rel="noopener">
+              Danglebz
+            </a>
+          </span>
+          <span className="foot-sep" aria-hidden="true">
+            ·
+          </span>
           <a
             id="app-version"
             className="app-version"

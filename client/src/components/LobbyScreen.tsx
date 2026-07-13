@@ -2,12 +2,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { socket } from '@/lib/socket';
 import { NameSchema, CodeSchema, validateField } from '@/lib/validation';
-import { Icon } from '@/lib/icons';
+import { Icon, GithubMark } from '@/lib/icons';
 import { useStore } from '@/store';
 import { t, type Lang } from '@/lib/i18n';
 import { progStart, progDone } from '@/lib/progress';
 import { ProgressBar } from './ProgressBar';
 import { RulesModal } from './RulesModal';
+import { SupportSection } from './SupportSection';
 
 // player colors (match Room.COLORS on the server) — stored in localStorage, randomized on first use
 const AVATAR_COLORS = [
@@ -142,154 +143,160 @@ export function LobbyScreen() {
     <>
       <ProgressBar />
       <section id="lobby-screen" className="screen">
-        <div className="card-panel">
-          <div className="lang-switch" role="group" aria-label="Language">
-            {(['th', 'en'] as Lang[]).map((l) => (
-              <button
-                key={l}
-                type="button"
-                data-lang={l}
-                className={l === lang ? 'active' : undefined}
-                onClick={() => setLang(l)}
-              >
-                {l === 'th' ? 'ไทย' : 'EN'}
-              </button>
-            ))}
-          </div>
-          <button
-            id="install-btn"
-            className={`corner-btn corner-install${canInstall ? '' : ' hidden'}`}
-            type="button"
-            title={t(lang, 'lobby.install')}
-            aria-label={t(lang, 'lobby.install')}
-            onClick={onInstall}
-          >
-            <Icon name="download" />
-          </button>
-          <a
-            className="corner-btn corner-tr"
-            href="https://github.com/Danglebz/slave-card-game"
-            target="_blank"
-            rel="noopener"
-            title="GitHub"
-            aria-label="GitHub"
-          >
-            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor">
-              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z" />
-            </svg>
-          </a>
-          <img className="project-logo" src="/logo.png" alt="" aria-hidden="true" />
-          <h1>{t(lang, 'lobby.title')}</h1>
-          <p className="sub">{t(lang, 'lobby.sub')}</p>
-          <div className="field">
-            <div className="input-icon">
-              <Icon name="user" />
-              <input
-                id="name-input"
-                className="text-center"
-                maxLength={16}
-                placeholder={t(lang, 'lobby.name')}
-                autoComplete="off"
-                aria-describedby="name-error"
-                aria-invalid={nameErr ? 'true' : undefined}
-                disabled={busy}
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  setNameErr(null);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') onCreate();
-                }}
-              />
+        {/* hero = the join form, always centred in the first viewport — the support section starts below the fold */}
+        <div className="lobby-hero">
+          <div className="card-panel">
+            <div className="lang-switch" role="group" aria-label="Language">
+              {(['th', 'en'] as Lang[]).map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  data-lang={l}
+                  className={l === lang ? 'active' : undefined}
+                  onClick={() => setLang(l)}
+                >
+                  {l === 'th' ? 'ไทย' : 'EN'}
+                </button>
+              ))}
             </div>
-            <p className="field-error" id="name-error" role="alert">
-              {nameErr && (
-                <>
-                  <Icon name="circle-alert" /> {nameErr}
-                </>
-              )}
-            </p>
-          </div>
-          <button
-            id="create-btn"
-            className={`primary${loading === 'create' ? ' loading' : ''}`}
-            disabled={busy}
-            onClick={onCreate}
-          >
-            {loading === 'create' ? (
-              <>
-                <Icon name="loader-circle" className="spin" /> {t(lang, 'lobby.creating')}
-              </>
-            ) : (
-              <>
-                <Icon name="plus" /> <span>{t(lang, 'lobby.create')}</span>
-              </>
-            )}
-          </button>
-          <div className="divider">
-            <span>{t(lang, 'lobby.or')}</span>
-          </div>
-          <div className="field">
-            <div className="input-group">
-              <span className="input-addon">
-                <Icon name="hash" />
-              </span>
-              <input
-                id="code-input"
-                maxLength={4}
-                placeholder={t(lang, 'lobby.code')}
-                autoComplete="off"
-                aria-describedby="code-error"
-                aria-invalid={codeErr ? 'true' : undefined}
-                disabled={busy}
-                value={code}
-                onChange={(e) => {
-                  setCode(e.target.value);
-                  setCodeErr(null);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') onJoin();
-                }}
-              />
-              <button
-                id="join-btn"
-                className={`primary${loading === 'join' ? ' loading' : ''}`}
-                disabled={busy}
-                onClick={onJoin}
-              >
-                {loading === 'join' ? (
+            <button
+              id="install-btn"
+              className={`corner-btn corner-install${canInstall ? '' : ' hidden'}`}
+              type="button"
+              title={t(lang, 'lobby.install')}
+              aria-label={t(lang, 'lobby.install')}
+              onClick={onInstall}
+            >
+              <Icon name="download" />
+            </button>
+            <a
+              className="corner-btn corner-tr"
+              href="https://github.com/Danglebz/slave-card-game"
+              target="_blank"
+              rel="noopener"
+              title="GitHub"
+              aria-label="GitHub"
+            >
+              <GithubMark />
+            </a>
+            <img className="project-logo" src="/logo.png" alt="" aria-hidden="true" />
+            <h1>{t(lang, 'lobby.title')}</h1>
+            <p className="sub">{t(lang, 'lobby.sub')}</p>
+            <div className="field">
+              <div className="input-icon">
+                <Icon name="user" />
+                <input
+                  id="name-input"
+                  className="text-center"
+                  maxLength={16}
+                  placeholder={t(lang, 'lobby.name')}
+                  autoComplete="off"
+                  aria-describedby="name-error"
+                  aria-invalid={nameErr ? 'true' : undefined}
+                  disabled={busy}
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setNameErr(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') onCreate();
+                  }}
+                />
+              </div>
+              <p className="field-error" id="name-error" role="alert">
+                {nameErr && (
                   <>
-                    <Icon name="loader-circle" className="spin" /> {t(lang, 'lobby.joining')}
-                  </>
-                ) : (
-                  <>
-                    <Icon name="log-in" /> <span>{t(lang, 'lobby.join')}</span>
+                    <Icon name="circle-alert" /> {nameErr}
                   </>
                 )}
-              </button>
+              </p>
             </div>
-            <p className="field-error" id="code-error" role="alert">
-              {codeErr && (
+            <button
+              id="create-btn"
+              className={`primary${loading === 'create' ? ' loading' : ''}`}
+              disabled={busy}
+              onClick={onCreate}
+            >
+              {loading === 'create' ? (
                 <>
-                  <Icon name="circle-alert" /> {codeErr}
+                  <Icon name="loader-circle" className="spin" /> {t(lang, 'lobby.creating')}
+                </>
+              ) : (
+                <>
+                  <Icon name="plus" /> <span>{t(lang, 'lobby.create')}</span>
                 </>
               )}
-            </p>
+            </button>
+            <div className="divider">
+              <span>{t(lang, 'lobby.or')}</span>
+            </div>
+            <div className="field">
+              <div className="input-group">
+                <span className="input-addon">
+                  <Icon name="hash" />
+                </span>
+                <input
+                  id="code-input"
+                  maxLength={4}
+                  placeholder={t(lang, 'lobby.code')}
+                  autoComplete="off"
+                  aria-describedby="code-error"
+                  aria-invalid={codeErr ? 'true' : undefined}
+                  disabled={busy}
+                  value={code}
+                  onChange={(e) => {
+                    setCode(e.target.value);
+                    setCodeErr(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') onJoin();
+                  }}
+                />
+                <button
+                  id="join-btn"
+                  className={`primary${loading === 'join' ? ' loading' : ''}`}
+                  disabled={busy}
+                  onClick={onJoin}
+                >
+                  {loading === 'join' ? (
+                    <>
+                      <Icon name="loader-circle" className="spin" /> {t(lang, 'lobby.joining')}
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="log-in" /> <span>{t(lang, 'lobby.join')}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <p className="field-error" id="code-error" role="alert">
+                {codeErr && (
+                  <>
+                    <Icon name="circle-alert" /> {codeErr}
+                  </>
+                )}
+              </p>
+            </div>
+            <a
+              id="rules-btn"
+              className="link-btn"
+              role="button"
+              tabIndex={0}
+              onClick={() => setRulesOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') setRulesOpen(true);
+              }}
+            >
+              <Icon name="book-open" /> <span>{t(lang, 'lobby.rules')}</span>
+            </a>
           </div>
-          <a
-            id="rules-btn"
-            className="link-btn"
-            role="button"
-            tabIndex={0}
-            onClick={() => setRulesOpen(true)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') setRulesOpen(true);
-            }}
-          >
-            <Icon name="book-open" /> <span>{t(lang, 'lobby.rules')}</span>
+          <a className="scroll-hint" href="#support">
+            <Icon name="coffee" /> <span>{t(lang, 'lobby.scrollHint')}</span>
+            <Icon name="chevron-down" className="scroll-hint-arrow" />
           </a>
         </div>
+        <SupportSection />
         <footer className="lobby-foot">
           <span className="lobby-copy">
             ©&nbsp;{YEAR}{' '}

@@ -250,12 +250,248 @@ button.loading:disabled {
 
 /* ============ Lobby (ฟอร์มกระจกเข้ม) ============ */
 #lobby-screen {
-  /* ล็อกพอดีจอเหมือนหน้าเกม → ไม่มี scrollbar/เลื่อนขึ้น-ลง (pull-to-refresh ที่ body ยังทำงาน) */
-  height: 100dvh;
-  overflow: hidden;
+  /* หน้าแรกเลื่อนได้ (มี section สนับสนุนใต้ fold) — แต่ห้ามเลื่อนแนวนอนเด็ดขาด
+     ฟอร์มยังพอดีจอแรกเสมอเพราะ .lobby-hero กินความสูงเต็ม 100dvh อยู่แล้ว */
+  overflow-x: hidden;
+}
+/* จอแรก: ฟอร์มอยู่กลางจอเป๊ะเหมือนเดิม (ก่อนมี section สนับสนุนใต้ fold) */
+.lobby-hero {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 14px;
   padding: 20px;
+}
+/* ป้ายชวนเลื่อนลง — บอกว่ายังมีของอยู่ข้างล่าง (ไม่งั้นไม่มีใครรู้ว่าเลื่อนได้) */
+.scroll-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--felt-text-soft);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.scroll-hint:hover {
+  color: var(--felt-text);
+  border-color: var(--primary-border);
+}
+.scroll-hint svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+.scroll-hint-arrow {
+  animation: hint-bob 1.8s ease-in-out infinite;
+}
+@keyframes hint-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-hint-arrow {
+    animation: none;
+  }
+}
+
+/* ============ Support — "เกมนี้ฟรี เลี้ยงกาแฟได้" (ใต้ fold ของหน้าแรก) ============ */
+.support {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 8px 20px 40px;
+  text-align: center;
+  color: var(--felt-text);
+}
+.support-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--felt-text-faint);
+}
+.support-title {
+  margin-top: 10px;
+  font-size: clamp(1.35rem, 4vw, 1.85rem);
+  font-weight: 800;
+  line-height: 1.3;
+}
+.support-lead {
+  margin: 10px auto 0;
+  max-width: 560px;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--felt-text-soft);
+}
+.support-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 720px) {
+  .support-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.support-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-lg);
+}
+.support-card h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+.support-card h3 svg {
+  width: 17px;
+  height: 17px;
+  color: var(--primary);
+}
+.support-card-sub {
+  font-size: 0.84rem;
+  color: var(--felt-text-soft);
+}
+/* QR ต้องพื้นขาวเสมอ (สแกนติดชัวร์) + ล็อกขนาด → สลับจำนวนเงินแล้ว layout ไม่กระตุก */
+.support-qr {
+  margin-top: 4px;
+  padding: 10px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+  line-height: 0;
+}
+.support-qr img {
+  display: block;
+  width: 200px;
+  height: 200px;
+}
+.amount-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.amount-chip {
+  min-height: 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--chip-btn-border);
+  background: var(--chip-btn-bg);
+  color: var(--felt-text);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.amount-chip:hover {
+  background: var(--chip-btn-hover);
+}
+.amount-chip.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+/* min-height กันบรรทัดคำใบ้ยาว/สั้นไม่เท่ากันดันการ์ดขยับตอนสลับจำนวน */
+.support-hint {
+  min-height: 1.15em;
+  font-size: 0.78rem;
+  color: var(--felt-text-faint);
+}
+.support-id {
+  min-height: 0;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--glass-field-border);
+  background: var(--glass-field-bg);
+  color: var(--felt-text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.support-id:hover {
+  background: var(--chip-btn-hover);
+}
+.support-id svg {
+  width: 15px;
+  height: 15px;
+  color: var(--felt-text-faint);
+}
+/* การ์ดขวา — ช่วยแบบไม่ต้องจ่าย */
+.support-ways {
+  width: 100%;
+  margin-top: 2px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.support-ways a,
+.support-ways button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 0;
+  padding: 11px 13px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-field-border);
+  background: var(--glass-field-bg);
+  color: var(--felt-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.support-ways a:hover,
+.support-ways button:hover {
+  background: var(--chip-btn-hover);
+  border-color: var(--primary-border);
+}
+.support-ways span {
+  flex: 1;
+}
+.support-ways svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+/* ไอคอนท้ายแถว = ใบ้ว่ากดแล้วเกิดอะไร (คัดลอก/เปิดลิงก์) → จางกว่าไอคอนนำ */
+.support-ways svg:last-child {
+  width: 14px;
+  height: 14px;
+  color: var(--felt-text-faint);
+}
+.support-thanks {
+  margin-top: auto;
+  padding-top: 6px;
+  font-size: 0.8rem;
+  color: var(--felt-text-faint);
 }
 .card-panel {
   position: relative;

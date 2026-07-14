@@ -1,10 +1,25 @@
 // PromptPay payload — a wrong byte here sends money nowhere (or worse, somewhere else),
-// so pin the checksum, the field layout and the amount encoding.
+// so pin the receiver, the checksum, the field layout and the amount encoding.
 import { describe, it, expect } from 'vitest';
-import { crc16, promptPayPayload, formatPromptPayId } from '../../client/src/lib/promptpay';
+import {
+  crc16,
+  promptPayPayload,
+  formatPromptPayId,
+  PROMPTPAY_ID,
+} from '../../client/src/lib/promptpay';
 
-// the receiver used on the lobby's support section
-const PHONE = '086-327-3566';
+// the receiver the donation QR actually pays
+const PHONE = PROMPTPAY_ID;
+
+describe('ผู้รับเงิน (PROMPTPAY_ID)', () => {
+  it('เป็นเบอร์ที่ตั้งใจจะให้เงินเข้า — เลขผิดตัวเดียว = เงินไปเข้าคนอื่น', () => {
+    expect(PROMPTPAY_ID).toBe('085-796-8525');
+  });
+
+  it('QR ที่แอปสร้างจริง เข้ารหัสเบอร์นี้ในรูปแบบสากล (0066 + เบอร์ไม่มี 0 นำ)', () => {
+    expect(promptPayPayload(PROMPTPAY_ID)).toContain('0113' + '0066857968525');
+  });
+});
 
 describe('crc16 (CRC-16/CCITT-FALSE)', () => {
   it('ตรงกับ check value มาตรฐานของอัลกอริทึม', () => {
@@ -28,7 +43,7 @@ describe('promptPayPayload — ไม่ระบุจำนวนเงิน 
 
   it('มี AID ของพร้อมเพย์ และเบอร์ในรูปแบบ 0066XXXXXXXXX', () => {
     // field 29, length 37 = AID (20 chars) + mobile (17 chars)
-    expect(payload).toContain('2937' + '0016A000000677010111' + '0113' + '0066863273566');
+    expect(payload).toContain('2937' + '0016A000000677010111' + '0113' + '0066857968525');
   });
 
   it('มีประเทศ TH + สกุลเงิน THB (764) และไม่มี field จำนวนเงิน (54)', () => {
@@ -80,8 +95,8 @@ describe('promptPayPayload — ชนิดผู้รับ', () => {
   });
 
   it('ตัวคั่นอย่าง - หรือช่องว่างไม่มีผลต่อผลลัพธ์', () => {
-    expect(promptPayPayload('086-327-3566')).toBe(promptPayPayload('0863273566'));
-    expect(promptPayPayload('086 327 3566')).toBe(promptPayPayload('0863273566'));
+    expect(promptPayPayload('085-796-8525')).toBe(promptPayPayload('0857968525'));
+    expect(promptPayPayload('085 796 8525')).toBe(promptPayPayload('0857968525'));
   });
 
   it('id ว่าง → error (กัน QR ที่ชี้ไปไม่ถึงใคร)', () => {
@@ -91,8 +106,8 @@ describe('promptPayPayload — ชนิดผู้รับ', () => {
 });
 
 describe('formatPromptPayId', () => {
-  it('จัดเบอร์ 10 หลักเป็น 086-327-3566', () => {
-    expect(formatPromptPayId('0863273566')).toBe('086-327-3566');
+  it('จัดเบอร์ 10 หลักเป็น 085-796-8525', () => {
+    expect(formatPromptPayId('0857968525')).toBe('085-796-8525');
   });
 
   it('id ชนิดอื่นแสดงตามเดิม', () => {

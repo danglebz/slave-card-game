@@ -1,6 +1,6 @@
 // SupportModal.tsx — "the game is free, a coffee keeps it going" (opened from the lobby)
-// PromptPay only: the QR payload is built client-side (lib/promptpay) so an amount preset can be baked
-// straight into the code — no payment provider, no backend, nothing to leak.
+// PromptPay only: the QR payload is built client-side (lib/promptpay) — no payment provider,
+// no backend, nothing to leak. The QR carries no amount; the payer types one in their banking app.
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import {
@@ -12,15 +12,11 @@ import {
 } from '@/components/ui/dialog';
 import { Icon, GithubMark } from '@/lib/icons';
 import { copyText } from '@/lib/clipboard';
-import { promptPayPayload, formatPromptPayId } from '@/lib/promptpay';
+import { promptPayPayload, formatPromptPayId, PROMPTPAY_ID } from '@/lib/promptpay';
 import { useStore } from '@/store';
 import { t } from '@/lib/i18n';
 
 const REPO = 'https://github.com/Danglebz/slave-card-game';
-// receiver of every donation QR in here
-const PROMPTPAY_ID = '086-327-3566';
-// null = no amount in the QR → the payer types one in their banking app
-const AMOUNTS: (number | null)[] = [null, 20, 50, 100];
 
 export function SupportModal({
   open,
@@ -31,13 +27,12 @@ export function SupportModal({
 }) {
   const lang = useStore((s) => s.lang);
   const showToast = useStore((s) => s.showToast);
-  const [amount, setAmount] = useState<number | null>(null);
   const [qr, setQr] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
     let alive = true;
-    QRCode.toDataURL(promptPayPayload(PROMPTPAY_ID, amount), {
+    QRCode.toDataURL(promptPayPayload(PROMPTPAY_ID), {
       width: 440,
       margin: 1,
       errorCorrectionLevel: 'M',
@@ -48,7 +43,7 @@ export function SupportModal({
     return () => {
       alive = false;
     };
-  }, [open, amount]);
+  }, [open]);
 
   async function onCopyId() {
     const ok = await copyText(PROMPTPAY_ID);
@@ -77,24 +72,7 @@ export function SupportModal({
             <img width={186} height={186} alt={t(lang, 'support.qrAlt')} src={qr ?? undefined} />
           </div>
 
-          <div className="amount-chips" role="group" aria-label={t(lang, 'support.amountLabel')}>
-            {AMOUNTS.map((a) => (
-              <button
-                key={a ?? 'any'}
-                type="button"
-                className={`amount-chip${a === amount ? ' active' : ''}`}
-                aria-pressed={a === amount}
-                onClick={() => setAmount(a)}
-              >
-                {a === null ? t(lang, 'support.amountAny') : `฿${a}`}
-              </button>
-            ))}
-          </div>
-          <p className="support-hint">
-            {amount === null
-              ? t(lang, 'support.hintAny')
-              : t(lang, 'support.hintFixed', { amount: String(amount) })}
-          </p>
+          <p className="support-hint">{t(lang, 'support.hint')}</p>
 
           <button
             type="button"

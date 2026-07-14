@@ -84,7 +84,7 @@ export function SupportModal({
     QRCode.toDataURL(promptPayPayload(PROMPTPAY_ID), {
       width: QR_PX,
       margin: 1,
-      // H = 30% of the code is recoverable → the PromptPay mark can sit on top of the middle
+      // H = 30% of the code is recoverable → the Thai QR mark can sit on top of the middle
       // without breaking the scan. Do NOT drop this to M while a logo is stamped on it.
       errorCorrectionLevel: 'H',
       color: { dark: '#18181b', light: '#ffffff' },
@@ -123,15 +123,13 @@ export function SupportModal({
           </p>
 
           {/* the plate a Thai merchant QR actually looks like — and the number rides on it, so a
-              screenshotted or saved code still says who it pays. Tap the number to copy it.
-              Both marks are the official ones (Wikimedia Commons: Thai QR is CC0, PromptPay is
-              public domain) — the Thai QR one is recoloured to its knockout form for the navy bar. */}
+              screenshotted or saved code still says who it pays. Tap the number to copy it. */}
           <div className="thaiqr">
             <div className="thaiqr-head">
               <img src="/thai-qr-payment.svg" alt="Thai QR Payment" width={132} height={40} />
             </div>
             <div className="thaiqr-body">
-              <img className="promptpay-mark" src="/promptpay.png" alt="PromptPay" />
+              <img className="promptpay-mark" src="/prompt-pay.svg" alt="PromptPay" />
               <img
                 className="thaiqr-qr"
                 width={172}

@@ -10,7 +10,7 @@ import { io as ioClient } from 'socket.io-client';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SERVER = join(__dirname, '..', '..', 'server', 'index.ts');
-// test-only port, avoids clashing with the dev server (3000)
+// test-only port, avoids clashing with the dev server (4000)
 const PORT = 3199;
 const URL = `http://localhost:${PORT}`;
 

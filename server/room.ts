@@ -343,10 +343,18 @@ export class Room {
   }
 
   start(): void {
+    // capture last round's ranking as NAMES before seats change (spectator promotion appends,
+    // players may have left) — remapped to fresh indices below so the ranking survives a
+    // different player count instead of silently resetting the round to first-game rules
+    const prevNames = (Array.isArray(this.finishOrder) ? this.finishOrder : [])
+      .map((i) => this.players[i]?.name)
+      .filter((n): n is string => typeof n === 'string');
     // promote waiting spectators into this round
     this.promoteSpectators();
     if (this.players.length < 2) gerr('err.needTwoStart');
-    const prevOrder = Array.isArray(this.finishOrder) ? this.finishOrder.slice() : [];
+    const prevOrder = prevNames
+      .map((name) => this.players.findIndex((p) => p.name === name))
+      .filter((i) => i >= 0);
     const hands = deal(this.players.length);
     this.players.forEach((p, i) => {
       p.hand = hands[i];
@@ -364,9 +372,10 @@ export class Room {
     this.log = [];
     this.history = [];
     this.giveTasks = null;
-    this._prevOrder = prevOrder.length === this.players.length ? prevOrder : null;
+    // needs at least King + Slave still seated; newcomers simply play this round untitled
+    this._prevOrder = prevOrder.length >= 2 ? prevOrder : null;
     this.addHistory({ event: '🆕 เริ่มรอบใหม่' });
-    // if a previous round covered everyone → enter the "card exchange" phase (manual pick) before play starts
+    // if a previous round produced a ranking → enter the "card exchange" phase (manual pick) before play starts
     if (this._prevOrder) {
       this.setupExchange(this._prevOrder);
     } else {
@@ -379,13 +388,14 @@ export class Room {
     this.phase = 'playing';
     this.giveTasks = null;
     // one-shot flag: clear it here too, so a dethrone re-deal that falls back to the first-game
-    // path (e.g. a spectator promotion changed the player count) can't leak it into a later round
+    // path (fewer than 2 ranked players left after remapping) can't leak it into a later round
     this._miyakoExchange = false;
     const prev = this._prevOrder;
-    if (prev && prev.length === this.players.length) {
+    if (prev && prev.length >= 2) {
       // round 2+: slave leads, no 3♣ required, direction "rotates away from the King"
+      // (prev may be shorter than players — promoted spectators play this round untitled)
       const n = this.players.length;
-      const slave = prev[n - 1];
+      const slave = prev[prev.length - 1];
       const king = prev[0];
       this.turn = slave;
       // skip the "first pile must contain 3♣" condition

@@ -31,13 +31,17 @@ const CARD_DONATE_URL: string = 'https://ko-fi.com/danglebz';
 const QR_PX = 440;
 
 /**
- * Bake the PromptPay mark into the middle of the code, the way bank-issued QRs carry one.
- * Baked, not overlaid with CSS, so it survives a screenshot *and* a save-image.
- * Safe because the code is generated at error-correction level H (30% recoverable) and the mark
- * covers only the centre — never a finder or timing pattern. e2e decodes the stamped PNG to prove
- * it still scans; if you enlarge the mark, re-check that test.
+ * Bake the Thai QR mark into the middle of the code, the way a real merchant QR carries one.
+ * The mark only — the "THAI QR PAYMENT" wordmark is stripped out, because the full logo is 3.3:1
+ * and as a centre stamp it would cover a wide band of modules for text too small to read anyway.
+ * Original colours, not the knockout in the header: the code's background is white.
+ *
+ * Baked on the canvas rather than laid over the image with CSS, so it survives a save-image as well
+ * as a screenshot. Safe because the code is generated at error-correction level H (30% recoverable)
+ * and the mark covers only the centre — never a finder or timing pattern. e2e decodes the stamped
+ * PNG to prove it still scans; if you enlarge the mark, that test is what tells you you went too far.
  */
-async function stampPromptPayMark(qrUrl: string): Promise<string> {
+async function stampThaiQrMark(qrUrl: string): Promise<string> {
   const canvas = document.createElement('canvas');
   canvas.width = QR_PX;
   canvas.height = QR_PX;
@@ -50,11 +54,11 @@ async function stampPromptPayMark(qrUrl: string): Promise<string> {
   ctx.drawImage(qr, 0, 0, QR_PX, QR_PX);
 
   const mark = new Image();
-  mark.src = '/promptpay.png';
+  mark.src = '/thai-qr-mark.svg';
   await mark.decode();
-  const w = QR_PX * 0.27;
+  const w = QR_PX * 0.22;
   const h = (w / mark.naturalWidth) * mark.naturalHeight;
-  const pad = QR_PX * 0.016;
+  const pad = QR_PX * 0.018;
   // white bed under the mark → the modules it covers read as "quiet", not as noise
   ctx.fillStyle = '#fff';
   ctx.fillRect((QR_PX - w) / 2 - pad, (QR_PX - h) / 2 - pad, w + pad * 2, h + pad * 2);
@@ -85,7 +89,7 @@ export function SupportModal({
       errorCorrectionLevel: 'H',
       color: { dark: '#18181b', light: '#ffffff' },
     })
-      .then(stampPromptPayMark)
+      .then(stampThaiQrMark)
       .then((d) => alive && setQr(d))
       .catch(() => alive && setQr(null));
     return () => {

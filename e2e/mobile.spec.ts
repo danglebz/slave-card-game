@@ -19,7 +19,7 @@ async function htmlBg(page: Page) {
   return page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
 }
 
-test('lobby: ไม่จอขาว พื้นเขียว felt ฟอร์มพอดีจอแรก และไม่มี scroll แนวนอน', async ({ page }) => {
+test('lobby: ไม่จอขาว พื้นเขียว felt และไม่มี scrollbar บนมือถือ', async ({ page }) => {
   await page.goto('/');
 
   // ล็อบบี้ต้องแสดง (ไม่ใช่จอขาวว่าง ๆ)
@@ -30,40 +30,38 @@ test('lobby: ไม่จอขาว พื้นเขียว felt ฟอร
   // พื้นหลังต้องถูก paint เป็นสีเขียว felt — guard ของบั๊กจอขาว iOS
   expect(await htmlBg(page)).toBe(FELT_GREEN);
 
-  // แนวนอนห้ามเลื่อนเด็ดขาด (แนวตั้งเลื่อนได้แล้ว — มี section เลี้ยงกาแฟใต้ fold)
-  const { hScroll } = await pageScroll(page);
+  // ไม่มี scroll ทั้งแนวตั้งและแนวนอน
+  const { vScroll, hScroll } = await pageScroll(page);
+  expect(vScroll).toBeLessThanOrEqual(1);
   expect(hScroll).toBeLessThanOrEqual(1);
 
-  // หัวใจของกฎเดิม: ฟอร์มเข้าห้องต้องใช้งานได้ครบใน "จอแรก" โดยไม่ต้องเลื่อน
-  const vh = page.viewportSize()!.height;
-  for (const sel of ['#name-input', '#create-btn', '#code-input', '#join-btn']) {
-    const box = await page.locator(sel).boundingBox();
-    expect(box, `${sel} ต้องมีอยู่จริง`).not.toBeNull();
-    expect(box!.y + box!.height, `${sel} ต้องอยู่ในจอแรก`).toBeLessThanOrEqual(vh);
-  }
-
-  // section เลี้ยงกาแฟอยู่ "ใต้ fold" — ยังไม่เห็นตอนเปิดหน้า แต่เลื่อนลงแล้วต้องเจอ
-  const support = page.locator('#support');
-  await expect(support).not.toBeInViewport();
-  await support.scrollIntoViewIfNeeded();
-  await expect(support).toBeInViewport();
+  // #lobby-screen ต้องมีขนาดจริง (กว้าง/สูง > 0)
+  const box = await page.locator('#lobby-screen').boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.width).toBeGreaterThan(0);
+  expect(box!.height).toBeGreaterThan(0);
 });
 
-test('lobby: QR พร้อมเพย์เรนเดอร์ได้ และปุ่มจำนวนเงินเปลี่ยน QR จริง', async ({ page }) => {
+test('เลี้ยงกาแฟ: เปิด modal แล้ว QR พร้อมเพย์เรนเดอร์ได้ + ปุ่มจำนวนเงินเปลี่ยน QR จริง', async ({
+  page,
+}) => {
   await page.goto('/');
-  await page.locator('#support').scrollIntoViewIfNeeded();
+  await page.click('#support-btn');
 
-  const qr = page.locator('#support .support-qr img');
+  const modal = page.locator('#support-modal');
+  await expect(modal).toBeVisible();
+
   // QR ถูก encode เป็น data URL แล้ว (ไม่ใช่ img ว่าง)
+  const qr = modal.locator('.support-qr img');
   await expect(qr).toHaveAttribute('src', /^data:image\/png;base64,/);
   const staticQr = await qr.getAttribute('src');
 
   // กด ฿100 → payload เปลี่ยน (ฝังจำนวนเงินลง QR) → รูป QR ต้องเปลี่ยนตาม
-  await page.getByRole('button', { name: '฿100' }).click();
+  await modal.getByRole('button', { name: '฿100' }).click();
   await expect(qr).not.toHaveAttribute('src', staticQr!);
-  await expect(page.getByRole('button', { name: '฿100' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(modal.getByRole('button', { name: '฿100' })).toHaveAttribute('aria-pressed', 'true');
 
-  // ยังไม่มี scroll แนวนอนหลุดออกมาจากการ์ด
+  // modal เปิดอยู่ก็ห้ามทำให้หน้าเลื่อนได้
   const { hScroll } = await pageScroll(page);
   expect(hScroll).toBeLessThanOrEqual(1);
 });

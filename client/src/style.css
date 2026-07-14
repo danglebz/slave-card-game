@@ -250,332 +250,19 @@ button.loading:disabled {
 
 /* ============ Lobby (ฟอร์มกระจกเข้ม) ============ */
 #lobby-screen {
-  /* หน้าแรกเลื่อนได้ (มี section สนับสนุนใต้ fold) — แต่ห้ามเลื่อนแนวนอนเด็ดขาด
-     ฟอร์มยังพอดีจอแรกเสมอเพราะ .lobby-hero กินความสูงเต็ม 100dvh อยู่แล้ว */
-  overflow-x: hidden;
-}
-/* จอแรก: ฟอร์มอยู่กลางจอเป๊ะเหมือนเดิม (ก่อนมี section สนับสนุนใต้ fold) */
-.lobby-hero {
-  position: relative;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
+  /* ล็อกพอดีจอเหมือนหน้าเกม → ไม่มี scrollbar/เลื่อนขึ้น-ลง (pull-to-refresh ที่ body ยังทำงาน) */
+  height: 100dvh;
+  overflow: hidden;
   align-items: center;
   justify-content: center;
-  /* เผื่อที่ล่างให้ป้ายชวนเลื่อน → การ์ดฟอร์มไม่ทับกันบนจอเตี้ย */
-  padding: 20px 20px 68px;
+  padding: 20px;
 }
-/* ป้ายชวนเลื่อนลง — เกาะขอบล่างของจอแรก (ไม่ลอยกลางอากาศจนเกิดช่องโบ๋) */
-.scroll-hint {
-  position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--glass-border);
-  background: rgba(0, 0, 0, 0.3);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  color: var(--felt-text-soft);
-  font-size: 0.8rem;
-  font-weight: 600;
-  white-space: nowrap;
-  text-decoration: none;
-  transition:
-    color 0.15s,
-    border-color 0.15s;
-}
-.scroll-hint:hover {
-  color: var(--felt-text);
-  border-color: var(--primary-border);
-}
-.scroll-hint svg {
-  width: 15px;
-  height: 15px;
-  flex: none;
-}
-.scroll-hint-arrow {
-  animation: hint-bob 1.8s ease-in-out infinite;
-}
-@keyframes hint-bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(3px);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .scroll-hint-arrow {
-    animation: none;
-  }
-}
-
-/* ============ Support — "เกมนี้ฟรี เลี้ยงกาแฟได้" (ใต้ fold ของหน้าแรก) ============ */
-/* แถบพื้นเข้มรองทั้ง section → แยกตัวออกจากโต๊ะเขียว ทำให้การ์ดลอยเด่น (ไม่งั้นการ์ดโปร่งจมไปกับพื้น) */
-.support {
-  position: relative;
-  padding: 56px 20px 44px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  background:
-    radial-gradient(120% 70% at 50% 0%, rgba(245, 197, 66, 0.07) 0%, transparent 62%),
-    linear-gradient(180deg, rgba(3, 24, 14, 0.62) 0%, rgba(3, 20, 12, 0.86) 100%);
-}
-.support-inner {
-  width: 100%;
-  max-width: 860px;
-  margin: 0 auto;
-  text-align: center;
-  color: var(--felt-text);
-}
-/* tracking แค่พอดี — ไทยไม่รับ letter-spacing เยอะเท่าอังกฤษ (ดูโปร่งจนหลุด) */
-.support-eyebrow {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--primary);
-  opacity: 0.85;
-}
-/* balance/pretty → บนมือถือหัวข้อไม่ตกบรรทัดเหลือคำเดียวห้อย */
-.support-title {
-  margin-top: 12px;
-  font-size: clamp(1.5rem, 4.4vw, 2.1rem);
-  font-weight: 800;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
-  text-wrap: balance;
-}
-.support-lead {
-  margin: 12px auto 0;
-  max-width: 540px;
-  font-size: 0.94rem;
-  line-height: 1.7;
-  color: var(--felt-text-soft);
-  text-wrap: pretty;
-}
-.support-grid {
-  margin-top: 30px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  align-items: stretch;
-}
-@media (max-width: 760px) {
-  .support {
-    padding: 44px 18px 36px;
-  }
-  .support-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 14px;
-  }
-}
-/* การ์ดทึบ (ไม่ใช่กระจกจางๆ) + ไฮไลต์เส้นบน → อ่านออกว่าเป็นพื้นผิวยกขึ้นมาจริง */
-.support-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 26px 22px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(180deg, rgba(9, 41, 26, 0.9) 0%, rgba(4, 24, 15, 0.94) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 18px 40px rgba(0, 0, 0, 0.34);
-}
-.support-card h3 {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-.support-card h3 svg {
-  width: 18px;
-  height: 18px;
-  color: var(--primary);
-}
-.support-card-sub {
-  margin-top: -4px;
-  font-size: 0.84rem;
-  line-height: 1.55;
-  color: var(--felt-text-soft);
-}
-/* แผ่นขาว = สิ่งที่กล้องอยากได้ + ป้ายกำกับติดไปด้วย (แคปเก็บไว้ก็ยังรู้ว่าโอนให้ใคร) */
-.support-qr {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 9px;
-  margin-top: 2px;
-  padding: 16px 26px 18px;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.3);
-}
-.support-qr-brand {
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #52525b;
-}
-.support-qr img {
-  display: block;
-  width: 180px;
-  height: 180px;
-}
-.amount-chips {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 2px;
-}
-.amount-chip {
-  min-height: 0;
-  padding: 8px 16px;
-  border-radius: 999px;
-  border: 1px solid var(--chip-btn-border);
-  background: var(--chip-btn-bg);
-  color: var(--felt-text-soft);
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-.amount-chip:hover {
-  background: var(--chip-btn-hover);
-  color: var(--felt-text);
-}
-/* เลือกอยู่ = ทองแบบโปร่ง (ปุ่มทองทึบสงวนไว้ให้ "ปุ่มกด" จริงๆ อย่าง CTA) */
-.amount-chip.active {
-  background: var(--primary-soft-2);
-  border-color: var(--primary-border);
-  color: var(--primary);
-}
-.support-id {
-  min-height: 0;
-  gap: 8px;
-  padding: 9px 16px;
-  border-radius: var(--radius-md);
-  border: 1px dashed var(--glass-field-border);
-  background: var(--glass-field-bg);
-  color: var(--felt-text);
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-.support-id:hover {
-  background: var(--chip-btn-hover);
-  border-color: var(--primary-border);
-}
-.support-id svg {
-  width: 15px;
-  height: 15px;
-  color: var(--felt-text-faint);
-}
-/* min-height กันบรรทัดคำใบ้ยาว/สั้นไม่เท่ากันดันการ์ดขยับตอนสลับจำนวน */
-.support-hint {
-  min-height: 1.15em;
-  margin-top: -2px;
-  font-size: 0.78rem;
-  color: var(--felt-text-faint);
-}
-/* จุดยึดสายตาของการ์ดขวา — น้ำหนักเท่า QR ฝั่งตรงข้าม */
-.support-cta {
-  width: 100%;
+/* แถวลิงก์ท้ายฟอร์ม — กติกา · เลี้ยงกาแฟ */
+.card-links {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  margin-top: 4px;
-  padding: 0.7rem 1rem;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(170, 120, 8, 0.55);
-  background: linear-gradient(180deg, #fad760 0%, #f5c542 48%, #e7b01d 100%);
-  color: #3a2c00;
-  font-size: 0.92rem;
-  font-weight: 700;
-  text-decoration: none;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    0 4px 14px rgba(234, 179, 8, 0.3);
-  transition:
-    background 0.15s,
-    transform 0.05s;
-}
-.support-cta:hover {
-  background: linear-gradient(180deg, #fcdd6e 0%, #f8ca49 48%, #eeb924 100%);
-}
-.support-cta:active {
-  transform: scale(0.985);
-}
-.support-cta svg {
-  width: 17px;
-  height: 17px;
-  flex: none;
-}
-.support-ways {
-  width: 100%;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-.support-ways a,
-.support-ways button {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 0;
-  padding: 13px 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--glass-field-border);
-  background: var(--glass-field-bg);
-  color: var(--felt-text);
-  font-size: 0.88rem;
-  font-weight: 600;
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
-}
-.support-ways a:hover,
-.support-ways button:hover {
-  background: var(--chip-btn-hover);
-  border-color: var(--primary-border);
-}
-.support-ways span {
-  flex: 1;
-}
-.support-ways svg {
-  width: 16px;
-  height: 16px;
-  flex: none;
-}
-/* ไอคอนท้ายแถว = ใบ้ว่ากดแล้วเกิดอะไร (คัดลอก/เปิดลิงก์) → จางกว่าไอคอนนำ */
-.support-ways svg:last-child {
-  width: 14px;
-  height: 14px;
-  color: var(--felt-text-faint);
-}
-/* ดันไปชิดขอบล่างการ์ด → ความสูงสองการ์ดจบเสมอกัน ไม่มีรูโหว่กลางการ์ด */
-.support-fine {
-  margin-top: auto;
-  padding-top: 8px;
-  font-size: 0.76rem;
-  line-height: 1.5;
-  color: var(--felt-text-faint);
-}
-.support-thanks {
-  margin-top: 26px;
-  font-size: 0.84rem;
-  color: var(--felt-text-faint);
+  gap: 4px;
 }
 
 .card-panel {
@@ -2120,11 +1807,8 @@ button.loading:disabled {
   background: var(--surface-2);
   color: var(--foreground);
 }
-/* ต่อพื้นเข้มของ section สนับสนุนลงมาจนสุดก้นหน้า — ไม่งั้นมีแถบเขียวสว่างโผล่ใต้แถบเข้ม เหมือนงานพลาด */
 .lobby-foot {
-  margin-top: 0;
-  padding: 0 20px 18px;
-  background: rgba(3, 20, 12, 0.86);
+  margin-top: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2153,6 +1837,163 @@ button.loading:disabled {
 }
 .github-btn svg {
   flex: none;
+}
+
+/* ============ Support modal — "เกมนี้ฟรี เลี้ยงกาแฟได้" (โทนสว่างตาม dialog อื่น) ============ */
+.support-box {
+  max-width: 380px;
+  text-align: center;
+}
+.support-sub {
+  margin: 2px 0 14px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+  text-wrap: pretty;
+}
+/* แผ่นขาว = สิ่งที่กล้องอยากได้ + ป้ายกำกับติดบนแผ่น (แคปเก็บไว้ก็ยังรู้ว่าโอนเข้าใคร) */
+.support-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  margin: 0 auto 12px;
+  padding: 12px 14px 14px;
+  background: #fff;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.support-qr-brand {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--muted-foreground);
+}
+.support-qr img {
+  display: block;
+  width: 186px;
+  height: 186px;
+  image-rendering: pixelated;
+}
+.amount-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+}
+.amount-chip {
+  min-height: 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.amount-chip:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+.amount-chip.active {
+  background: var(--primary-soft);
+  border-color: var(--primary-border);
+  color: var(--primary-foreground);
+}
+/* min-height กันบรรทัดคำใบ้ยาว/สั้นไม่เท่ากันดัน modal ขยับตอนสลับจำนวน */
+.support-hint {
+  min-height: 1.15em;
+  margin: 9px 0 12px;
+  font-size: 0.78rem;
+  color: var(--muted-foreground);
+}
+.support-id {
+  gap: 8px;
+  min-height: 0;
+  margin: 0 auto;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border);
+  background: var(--surface-2);
+  color: var(--foreground);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.support-id:hover {
+  background: var(--hover);
+}
+.support-id .lucide {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--muted-foreground);
+}
+/* เส้นคั่นพร้อมป้ายกลาง (แบบเดียวกับ .divider ของฟอร์ม แต่โทนสว่างของ modal) */
+.support-split {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+.support-split::before,
+.support-split::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.support-ways {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.support-ways a,
+.support-ways button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 0;
+  padding: 11px 13px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--foreground);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.support-ways a:hover,
+.support-ways button:hover {
+  background: var(--hover);
+}
+.support-ways span {
+  flex: 1;
+}
+.support-ways svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+/* ไอคอนท้ายแถว = ใบ้ว่ากดแล้วเกิดอะไร (คัดลอก/เปิดลิงก์) → จางกว่าไอคอนนำ */
+.support-ways svg:last-child {
+  width: 14px;
+  height: 14px;
+  color: var(--muted-foreground);
+}
+.support-fine {
+  margin-top: 14px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
 }
 
 /* กล่องกติกา — เลื่อนอ่านได้ */

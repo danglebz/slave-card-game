@@ -58,9 +58,15 @@ import {
   ArrowUp,
   ArrowDown,
   BarChart3,
+  Coffee,
+  Star,
+  Share2,
+  Bug,
+  ChevronDown,
+  CreditCard,
   type LucideProps,
 } from 'lucide-react';
-import type { ComponentType, ReactNode } from 'react';
+import { useId, type ComponentType, type ReactNode } from 'react';
 
 // icon name (kebab-case) → lucide-react component
 const ICONS: Record<string, ComponentType<LucideProps>> = {
@@ -121,7 +127,75 @@ const ICONS: Record<string, ComponentType<LucideProps>> = {
   frown: Frown,
   meh: Meh,
   'bar-chart': BarChart3,
+  coffee: Coffee,
+  star: Star,
+  'share-2': Share2,
+  bug: Bug,
+  'chevron-down': ChevronDown,
+  'credit-card': CreditCard,
 };
+
+/**
+ * Flags for the language switch — raw SVG, not emoji: 🇹🇭/🇬🇧 are regional-indicator pairs that
+ * Windows renders as the letters "TH"/"GB" instead of a flag.
+ */
+export function FlagTH({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 9 6"
+      preserveAspectRatio="xMidYMid slice"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect width="9" height="6" fill="#a51931" />
+      <rect y="1" width="9" height="4" fill="#f4f5f8" />
+      <rect y="2" width="9" height="2" fill="#2d2a4a" />
+    </svg>
+  );
+}
+
+export function FlagEN({ className }: { className?: string }) {
+  // useId → the clip path can't collide if this ever renders more than once
+  const clip = useId();
+  return (
+    <svg
+      viewBox="0 0 60 30"
+      preserveAspectRatio="xMidYMid slice"
+      className={className}
+      aria-hidden="true"
+    >
+      <clipPath id={clip}>
+        <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" />
+      </clipPath>
+      <rect width="60" height="30" fill="#012169" />
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
+      <path
+        d="M0,0 L60,30 M60,0 L0,30"
+        clipPath={`url(#${clip})`}
+        stroke="#c8102e"
+        strokeWidth="4"
+      />
+      <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
+      <path d="M30,0 v30 M0,15 h60" stroke="#c8102e" strokeWidth="6" />
+    </svg>
+  );
+}
+
+/** GitHub's mark — not in lucide (it's a brand logo), so it lives here as raw SVG for both the lobby and the support section */
+export function GithubMark({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="16"
+      height="16"
+      aria-hidden="true"
+      fill="currentColor"
+      className={className}
+    >
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z" />
+    </svg>
+  );
+}
 
 // emoji → lucide icon name (kebab-case) for messages sent from the server
 const EMOJI_ICON: Record<string, string> = {

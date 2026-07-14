@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// e2e-only port (avoids clashing with dev 3000 / smoke 3199)
+// e2e-only port (avoids clashing with dev 4000 / smoke 3199)
 const PORT = 3100;
 const BASE_URL = `http://localhost:${PORT}`;
 

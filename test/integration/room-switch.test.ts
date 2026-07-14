@@ -10,7 +10,7 @@ import { io as ioClient, type Socket } from 'socket.io-client';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SERVER = join(__dirname, '..', '..', 'server', 'index.ts');
-// unique port + rooms file (avoids smoke 3199 / reconnect 3211 / e2e 3100 / dev 3000)
+// unique port + rooms file (avoids smoke 3199 / reconnect 3211 / e2e 3100 / dev 4000)
 const PORT = 3212;
 const URL = `http://localhost:${PORT}`;
 const ROOMS_FILE = join(__dirname, '..', '..', 'tmp', 'rooms.roomswitch.json');

@@ -257,6 +257,20 @@ button.loading:disabled {
   justify-content: center;
   padding: 20px;
 }
+/* แถวลิงก์ท้ายฟอร์ม — กติกา / เลี้ยงกาแฟ
+   ตัวหนังสืออังกฤษยาวกว่าไทย พอจอแคบเลยเคยตัดคำกลางประโยค ("Rules / How to" + "play")
+   → ห้ามตัดในลิงก์ (nowrap) แล้วให้ทั้งลิงก์ตกลงบรรทัดใหม่ทั้งก้อนแทน */
+.card-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+}
+.card-links .link-btn {
+  white-space: nowrap;
+}
+
 .card-panel {
   position: relative;
   background: var(--glass-bg);
@@ -314,39 +328,58 @@ button.loading:disabled {
   right: 44px;
 }
 /* สวิตช์ภาษามุมบนซ้าย — text จางๆ เข้ากับปุ่มไอคอนมุมอื่น (ไม่มีกล่องพื้นหลัง) */
+/* กล่องสูงเท่า .corner-btn (28px) และจัดกลาง → ธงอยู่แนวเดียวกับไอคอน GitHub/ติดตั้งพอดี
+   (ธงสูงแค่ 15px ถ้าไม่ตั้งความสูงกล่อง มันจะลอยสูงกว่าไอคอนฝั่งขวา ~6px) */
 .lang-switch {
   position: absolute;
   top: 14px;
-  left: 14px;
+  left: 17px;
+  height: 28px;
   z-index: 2;
   display: inline-flex;
   align-items: center;
 }
+/* ธงเป็น SVG (ไม่ใช้ emoji — Windows เรนเดอร์ 🇹🇭 เป็นตัวอักษร "TH") · ที่ไม่ได้เลือก = ขาวดำจางๆ */
 .lang-switch button {
   min-height: 0;
   padding: 0;
   border: none;
   background: none;
-  font-size: 0.78rem;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--felt-text-faint);
+  line-height: 0;
   cursor: pointer;
-  transition: color 0.15s;
+  border-radius: 3px;
+  opacity: 0.45;
+  filter: grayscale(1);
+  transition:
+    opacity 0.15s,
+    filter 0.15s;
+}
+.lang-switch button svg {
+  display: block;
+  width: 22px;
+  height: 15px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28);
 }
 .lang-switch button:not(:first-of-type) {
   margin-left: 7px;
-  padding-left: 7px;
 }
 .lang-switch button:hover:not(.active) {
-  color: var(--felt-text-soft);
+  opacity: 0.85;
+  filter: grayscale(0.35);
   background: none;
 }
 .lang-switch button.active {
-  color: var(--felt-text);
+  opacity: 1;
+  filter: none;
 }
+.lang-switch button.active svg {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.65);
+}
+/* ธงไม่มีข้อความ → คนใช้คีย์บอร์ดต้องเห็นโฟกัสชัด (ของเดิมปิดวงแหวนโฟกัสทิ้ง) */
 .lang-switch button:focus-visible {
-  outline: none;
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
   box-shadow: none;
 }
 .corner-btn svg {
@@ -482,7 +515,8 @@ button.loading:disabled {
   gap: 5px;
   align-self: center;
   margin-top: 2px;
-  padding: 6px 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
   background: none;
   border: none;
   min-height: 0;
@@ -491,10 +525,15 @@ button.loading:disabled {
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
+/* ชี้แล้วเป็นพิลสีทอง — เขียนครอบทั้ง <a> และ <button> ให้เหมือนกัน (ไม่งั้น <button> ไปกิน button:hover สีเทาของ global) */
 .link-btn:hover {
-  color: var(--felt-text);
-  text-decoration: underline;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  text-decoration: none;
 }
 /* ปุ่มติดตั้ง PWA (โผล่เฉพาะตอนติดตั้งได้) */
 .install-btn {
@@ -1829,6 +1868,155 @@ button.loading:disabled {
 }
 .github-btn svg {
   flex: none;
+}
+
+/* ============ Support modal — "เกมนี้ฟรี เลี้ยงกาแฟได้" (โทนสว่างตาม dialog อื่น) ============ */
+.support-box {
+  max-width: 380px;
+  text-align: center;
+}
+.support-sub {
+  margin: 2px 0 14px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+  text-wrap: pretty;
+}
+/* แผ่น QR แบบที่ร้านค้าไทยใช้จริง: แถบน้ำเงิน THAI QR PAYMENT + โลโก้พร้อมเพย์ + QR + เบอร์
+   เบอร์อยู่บนแผ่นด้วย → แคปหน้าจอ/เซฟรูปไปก็ยังรู้ว่าโอนเข้าใคร (และกดที่เบอร์ = คัดลอก) */
+.thaiqr {
+  width: max-content;
+  max-width: 100%;
+  margin: 2px auto 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+/* แถบหัว = สีน้ำเงินทางการของโลโก้เอง (#00427a) → ส่วนที่ถูกเจาะในโลโก้ใช้สีเดียวกันเป๊ะ ไม่มีรอยต่อ */
+.thaiqr-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  background: #00427a;
+}
+.thaiqr-head img {
+  display: block;
+  width: 132px;
+  height: auto;
+}
+.thaiqr-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 16px 14px;
+}
+.promptpay-mark {
+  display: block;
+  width: 104px;
+  height: auto;
+}
+/* เจาะจงเฉพาะรูป QR — ถ้าใช้ `.thaiqr img` มันจะไปบังคับโลโก้ทั้งสองให้เป็น 172×172 ด้วย (โดนยืด)
+   ไม่ใช้ image-rendering: pixelated เพราะย่อจาก 440→172 แล้วโลโก้ตรงกลางจะแตก (ปล่อยให้เบราว์เซอร์ย่อแบบเนียน) */
+.thaiqr-qr {
+  display: block;
+  width: 172px;
+  height: 172px;
+}
+/* แถวเบอร์ = ปุ่มคัดลอกในตัว (เต็มความกว้างของแผ่น มุมล่างโค้งตามแผ่นเพราะ overflow:hidden) */
+.thaiqr-id {
+  width: 100%;
+  gap: 8px;
+  min-height: 0;
+  padding: 10px 12px;
+  border: none;
+  border-top: 1px dashed #d9dee8;
+  border-radius: 0;
+  background: #fff;
+  color: #17233a;
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.thaiqr-id:hover {
+  background: #f2f6fc;
+}
+.thaiqr-id svg {
+  width: 15px;
+  height: 15px;
+  color: #7b8aa3;
+}
+/* เส้นคั่นพร้อมป้ายกลาง (แบบเดียวกับ .divider ของฟอร์ม แต่โทนสว่างของ modal) */
+.support-split {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+.support-split::before,
+.support-split::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.support-ways {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+/* แถวลิงก์ใน modal — ใช้ร่วมทั้งปุ่มจ่ายด้วยบัตรและรายการช่วยแบบไม่ต้องจ่าย */
+.support-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 0;
+  padding: 11px 13px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--foreground);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.support-row:hover {
+  background: var(--hover);
+}
+.support-row span {
+  flex: 1;
+}
+.support-row svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+/* ไอคอนท้ายแถว = ใบ้ว่ากดแล้วเกิดอะไร (คัดลอก/เปิดลิงก์) → จางกว่าไอคอนนำ */
+.support-row svg:last-child {
+  width: 14px;
+  height: 14px;
+  color: var(--muted-foreground);
+}
+/* จ่ายด้วยบัตร = ทางเลือก "รอง" (พร้อมเพย์ฟรี บัตรโดนค่าธรรมเนียม) → อยู่ใต้ QR ไม่เด่นแข่งกัน */
+.support-card-pay {
+  margin-top: 13px;
+}
+
+.support-fine {
+  margin-top: 11px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
 }
 
 /* กล่องกติกา — เลื่อนอ่านได้ */

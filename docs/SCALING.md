@@ -197,10 +197,10 @@ error counts, and wall-clock — exiting non-zero if the error rate is high.
 
 ```bash
 # against a locally running server (pnpm start), 20 rooms × 4 players:
-ROOMS=20 PER=4 node scripts/loadtest.mjs http://localhost:3000
+ROOMS=20 PER=4 node scripts/loadtest.mjs http://localhost:4000
 
 # a quick smoke run:
-ROOMS=3 PER=3 node scripts/loadtest.mjs http://localhost:3000
+ROOMS=3 PER=3 node scripts/loadtest.mjs http://localhost:4000
 ```
 
 Knobs (env or argv): `TARGET`/`argv[2]`, `ROOMS`, `PER`, `ACTIONS`, `DURATION_MS`, `ERROR_RATE_MAX`,

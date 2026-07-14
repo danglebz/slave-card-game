@@ -1,4 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import jsQR from 'jsqr';
+import { PNG } from 'pngjs';
 
 // The felt-green base painted inline in client/index.html (html,body{ background:#0c3f26 })
 const FELT_GREEN = 'rgb(12, 63, 38)';
@@ -40,6 +42,52 @@ test('lobby: ไม่จอขาว พื้นเขียว felt และ
   expect(box).not.toBeNull();
   expect(box!.width).toBeGreaterThan(0);
   expect(box!.height).toBeGreaterThan(0);
+});
+
+test('เลี้ยงกาแฟ: เปิด modal แล้ว QR พร้อมเพย์เรนเดอร์ได้ + โชว์เบอร์ผู้รับที่ถูกต้อง', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.click('#support-btn');
+
+  const modal = page.locator('#support-modal');
+  await expect(modal).toBeVisible();
+
+  // QR ถูก encode เป็น data URL แล้ว (ไม่ใช่ img ว่าง)
+  await expect(modal.locator('.thaiqr-qr')).toHaveAttribute('src', /^data:image\/png;base64,/);
+
+  // เบอร์ผู้รับต้องโชว์บนแผ่น QR ให้ถูก — ผิดตัวเดียว = เงินเข้าคนอื่น
+  await expect(modal.locator('.thaiqr-id')).toContainText('085-796-8525');
+
+  // ปุ่มจ่ายด้วยบัตรต้องชี้ไปหน้า Ko-fi ที่ถูกต้อง — ผิด URL = เงินไปเข้าคนอื่นเหมือนกัน
+  await expect(modal.locator('a.support-card-pay')).toHaveAttribute(
+    'href',
+    'https://ko-fi.com/danglebz',
+  );
+
+  // modal เปิดอยู่ก็ห้ามทำให้หน้าเลื่อนได้
+  const { hScroll } = await pageScroll(page);
+  expect(hScroll).toBeLessThanOrEqual(1);
+});
+
+// เรื่องเงิน: มีโลโก้พร้อมเพย์ทับกลาง QR อยู่ → ถ้าใครขยายโลโก้ หรือลด errorCorrectionLevel จาก 'H'
+// QR จะสแกนไม่ติดแบบเงียบๆ (ไม่มี error ให้เห็น คนโอนไม่ได้แต่เราไม่รู้) → ถอดรหัส "พิกเซลที่เรนเดอร์จริง" มายืนยัน
+test('เลี้ยงกาแฟ: QR ที่มีโลโก้ทับกลาง ยังถอดรหัสได้และชี้ไปเบอร์ที่ถูกต้อง', async ({ page }) => {
+  await page.goto('/');
+  await page.click('#support-btn');
+
+  const qr = page.locator('#support-modal .thaiqr-qr');
+  await expect(qr).toHaveAttribute('src', /^data:image\/png;base64,/);
+
+  // แคปเฉพาะรูป QR ตามขนาดที่แสดงบนจอ = สิ่งที่กล้องมือถือเห็นจริง (เคสโหดสุด)
+  const png = PNG.sync.read(await qr.screenshot());
+  const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
+
+  expect(decoded, 'QR ต้องยังสแกนติดทั้งที่มีโลโก้ทับ').not.toBeNull();
+  // เบอร์ในรูปแบบสากล: 0066 + เบอร์ไม่มี 0 นำ
+  expect(decoded!.data).toContain('0113' + '0066857968525');
+  // ยังเป็น QR แบบไม่ระบุยอด (flag 11) → ผู้โอนพิมพ์จำนวนเงินเอง
+  expect(decoded!.data.startsWith('000201' + '010211')).toBe(true);
 });
 
 test('game: เริ่มเกมบนมือถือแล้วพอดีจอ ไม่มี scroll แนวนอน พื้นยังเขียว', async ({ page }) => {

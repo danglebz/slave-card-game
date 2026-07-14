@@ -257,12 +257,18 @@ button.loading:disabled {
   justify-content: center;
   padding: 20px;
 }
-/* แถวลิงก์ท้ายฟอร์ม — กติกา · เลี้ยงกาแฟ */
+/* แถวลิงก์ท้ายฟอร์ม — กติกา / เลี้ยงกาแฟ
+   ตัวหนังสืออังกฤษยาวกว่าไทย พอจอแคบเลยเคยตัดคำกลางประโยค ("Rules / How to" + "play")
+   → ห้ามตัดในลิงก์ (nowrap) แล้วให้ทั้งลิงก์ตกลงบรรทัดใหม่ทั้งก้อนแทน */
 .card-links {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+}
+.card-links .link-btn {
+  white-space: nowrap;
 }
 
 .card-panel {
@@ -330,31 +336,47 @@ button.loading:disabled {
   display: inline-flex;
   align-items: center;
 }
+/* ธงเป็น SVG (ไม่ใช้ emoji — Windows เรนเดอร์ 🇹🇭 เป็นตัวอักษร "TH") · ที่ไม่ได้เลือก = ขาวดำจางๆ */
 .lang-switch button {
   min-height: 0;
   padding: 0;
   border: none;
   background: none;
-  font-size: 0.78rem;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--felt-text-faint);
+  line-height: 0;
   cursor: pointer;
-  transition: color 0.15s;
+  border-radius: 3px;
+  opacity: 0.45;
+  filter: grayscale(1);
+  transition:
+    opacity 0.15s,
+    filter 0.15s;
+}
+.lang-switch button svg {
+  display: block;
+  width: 22px;
+  height: 15px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28);
 }
 .lang-switch button:not(:first-of-type) {
   margin-left: 7px;
-  padding-left: 7px;
 }
 .lang-switch button:hover:not(.active) {
-  color: var(--felt-text-soft);
+  opacity: 0.85;
+  filter: grayscale(0.35);
   background: none;
 }
 .lang-switch button.active {
-  color: var(--felt-text);
+  opacity: 1;
+  filter: none;
 }
+.lang-switch button.active svg {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.65);
+}
+/* ธงไม่มีข้อความ → คนใช้คีย์บอร์ดต้องเห็นโฟกัสชัด (ของเดิมปิดวงแหวนโฟกัสทิ้ง) */
 .lang-switch button:focus-visible {
-  outline: none;
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
   box-shadow: none;
 }
 .corner-btn svg {

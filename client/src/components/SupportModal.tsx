@@ -19,8 +19,8 @@ import { t } from '@/lib/i18n';
 const REPO = 'https://github.com/Danglebz/slave-card-game';
 
 /**
- * Card / PayPal donations for people who have no Thai banking app. Empty = the row is hidden, so a
- * missing page can never ship as a dead link.
+ * Card donations for people who have no Thai banking app. Empty = the row is hidden, so a missing
+ * page can never ship as a dead link.
  *
  * Deliberately the *secondary* channel: cards cost ~3.65% + THB 10 per donation, PromptPay costs
  * nothing, so anyone who can scan the QR is told to scan the QR.

@@ -66,7 +66,7 @@ import {
   CreditCard,
   type LucideProps,
 } from 'lucide-react';
-import type { ComponentType, ReactNode } from 'react';
+import { useId, type ComponentType, type ReactNode } from 'react';
 
 // icon name (kebab-case) → lucide-react component
 const ICONS: Record<string, ComponentType<LucideProps>> = {
@@ -134,6 +134,52 @@ const ICONS: Record<string, ComponentType<LucideProps>> = {
   'chevron-down': ChevronDown,
   'credit-card': CreditCard,
 };
+
+/**
+ * Flags for the language switch — raw SVG, not emoji: 🇹🇭/🇬🇧 are regional-indicator pairs that
+ * Windows renders as the letters "TH"/"GB" instead of a flag.
+ */
+export function FlagTH({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 9 6"
+      preserveAspectRatio="xMidYMid slice"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect width="9" height="6" fill="#a51931" />
+      <rect y="1" width="9" height="4" fill="#f4f5f8" />
+      <rect y="2" width="9" height="2" fill="#2d2a4a" />
+    </svg>
+  );
+}
+
+export function FlagEN({ className }: { className?: string }) {
+  // useId → the clip path can't collide if this ever renders more than once
+  const clip = useId();
+  return (
+    <svg
+      viewBox="0 0 60 30"
+      preserveAspectRatio="xMidYMid slice"
+      className={className}
+      aria-hidden="true"
+    >
+      <clipPath id={clip}>
+        <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" />
+      </clipPath>
+      <rect width="60" height="30" fill="#012169" />
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
+      <path
+        d="M0,0 L60,30 M60,0 L0,30"
+        clipPath={`url(#${clip})`}
+        stroke="#c8102e"
+        strokeWidth="4"
+      />
+      <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10" />
+      <path d="M30,0 v30 M0,15 h60" stroke="#c8102e" strokeWidth="6" />
+    </svg>
+  );
+}
 
 /** GitHub's mark — not in lucide (it's a brand logo), so it lives here as raw SVG for both the lobby and the support section */
 export function GithubMark({ className }: { className?: string }) {

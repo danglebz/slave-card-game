@@ -63,6 +63,7 @@ import {
   Share2,
   Bug,
   ChevronDown,
+  CreditCard,
   type LucideProps,
 } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
@@ -131,6 +132,7 @@ const ICONS: Record<string, ComponentType<LucideProps>> = {
   'share-2': Share2,
   bug: Bug,
   'chevron-down': ChevronDown,
+  'credit-card': CreditCard,
 };
 
 /** GitHub's mark — not in lucide (it's a brand logo), so it lives here as raw SVG for both the lobby and the support section */

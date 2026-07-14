@@ -20,16 +20,16 @@ pnpm build        # build client (Vite → dist/)
 pnpm start        # รันเซิร์ฟเวอร์ (เสิร์ฟ dist/)
 ```
 
-> **โหมด dev (มี hot-reload):** เปิด 2 เทอร์มินัล — `pnpm dev:server` (Fastify+Socket.IO :3000, tsx watch) และ `pnpm dev` (Vite :5173 พร้อม HMR, proxy WebSocket ให้)
+> **โหมด dev (มี hot-reload):** เปิด 2 เทอร์มินัล — `pnpm dev:server` (Fastify+Socket.IO :4000, tsx watch) และ `pnpm dev` (Vite :5173 พร้อม HMR, proxy WebSocket ให้)
 
 เปิดลิงก์ที่ขึ้นในเทอร์มินัล เช่น:
 
 ```
-   เครื่องนี้:   http://localhost:3000
-   ในออฟฟิศ:   http://192.168.1.50:3000   ← ส่งลิงก์นี้ให้เพื่อน
+   เครื่องนี้:   http://localhost:4000
+   ในออฟฟิศ:   http://192.168.1.50:4000   ← ส่งลิงก์นี้ให้เพื่อน
 ```
 
-เพื่อนที่ Wi-Fi เดียวกันเปิดลิงก์ `http://<ไอพีเครื่องคุณ>:3000` ได้เลย ไม่ต้องลงอะไร
+เพื่อนที่ Wi-Fi เดียวกันเปิดลิงก์ `http://<ไอพีเครื่องคุณ>:4000` ได้เลย ไม่ต้องลงอะไร
 เปลี่ยนพอร์ตได้ด้วย `PORT=8080 pnpm start`
 
 ---
@@ -186,10 +186,10 @@ dist/                        ผลลัพธ์ build (gitignored) — Fastif
 pnpm start          # รันเซิร์ฟเวอร์ก่อน (หรือชี้ TARGET ไปที่ deploy จริง)
 
 # 20 ห้อง × 4 คน
-ROOMS=20 PER=4 node scripts/loadtest.mjs http://localhost:3000
+ROOMS=20 PER=4 node scripts/loadtest.mjs http://localhost:4000
 
 # smoke สั้น ๆ
-ROOMS=3 PER=3 node scripts/loadtest.mjs http://localhost:3000
+ROOMS=3 PER=3 node scripts/loadtest.mjs http://localhost:4000
 ```
 
 > ปุ่มปรับ (env/argv): `TARGET`/`argv[2]`, `ROOMS`, `PER`, `ACTIONS`, `DURATION_MS`, `ERROR_RATE_MAX`, `CONNECT_TIMEOUT`

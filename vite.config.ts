@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
@@ -22,7 +22,11 @@ const ANALYTICS_DOMAIN = process.env.ANALYTICS_DOMAIN || '';
 // Umami: data-website-id
 const ANALYTICS_WEBSITE_ID = process.env.ANALYTICS_WEBSITE_ID || '';
 
-// client (vanilla JS) lives in client/, builds out to dist/ (served by Express)
+// API port for the dev proxy — read from .env (same file tsx feeds the server) so the two can never
+// drift apart; PORT in the shell still wins. Keep in sync with the default in server/index.ts.
+const API_PORT = Number(loadEnv('development', process.cwd(), '').PORT) || 4000;
+
+// client (vanilla JS) lives in client/, builds out to dist/ (served by Fastify)
 export default defineConfig({
   root: 'client',
   define: {
@@ -46,10 +50,10 @@ export default defineConfig({
     // 'hidden' = generate .map to upload to Sentry but don't embed sourceMappingURL (browser won't load it)
     sourcemap: SENTRY_DSN ? 'hidden' : false,
   },
-  // dev: vite (:5173) proxies WebSocket to Express+Socket.IO (:3000)
+  // dev: vite (:5173) proxies WebSocket to Fastify+Socket.IO (:4000 by default)
   server: {
     proxy: {
-      '/socket.io': { target: 'http://localhost:3000', ws: true },
+      '/socket.io': { target: `http://localhost:${API_PORT}`, ws: true },
     },
   },
 });

@@ -27,7 +27,7 @@ import {
 import type { ClientToServerEvents, ServerToClientEvents } from '../shared/types';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT) || 4000;
 const SAVE_PATH = process.env.ROOMS_FILE || join(__dirname, '..', 'rooms.json');
 // client built by Vite
 const CLIENT_DIR = join(__dirname, '..', 'dist');

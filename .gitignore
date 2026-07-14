@@ -31,3 +31,6 @@ coverage/
 test-results/
 playwright-report/
 playwright/.cache/
+
+# Playwright MCP scratch output (snapshots/screenshots from browser tooling)
+.playwright-mcp/

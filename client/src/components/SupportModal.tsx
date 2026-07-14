@@ -149,8 +149,6 @@ export function SupportModal({
             </button>
           </div>
 
-          <p className="support-hint">{t(lang, 'support.hint')}</p>
-
           {/* no Thai banking app → cards. Hidden until CARD_DONATE_URL is set, so no dead link ships. */}
           {CARD_DONATE_URL && (
             <a

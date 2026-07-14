@@ -1949,11 +1949,6 @@ button.loading:disabled {
   height: 15px;
   color: #7b8aa3;
 }
-.support-hint {
-  margin: 11px 0 0;
-  font-size: 0.78rem;
-  color: var(--muted-foreground);
-}
 /* เส้นคั่นพร้อมป้ายกลาง (แบบเดียวกับ .divider ของฟอร์ม แต่โทนสว่างของ modal) */
 .support-split {
   display: flex;

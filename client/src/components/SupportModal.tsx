@@ -27,6 +27,42 @@ const REPO = 'https://github.com/Danglebz/slave-card-game';
  */
 const CARD_DONATE_URL: string = 'https://ko-fi.com/danglebz';
 
+// the code is encoded at this size, then displayed smaller — a phone camera reads the downscaled one fine
+const QR_PX = 440;
+
+/**
+ * Bake the PromptPay mark into the middle of the code, the way bank-issued QRs carry one.
+ * Baked, not overlaid with CSS, so it survives a screenshot *and* a save-image.
+ * Safe because the code is generated at error-correction level H (30% recoverable) and the mark
+ * covers only the centre — never a finder or timing pattern. e2e decodes the stamped PNG to prove
+ * it still scans; if you enlarge the mark, re-check that test.
+ */
+async function stampPromptPayMark(qrUrl: string): Promise<string> {
+  const canvas = document.createElement('canvas');
+  canvas.width = QR_PX;
+  canvas.height = QR_PX;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return qrUrl;
+
+  const qr = new Image();
+  qr.src = qrUrl;
+  await qr.decode();
+  ctx.drawImage(qr, 0, 0, QR_PX, QR_PX);
+
+  const mark = new Image();
+  mark.src = '/promptpay.png';
+  await mark.decode();
+  const w = QR_PX * 0.27;
+  const h = (w / mark.naturalWidth) * mark.naturalHeight;
+  const pad = QR_PX * 0.016;
+  // white bed under the mark → the modules it covers read as "quiet", not as noise
+  ctx.fillStyle = '#fff';
+  ctx.fillRect((QR_PX - w) / 2 - pad, (QR_PX - h) / 2 - pad, w + pad * 2, h + pad * 2);
+  ctx.drawImage(mark, (QR_PX - w) / 2, (QR_PX - h) / 2, w, h);
+
+  return canvas.toDataURL('image/png');
+}
+
 export function SupportModal({
   open,
   onOpenChange,
@@ -42,11 +78,14 @@ export function SupportModal({
     if (!open) return;
     let alive = true;
     QRCode.toDataURL(promptPayPayload(PROMPTPAY_ID), {
-      width: 440,
+      width: QR_PX,
       margin: 1,
-      errorCorrectionLevel: 'M',
+      // H = 30% of the code is recoverable → the PromptPay mark can sit on top of the middle
+      // without breaking the scan. Do NOT drop this to M while a logo is stamped on it.
+      errorCorrectionLevel: 'H',
       color: { dark: '#18181b', light: '#ffffff' },
     })
+      .then(stampPromptPayMark)
       .then((d) => alive && setQr(d))
       .catch(() => alive && setQr(null));
     return () => {
@@ -80,25 +119,22 @@ export function SupportModal({
           </p>
 
           {/* the plate a Thai merchant QR actually looks like — and the number rides on it, so a
-              screenshotted or saved code still says who it pays. Tap the number to copy it. */}
+              screenshotted or saved code still says who it pays. Tap the number to copy it.
+              Both marks are the official ones (Wikimedia Commons: Thai QR is CC0, PromptPay is
+              public domain) — the Thai QR one is recoloured to its knockout form for the navy bar. */}
           <div className="thaiqr">
             <div className="thaiqr-head">
-              <Icon name="qr-code" />
-              <span>
-                THAI QR
-                <br />
-                PAYMENT
-              </span>
+              <img src="/thai-qr-payment.svg" alt="Thai QR Payment" width={132} height={40} />
             </div>
             <div className="thaiqr-body">
-              <span className="promptpay-mark">
-                <span className="pp-th">พร้อมเพย์</span>
-                <span className="pp-en">
-                  <b>Prompt</b>
-                  <i>Pay</i>
-                </span>
-              </span>
-              <img width={172} height={172} alt={t(lang, 'support.qrAlt')} src={qr ?? undefined} />
+              <img className="promptpay-mark" src="/promptpay.png" alt="PromptPay" />
+              <img
+                className="thaiqr-qr"
+                width={172}
+                height={172}
+                alt={t(lang, 'support.qrAlt')}
+                src={qr ?? undefined}
+              />
             </div>
             <button
               type="button"

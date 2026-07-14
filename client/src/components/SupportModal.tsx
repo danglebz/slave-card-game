@@ -18,6 +18,15 @@ import { t } from '@/lib/i18n';
 
 const REPO = 'https://github.com/Danglebz/slave-card-game';
 
+/**
+ * Card / PayPal donations for people who have no Thai banking app — paste the Ko-fi page URL here
+ * (e.g. https://ko-fi.com/danglebz) and the row appears. Empty = hidden, so there is never a dead link.
+ *
+ * Deliberately the *secondary* channel: cards cost ~3.65% + THB 10 per donation, PromptPay costs
+ * nothing, so anyone who can scan the QR is told to scan the QR.
+ */
+const CARD_DONATE_URL: string = '';
+
 export function SupportModal({
   open,
   onOpenChange,
@@ -84,27 +93,39 @@ export function SupportModal({
             <span>{formatPromptPayId(PROMPTPAY_ID)}</span>
           </button>
 
+          {/* no Thai banking app → cards. Hidden until CARD_DONATE_URL is set, so no dead link ships. */}
+          {CARD_DONATE_URL && (
+            <div className="support-card-pay">
+              <a className="support-row" href={CARD_DONATE_URL} target="_blank" rel="noopener">
+                <Icon name="credit-card" />
+                <span>{t(lang, 'support.card')}</span>
+                <Icon name="link" />
+              </a>
+              <p className="support-hint">{t(lang, 'support.cardNote')}</p>
+            </div>
+          )}
+
           <div className="support-split">
             <span>{t(lang, 'support.freeTitle')}</span>
           </div>
 
           <ul className="support-ways">
             <li>
-              <a href={REPO} target="_blank" rel="noopener">
+              <a className="support-row" href={REPO} target="_blank" rel="noopener">
                 <GithubMark />
                 <span>{t(lang, 'support.waysStar')}</span>
                 <Icon name="star" />
               </a>
             </li>
             <li>
-              <button type="button" onClick={onShare}>
+              <button type="button" className="support-row" onClick={onShare}>
                 <Icon name="share-2" />
                 <span>{t(lang, 'support.waysShare')}</span>
                 <Icon name="copy" />
               </button>
             </li>
             <li>
-              <a href={`${REPO}/issues`} target="_blank" rel="noopener">
+              <a className="support-row" href={`${REPO}/issues`} target="_blank" rel="noopener">
                 <Icon name="bug" />
                 <span>{t(lang, 'support.waysIssue')}</span>
                 <Icon name="link" />

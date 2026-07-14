@@ -1932,8 +1932,8 @@ button.loading:disabled {
   flex-direction: column;
   gap: 7px;
 }
-.support-ways a,
-.support-ways button {
+/* แถวลิงก์ใน modal — ใช้ร่วมทั้งปุ่มจ่ายด้วยบัตรและรายการช่วยแบบไม่ต้องจ่าย */
+.support-row {
   width: 100%;
   display: flex;
   align-items: center;
@@ -1950,24 +1950,31 @@ button.loading:disabled {
   text-decoration: none;
   cursor: pointer;
 }
-.support-ways a:hover,
-.support-ways button:hover {
+.support-row:hover {
   background: var(--hover);
 }
-.support-ways span {
+.support-row span {
   flex: 1;
 }
-.support-ways svg {
+.support-row svg {
   width: 16px;
   height: 16px;
   flex: none;
 }
 /* ไอคอนท้ายแถว = ใบ้ว่ากดแล้วเกิดอะไร (คัดลอก/เปิดลิงก์) → จางกว่าไอคอนนำ */
-.support-ways svg:last-child {
+.support-row svg:last-child {
   width: 14px;
   height: 14px;
   color: var(--muted-foreground);
 }
+/* จ่ายด้วยบัตร = ทางเลือก "รอง" (พร้อมเพย์ฟรี บัตรโดนค่าธรรมเนียม) → อยู่ใต้เบอร์ ไม่เด่นแข่งกับ QR */
+.support-card-pay {
+  margin-top: 14px;
+}
+.support-card-pay .support-hint {
+  margin: 7px 0 0;
+}
+
 .support-fine {
   margin-top: 14px;
   font-size: 0.72rem;

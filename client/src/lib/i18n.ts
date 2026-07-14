@@ -26,7 +26,7 @@ const DICT: Record<Lang, Record<string, string>> = {
     'support.hint': 'สแกนแล้วใส่จำนวนเงินเองในแอปธนาคาร',
     'support.copyId': 'คัดลอกเบอร์พร้อมเพย์',
     'support.copied': 'คัดลอกเบอร์พร้อมเพย์แล้ว',
-    'support.card': 'จ่ายด้วยบัตร / PayPal',
+    'support.card': 'จ่ายด้วยบัตร',
     'support.cardNote': 'สำหรับคนที่ไม่มีแอปธนาคารไทย — อยู่ไทยสแกน QR ดีกว่า ไม่เสียค่าธรรมเนียม',
     'support.freeTitle': 'หรือช่วยแบบไม่ต้องจ่าย',
     'support.waysStar': 'กดดาวให้บน GitHub',
@@ -202,7 +202,7 @@ const DICT: Record<Lang, Record<string, string>> = {
     'support.hint': 'Scan it, then type any amount in your banking app.',
     'support.copyId': 'Copy PromptPay number',
     'support.copied': 'PromptPay number copied',
-    'support.card': 'Pay by card / PayPal',
+    'support.card': 'Pay by card',
     'support.cardNote':
       'For anyone without a Thai banking app — in Thailand, the QR is free of fees.',
     'support.freeTitle': 'Or help for free',

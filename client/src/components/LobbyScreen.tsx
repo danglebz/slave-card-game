@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { socket } from '@/lib/socket';
 import { NameSchema, CodeSchema, validateField } from '@/lib/validation';
-import { Icon, GithubMark } from '@/lib/icons';
+import { Icon, GithubMark, FlagTH, FlagEN } from '@/lib/icons';
 import { useStore } from '@/store';
 import { t, type Lang } from '@/lib/i18n';
 import { progStart, progDone } from '@/lib/progress';
@@ -152,9 +152,13 @@ export function LobbyScreen() {
                 type="button"
                 data-lang={l}
                 className={l === lang ? 'active' : undefined}
+                // the flag carries no text, so the label has to come from here
+                aria-label={l === 'th' ? 'ภาษาไทย' : 'English'}
+                title={l === 'th' ? 'ภาษาไทย' : 'English'}
+                aria-pressed={l === lang}
                 onClick={() => setLang(l)}
               >
-                {l === 'th' ? 'ไทย' : 'EN'}
+                {l === 'th' ? <FlagTH /> : <FlagEN />}
               </button>
             ))}
           </div>
@@ -290,9 +294,6 @@ export function LobbyScreen() {
             >
               <Icon name="book-open" /> <span>{t(lang, 'lobby.rules')}</span>
             </a>
-            <span className="foot-sep" aria-hidden="true">
-              ·
-            </span>
             <button id="support-btn" className="link-btn" onClick={() => setSupportOpen(true)}>
               <Icon name="coffee" /> <span>{t(lang, 'lobby.support')}</span>
             </button>

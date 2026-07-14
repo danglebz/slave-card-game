@@ -490,7 +490,8 @@ button.loading:disabled {
   gap: 5px;
   align-self: center;
   margin-top: 2px;
-  padding: 6px 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
   background: none;
   border: none;
   min-height: 0;
@@ -499,10 +500,15 @@ button.loading:disabled {
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
+/* ชี้แล้วเป็นพิลสีทอง — เขียนครอบทั้ง <a> และ <button> ให้เหมือนกัน (ไม่งั้น <button> ไปกิน button:hover สีเทาของ global) */
 .link-btn:hover {
-  color: var(--felt-text);
-  text-decoration: underline;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  text-decoration: none;
 }
 /* ปุ่มติดตั้ง PWA (โผล่เฉพาะตอนติดตั้งได้) */
 .install-btn {
@@ -1877,35 +1883,8 @@ button.loading:disabled {
   height: 186px;
   image-rendering: pixelated;
 }
-.amount-chips {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 7px;
-}
-.amount-chip {
-  min-height: 0;
-  padding: 7px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--muted-foreground);
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-.amount-chip:hover {
-  background: var(--hover);
-  color: var(--foreground);
-}
-.amount-chip.active {
-  background: var(--primary-soft);
-  border-color: var(--primary-border);
-  color: var(--primary-foreground);
-}
-/* min-height กันบรรทัดคำใบ้ยาว/สั้นไม่เท่ากันดัน modal ขยับตอนสลับจำนวน */
 .support-hint {
-  min-height: 1.15em;
-  margin: 9px 0 12px;
+  margin: 12px 0;
   font-size: 0.78rem;
   color: var(--muted-foreground);
 }

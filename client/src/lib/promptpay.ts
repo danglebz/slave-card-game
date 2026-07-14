@@ -12,6 +12,12 @@
 
 const AID_PROMPTPAY = 'A000000677010111';
 
+/**
+ * Who every donation QR in this app pays. Lives here (not in the component) so it has exactly one
+ * home and a unit test can pin it — a wrong digit silently sends people's money to a stranger.
+ */
+export const PROMPTPAY_ID = '085-796-8525';
+
 function tlv(id: string, value: string): string {
   return id + String(value.length).padStart(2, '0') + value;
 }
@@ -35,7 +41,7 @@ function subFieldId(digits: string): '01' | '02' | '03' {
   return '01';
 }
 
-// mobile: drop the leading 0, prefix the country code, left-pad to 13 → 0863273566 becomes 0066863273566
+// mobile: drop the leading 0, prefix the country code, left-pad to 13 → 0857968525 becomes 0066857968525
 // IDs of 13+ digits are already in their final form
 function formatTarget(digits: string): string {
   if (digits.length >= 13) return digits;
@@ -63,7 +69,7 @@ export function promptPayPayload(id: string, amount?: number | null): string {
   return `${body}6304${crc16(`${body}6304`)}`;
 }
 
-// 0863273566 → 086-327-3566 (display only; other id types are shown as-is)
+// 0857968525 → 085-796-8525 (display only; other id types are shown as-is)
 export function formatPromptPayId(id: string): string {
   const d = id.replace(/\D/g, '');
   return d.length === 10 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : id;

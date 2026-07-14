@@ -48,89 +48,105 @@ export function SupportSection() {
 
   return (
     <section id="support" className="support">
-      <p className="support-eyebrow">{t(lang, 'support.eyebrow')}</p>
-      <h2 className="support-title">{t(lang, 'support.title')}</h2>
-      <p className="support-lead">{t(lang, 'support.lead')}</p>
+      <div className="support-inner">
+        <p className="support-eyebrow">{t(lang, 'support.eyebrow')}</p>
+        <h2 className="support-title">{t(lang, 'support.title')}</h2>
+        <p className="support-lead">{t(lang, 'support.lead')}</p>
 
-      <div className="support-grid">
-        <div className="support-card">
-          <h3>
-            <Icon name="qr-code" /> {t(lang, 'support.qrTitle')}
-          </h3>
-          <p className="support-card-sub">{t(lang, 'support.qrSub')}</p>
+        <div className="support-grid">
+          <div className="support-card">
+            <h3>
+              <Icon name="qr-code" /> {t(lang, 'support.qrTitle')}
+            </h3>
+            <p className="support-card-sub">{t(lang, 'support.qrSub')}</p>
 
-          <div className="support-qr">
-            {/* keep the box reserved while the QR encodes → the section never jumps on amount change */}
-            <img width={200} height={200} alt={t(lang, 'support.qrAlt')} src={qr ?? undefined} />
+            {/* white plate = what a camera wants; the label rides along so a saved/screenshotted QR still says who it pays */}
+            <div className="support-qr">
+              <span className="support-qr-brand">
+                PromptPay · {formatPromptPayId(PROMPTPAY_ID)}
+              </span>
+              <img width={180} height={180} alt={t(lang, 'support.qrAlt')} src={qr ?? undefined} />
+            </div>
+
+            <div
+              className="amount-chips"
+              role="group"
+              aria-label={t(lang, 'support.amountLabel')}
+              data-testid="amount-chips"
+            >
+              {AMOUNTS.map((a) => (
+                <button
+                  key={a ?? 'any'}
+                  type="button"
+                  className={`amount-chip${a === amount ? ' active' : ''}`}
+                  aria-pressed={a === amount}
+                  onClick={() => setAmount(a)}
+                >
+                  {a === null ? t(lang, 'support.amountAny') : `฿${a}`}
+                </button>
+              ))}
+            </div>
+
+            {/* the hint explains the chips right above it, so it stays glued to them */}
+            <p className="support-hint">
+              {amount === null
+                ? t(lang, 'support.hintAny')
+                : t(lang, 'support.hintFixed', { amount: String(amount) })}
+            </p>
+
+            <button
+              type="button"
+              className="support-id"
+              title={t(lang, 'support.copyId')}
+              onClick={onCopyId}
+            >
+              <Icon name="copy" />
+              <span>{formatPromptPayId(PROMPTPAY_ID)}</span>
+            </button>
           </div>
 
-          <div
-            className="amount-chips"
-            role="group"
-            aria-label={t(lang, 'support.amountLabel')}
-            data-testid="amount-chips"
-          >
-            {AMOUNTS.map((a) => (
-              <button
-                key={a ?? 'any'}
-                type="button"
-                className={`amount-chip${a === amount ? ' active' : ''}`}
-                aria-pressed={a === amount}
-                onClick={() => setAmount(a)}
-              >
-                {a === null ? t(lang, 'support.amountAny') : `฿${a}`}
-              </button>
-            ))}
+          <div className="support-card">
+            <h3>
+              <Icon name="coffee" /> {t(lang, 'support.freeTitle')}
+            </h3>
+            <p className="support-card-sub">{t(lang, 'support.freeSub')}</p>
+
+            {/* the card needs one anchor the eye lands on — same weight as the QR opposite it */}
+            <a className="support-cta" href={REPO} target="_blank" rel="noopener">
+              <GithubMark />
+              <span>{t(lang, 'support.waysStar')}</span>
+              <Icon name="star" />
+            </a>
+
+            <ul className="support-ways">
+              <li>
+                <button type="button" onClick={onShare}>
+                  <Icon name="share-2" />
+                  <span>{t(lang, 'support.waysShare')}</span>
+                  <Icon name="copy" />
+                </button>
+              </li>
+              <li>
+                <a href={`${REPO}/issues`} target="_blank" rel="noopener">
+                  <Icon name="bug" />
+                  <span>{t(lang, 'support.waysIssue')}</span>
+                  <Icon name="link" />
+                </a>
+              </li>
+              <li>
+                <a href={`${REPO}/blob/main/CHANGELOG.md`} target="_blank" rel="noopener">
+                  <Icon name="list-ordered" />
+                  <span>{t(lang, 'support.waysChangelog')}</span>
+                  <Icon name="link" />
+                </a>
+              </li>
+            </ul>
+
+            <p className="support-fine">{t(lang, 'support.fine')}</p>
           </div>
-          <p className="support-hint">
-            {amount === null
-              ? t(lang, 'support.hintAny')
-              : t(lang, 'support.hintFixed', { amount: String(amount) })}
-          </p>
-
-          <button
-            type="button"
-            className="support-id"
-            title={t(lang, 'support.copyId')}
-            onClick={onCopyId}
-          >
-            <span>{formatPromptPayId(PROMPTPAY_ID)}</span>
-            <Icon name="copy" />
-          </button>
         </div>
 
-        <div className="support-card">
-          <h3>
-            <Icon name="coffee" /> {t(lang, 'support.freeTitle')}
-          </h3>
-          <p className="support-card-sub">{t(lang, 'support.freeSub')}</p>
-
-          <ul className="support-ways">
-            <li>
-              <a href={REPO} target="_blank" rel="noopener">
-                <GithubMark />
-                <span>{t(lang, 'support.waysStar')}</span>
-                <Icon name="star" />
-              </a>
-            </li>
-            <li>
-              <button type="button" onClick={onShare}>
-                <Icon name="share-2" />
-                <span>{t(lang, 'support.waysShare')}</span>
-                <Icon name="copy" />
-              </button>
-            </li>
-            <li>
-              <a href={`${REPO}/issues`} target="_blank" rel="noopener">
-                <Icon name="bug" />
-                <span>{t(lang, 'support.waysIssue')}</span>
-                <Icon name="link" />
-              </a>
-            </li>
-          </ul>
-
-          <p className="support-thanks">{t(lang, 'support.thanks')}</p>
-        </div>
+        <p className="support-thanks">{t(lang, 'support.thanks')}</p>
       </div>
     </section>
   );

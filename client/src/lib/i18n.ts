@@ -20,7 +20,8 @@ const DICT: Record<Lang, Record<string, string>> = {
     'lobby.changelog': 'ดู changelog',
     'lobby.scrollHint': 'เกมนี้ฟรี — เลี้ยงกาแฟได้',
     'support.eyebrow': 'ฟรี — สนับสนุนได้ถ้าถูกใจ',
-    'support.title': 'เกมนี้ฟรี กาแฟแก้วนึงช่วยให้มันไปต่อ',
+    // ⁠ = word joiner: ห้ามเบราว์เซอร์ตัดบรรทัดกลางวลี "กาแฟแก้วนึง" (ไทยไม่มีเว้นวรรค → มันตัดตรงไหนก็ได้)
+    'support.title': 'เกมนี้ฟรี กาแฟ⁠แก้ว⁠นึง ช่วยให้มันไปต่อ',
     'support.lead':
       'ไพ่สลาฟเปิดให้เล่นฟรีทุกคน ไม่มีโฆษณา ไม่มีไอเทมขาย — ถ้ามันทำให้ก๊วนคุณสนุกขึ้น เลี้ยงกาแฟสักแก้วได้ เอาไปเป็นค่าเซิร์ฟเวอร์กับอัปเดตรอบหน้า',
     'support.qrTitle': 'สแกนเลี้ยงกาแฟ — พร้อมเพย์',
@@ -37,6 +38,8 @@ const DICT: Record<Lang, Record<string, string>> = {
     'support.waysStar': 'กดดาวให้บน GitHub',
     'support.waysShare': 'แชร์ลิงก์เกมให้เพื่อน',
     'support.waysIssue': 'เจอบั๊ก / มีไอเดีย บอกได้เลย',
+    'support.waysChangelog': 'ดูว่าอัปเดตอะไรไปบ้าง',
+    'support.fine': 'ไม่มีโฆษณา ไม่มีไอเทมขาย ไม่เก็บข้อมูลส่วนตัว',
     'support.thanks': 'ขอบคุณทุกคนที่ยังเล่นอยู่ — เจอกันบนโต๊ะ',
     'game.play': 'ลงไพ่',
     'game.pass': 'ผ่าน',
@@ -218,6 +221,8 @@ const DICT: Record<Lang, Record<string, string>> = {
     'support.waysStar': 'Star it on GitHub',
     'support.waysShare': 'Share the game with friends',
     'support.waysIssue': 'Found a bug? Got an idea?',
+    'support.waysChangelog': 'See what shipped recently',
+    'support.fine': 'No ads · nothing to buy · no personal data collected',
     'support.thanks': 'Thanks to everyone still playing — see you at the table',
     'game.play': 'Play',
     'game.pass': 'Pass',

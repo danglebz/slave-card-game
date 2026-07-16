@@ -27,6 +27,9 @@ const REPO = 'https://github.com/Danglebz/slave-card-game';
  */
 const CARD_DONATE_URL: string = 'https://ko-fi.com/danglebz';
 
+// GitHub Sponsors — same dead-link protection as CARD_DONATE_URL, empty hides the row
+const SPONSOR_URL: string = 'https://github.com/sponsors/danglebz';
+
 // the code is encoded at this size, then displayed smaller — a phone camera reads the downscaled one fine
 const QR_PX = 440;
 
@@ -160,6 +163,20 @@ export function SupportModal({
               <Icon name="credit-card" />
               <span>{t(lang, 'support.card')}</span>
               <Icon name="link" />
+            </a>
+          )}
+
+          {/* recurring alternative to the one-off QR/card donations above */}
+          {SPONSOR_URL && (
+            <a
+              className="support-row support-card-pay"
+              href={SPONSOR_URL}
+              target="_blank"
+              rel="noopener"
+            >
+              <GithubMark />
+              <span>{t(lang, 'support.sponsor')}</span>
+              <Icon name="heart" />
             </a>
           )}
 

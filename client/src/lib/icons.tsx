@@ -64,6 +64,7 @@ import {
   Bug,
   ChevronDown,
   CreditCard,
+  Heart,
   type LucideProps,
 } from 'lucide-react';
 import { useId, type ComponentType, type ReactNode } from 'react';
@@ -131,6 +132,7 @@ const ICONS: Record<string, ComponentType<LucideProps>> = {
   star: Star,
   'share-2': Share2,
   bug: Bug,
+  heart: Heart,
   'chevron-down': ChevronDown,
   'credit-card': CreditCard,
 };

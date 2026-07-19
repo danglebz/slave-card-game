@@ -155,22 +155,36 @@ dist/                        ผลลัพธ์ build (gitignored) — Fastif
 
 ## เอาขึ้นออนไลน์
 
-ต้องใช้โฮสต์ที่รัน **Node แบบ process ค้างได้ + รองรับ WebSocket** (ไม่ใช่ serverless):
-**Render / Railway / Fly.io / Koyeb** หรือ VPS
+ต้องใช้โฮสต์ที่รัน **process ค้างได้ + รองรับ WebSocket** (ไม่ใช่ serverless):
+**Render / Railway / Fly.io / Koyeb** หรือ VPS — รองรับทั้งแบบ native Node runtime และ Docker
 
 ### Render (ฟรี ง่ายสุด)
 
-มี [`render.yaml`](render.yaml) (Blueprint) ในรีโปแล้ว — Render จะอ่าน build/start/health/Node version ให้อัตโนมัติ
+มี [`render.yaml`](render.yaml) (Blueprint) + [`Dockerfile`](Dockerfile) ในรีโปแล้ว — Render จะอ่าน build/start/health ให้อัตโนมัติ
+Build stage ใช้ **pnpm** (Node 22) build client ตามปกติ ส่วน runtime stage สลับไปรันเซิร์ฟเวอร์ด้วย **[Bun](https://bun.sh)** (`oven/bun`) แทน `tsx`/Node
 
 1. push โค้ดขึ้น GitHub
 2. [render.com](https://render.com) → **New → Blueprint** → เลือก repo นี้ → Apply
-   _(หรือ New → Web Service แล้วตั้งเอง: Build `pnpm install && pnpm build` · Start `pnpm start` · Instance **Free**)_
+   _(หรือ New → Web Service แล้วเลือก Environment **Docker** เอง — Render จะเจอ [`Dockerfile`](Dockerfile) อัตโนมัติ)_
 3. กด Create → ได้ลิงก์ `https://<ชื่อ>.onrender.com`
 
-> server รันด้วย `tsx` (อยู่ใน dependencies) เสิร์ฟ `dist/` ที่ Vite build — web service เดียวจบ ไม่ต้องแยก frontend/backend
+> เสิร์ฟ `dist/` ที่ Vite build ผ่าน Fastify + Socket.IO ตัวเดียวกัน — web service เดียวจบ ไม่ต้องแยก frontend/backend
 >
 > ⚠️ **อย่า**ใช้ Vercel/Netlify (serverless ใช้ Socket.IO ไม่ได้)
 > free tier ของ Render หลับหลังไม่มีคน 15 นาที (คนเข้าครั้งแรกรอ ~30 วิ) และ `rooms.json` รีเซ็ตตอน redeploy
+>
+> เครื่องตัวเอง/LAN (ด้านบน) ยังรันด้วย `tsx`/Node ตามปกติ — Bun เป็น runtime ของฝั่ง prod เท่านั้น ไม่บังคับต้องลง Bun ก็พัฒนาได้
+
+---
+
+## เวอร์ชัน & Release
+
+ออกเวอร์ชันอัตโนมัติด้วย [semantic-release](https://semantic-release.gitbook.io/) — ทุก push ที่ผ่าน CI (lint/typecheck/test/e2e) บน `main` จะถูกวิเคราะห์จาก [Conventional Commits](https://www.conventionalcommits.org/) (`fix:` → patch, `feat:` → minor, `BREAKING CHANGE:` → major) แล้ว:
+
+- bump `package.json` + เติม `CHANGELOG.md` ให้อัตโนมัติ (commit กลับเข้า `main` พร้อม `[skip ci]`)
+- สร้าง git tag + [GitHub Release](https://github.com/danglebz/slave-card-game/releases) ให้เอง
+
+ไม่มีขั้นตอนแมนวลอีกต่อไป — commit ตาม Conventional Commits (มี commitlint + husky บังคับ format ตอน commit อยู่แล้ว) แล้ว push เข้า `main` ได้เลย
 
 ---
 

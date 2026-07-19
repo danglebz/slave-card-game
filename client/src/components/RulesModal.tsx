@@ -178,12 +178,19 @@ export function RulesModal({
           </h3>
           {th ? (
             <p>
-              ถ้า<b>สลาฟหมดมือก่อนคิง</b> → คิงตกเป็นสลาฟ จบรอบ แจกใหม่ทันที แล้วแลกไพ่กับคิงใหม่
+              ถ้า<b>สลาฟหมดมือเป็นคนแรกของรอบ</b> (ก่อนคิงและก่อนทุกคน) → คิงตกเป็นสลาฟ จบรอบ
+              แจกใหม่ทันที แล้วแลกไพ่กับคิงใหม่
+              <br />
+              ถ้ามีคนอื่น (ที่ไม่ใช่สลาฟ) หมดมือก่อนสลาฟ → คิงจะไม่ตกบัลลังก์ แม้สลาฟจะหมดมือก่อนคิงก็ตาม
             </p>
           ) : (
             <p>
-              If the <b>Slave finishes before the King</b> → the King becomes the Slave, round ends,
-              redeal immediately, then exchange with the new King
+              If the <b>Slave is the first to finish this round</b> (before the King and everyone
+              else) → the King becomes the Slave, round ends, redeal immediately, then exchange
+              with the new King
+              <br />
+              If anyone else (not the Slave) finishes before the Slave, the King is safe — even if
+              the Slave still finishes before the King
             </p>
           )}
         </DialogBody>

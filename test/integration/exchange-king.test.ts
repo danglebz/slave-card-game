@@ -114,6 +114,48 @@ describe('คิงตกบัลลังก์ (miyakoOchi)', () => {
     expect(room._miyakoExchange).toBe(false);
   });
 
+  it('มีคนอื่น (ไม่ใช่สลาฟ) หมดมือก่อนสลาฟ → สลาฟหมดมือก่อนคิงก็ไม่ล่มคิง', () => {
+    const room = new Room('FIRST');
+    // index 0
+    room.addPlayer('king', 'KingP');
+    // index 1
+    room.addPlayer('other', 'OtherP');
+    // index 2
+    room.addPlayer('viceslave', 'ViceP');
+    // index 3
+    room.addPlayer('slave', 'SlaveP');
+    room.start();
+    room.roundOrder = [0, 1, 2, 3];
+    room.phase = 'playing';
+    room.everPlayed = true;
+    room.pile = null;
+    room.passed = new Set();
+
+    // "other" (not slave, not king) finishes first this round
+    room.turn = 1;
+    room.players[1].hand = [{ r: 5, s: 0 }];
+    room.play('other', [cardId({ r: 5, s: 0 })]);
+    expect(room.finishOrder).toEqual([1]);
+    expect(room.phase).toBe('playing');
+
+    // King still has cards
+    room.players[0].hand = [
+      { r: 9, s: 0 },
+      { r: 11, s: 0 },
+    ];
+    // Slave empties hand next — before the King, but NOT first overall
+    room.turn = 3;
+    room.pile = null;
+    room.passed = new Set();
+    room.players[3].hand = [{ r: 6, s: 3 }];
+    room.play('slave', [cardId({ r: 6, s: 3 })]);
+
+    // No dethrone: still playing normally, no notice, no exchange phase
+    expect(room.phase).toBe('playing');
+    expect(room.noticeKey).not.toBe('notice.dethrone');
+    expect(room.finishOrder).toEqual([1, 3]);
+  });
+
   it('สลาฟหมดมือ "หลัง" คิง = ไม่ตกบัลลังก์ (จบรอบปกติ)', () => {
     const room = new Room('NORM');
     room.addPlayer('king', 'KingP');

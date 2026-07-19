@@ -626,11 +626,13 @@ export class Room {
       this.log.push(`🏆 ${player.name} หมดมือแล้ว!`);
       this.addHistory({ event: `🏆 ${player.name} หมดมือ!` });
 
-      // King dethroned: the (former) slave empties their hand before the (former) King → end round, redeal immediately
+      // King dethroned: the (former) slave is the FIRST player to empty their hand this round
+      // (before the King and before everyone else) → end round, redeal immediately.
+      // If anyone else already finished before the Slave, the King is safe even though the Slave beat them.
       if (this.roundOrder) {
         const king = this.roundOrder[0];
         const slave = this.roundOrder[this.roundOrder.length - 1];
-        if (idx === slave && !this.players[king].finished) {
+        if (idx === slave && !this.players[king].finished && this.finishOrder.length === 1) {
           return this.miyakoOchi();
         }
       }

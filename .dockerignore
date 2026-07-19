@@ -1,0 +1,14 @@
+node_modules
+dist
+rooms.json
+*.log
+.git
+.DS_Store
+.vscode
+.idea
+.env
+.env.*
+!.env.example
+tmp
+coverage
+test

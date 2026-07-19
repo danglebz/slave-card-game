@@ -10,15 +10,27 @@ export function primeAudio() {
       window.AudioContext ||
       (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     audioCtx = audioCtx || (Ctx ? new Ctx() : null);
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx && audioCtx.state === 'suspended') void audioCtx.resume();
   } catch {
     /* unsupported → stay silent */
   }
 }
 
-// unlock autoplay on the first gesture (called once on import)
+// iOS Safari: a single one-shot 'click' listener isn't enough — it can suspend the
+// AudioContext again after backgrounding, and synthetic clicks aren't always fired for
+// every gesture. Keep unlocking on any gesture/visibility change until it's truly running.
 if (typeof document !== 'undefined') {
-  document.addEventListener('click', primeAudio, { once: true });
+  const unlockEvents = ['click', 'touchend', 'pointerdown', 'keydown'] as const;
+  const tryUnlock = () => {
+    primeAudio();
+    if (audioCtx && audioCtx.state === 'running') {
+      unlockEvents.forEach((evt) => document.removeEventListener(evt, tryUnlock));
+    }
+  };
+  unlockEvents.forEach((evt) => document.addEventListener(evt, tryUnlock, { passive: true }));
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) primeAudio();
+  });
 }
 
 export function beep() {

@@ -2007,8 +2007,8 @@ button.loading:disabled {
   height: 14px;
   color: var(--muted-foreground);
 }
-/* จ่ายด้วยบัตร = ทางเลือก "รอง" (พร้อมเพย์ฟรี บัตรโดนค่าธรรมเนียม) → อยู่ใต้ QR ไม่เด่นแข่งกัน */
-.support-card-pay {
+/* จ่ายด้วยบัตร / GitHub Sponsors = ทางเลือก "รอง" (พร้อมเพย์ฟรี) → อยู่ใต้ QR ไม่เด่นแข่งกัน */
+.support-donate-row {
   margin-top: 13px;
 }
 

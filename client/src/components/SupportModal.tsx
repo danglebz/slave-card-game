@@ -155,7 +155,7 @@ export function SupportModal({
           {/* no Thai banking app → cards. Hidden until CARD_DONATE_URL is set, so no dead link ships. */}
           {CARD_DONATE_URL && (
             <a
-              className="support-row support-card-pay"
+              className="support-row support-donate-row support-donate-card"
               href={CARD_DONATE_URL}
               target="_blank"
               rel="noopener"
@@ -169,7 +169,7 @@ export function SupportModal({
           {/* recurring alternative to the one-off QR/card donations above */}
           {SPONSOR_URL && (
             <a
-              className="support-row support-card-pay"
+              className="support-row support-donate-row support-donate-sponsor"
               href={SPONSOR_URL}
               target="_blank"
               rel="noopener"

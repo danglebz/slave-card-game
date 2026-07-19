@@ -80,24 +80,27 @@ jobs:
           retention-days: 7
 
   # ----- auto-release: semantic-release อ่าน conventional commits ตั้งแต่ tag ล่าสุด → คำนวณ -----
-  # เวอร์ชันถัดไปเอง (fix=patch, feat=minor, BREAKING CHANGE=major) แล้วสร้าง git tag + GitHub
-  # Release ให้ทันที ไม่มี commit เขียนกลับ main (ดู .releaserc.json — ไม่แตะ package.json/CHANGELOG)
-  # เหตุผล: @semantic-release/git ต้อง `git push` commit ตรงเข้า main ซึ่งโดน branch protection
-  # ("2 of 2 required status checks are expected") บล็อก เพราะ github-actions[bot] ไม่อยู่ใน
-  # bypass list ของ ruleset — ต่างจากการสร้าง tag/release ผ่าน GitHub API ที่ไม่โดนกฎนี้
+  # เวอร์ชันถัดไปเอง (fix=patch, feat=minor, BREAKING CHANGE=major) → bump package.json + เติม
+  # CHANGELOG.md → commit กลับ main → สร้าง git tag + GitHub Release (ดู .releaserc.json)
+  #
+  # ใช้ secrets.RELEASE_TOKEN (PAT ส่วนตัว ไม่ใช่ default GITHUB_TOKEN) ทั้งตอน checkout และรัน
+  # semantic-release เพราะ github-actions[bot] ไม่อยู่ใน bypass list ของ branch protection บน main
+  # (push ตรงจาก default token โดน "2 of 2 required status checks are expected" บล็อก) — PAT ต้อง
+  # ต่ออายุเองก่อนหมด ไม่งั้น release job จะพังแบบนี้อีก
   release:
     name: Release (semantic-release)
     runs-on: ubuntu-latest
     needs: [check, e2e] # ออกเวอร์ชันเฉพาะเมื่อ CI ผ่านครบ
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
-      contents: write # ต้องใช้สร้าง tag + release
+      contents: write # ต้องใช้สร้าง commit + tag + release
       issues: write # semantic-release คอมเมนต์ปิด issue/PR ที่เกี่ยวข้อง (ถ้ามี)
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # ดึง history + tags ทั้งหมดมาวิเคราะห์ commit
+          token: ${{ secrets.RELEASE_TOKEN }} # ให้ git push ของ semantic-release ใช้ credential นี้
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -111,7 +114,13 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
+      # @semantic-release/git ต้อง commit จริง — ไม่ตั้ง identity ไว้ก่อน git จะ error "unable to auto-detect email address"
+      - name: ตั้ง git identity สำหรับ commit ของ semantic-release
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: semantic-release
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: pnpm exec semantic-release

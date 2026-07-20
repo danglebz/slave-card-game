@@ -1887,12 +1887,38 @@ button.loading:disabled {
 .thaiqr {
   width: max-content;
   max-width: 100%;
-  margin: 2px auto 0;
+  margin: 13px auto 0;
   border-radius: 12px;
   overflow: hidden;
   background: #fff;
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
+}
+/* Collapsible เปิด/ปิด QR พร้อมเพย์แบบสมูท — Radix เซ็ต custom property ตัวนี้ให้ระหว่าง animate */
+@keyframes qr-collapsible-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+  }
+}
+@keyframes qr-collapsible-up {
+  from {
+    height: var(--radix-collapsible-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+.qr-collapsible-content {
+  overflow: hidden;
+}
+.qr-collapsible-content[data-state='open'] {
+  animation: qr-collapsible-down 220ms ease-out;
+}
+.qr-collapsible-content[data-state='closed'] {
+  animation: qr-collapsible-up 220ms ease-out;
 }
 /* แถบหัว = สีน้ำเงินทางการของโลโก้เอง (#00427a) → ส่วนที่ถูกเจาะในโลโก้ใช้สีเดียวกันเป๊ะ ไม่มีรอยต่อ */
 .thaiqr-head {

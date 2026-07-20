@@ -10,6 +10,7 @@ import {
   DialogBody,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Icon, GithubMark } from '@/lib/icons';
 import { copyText } from '@/lib/clipboard';
 import { promptPayPayload, formatPromptPayId, PROMPTPAY_ID } from '@/lib/promptpay';
@@ -80,9 +81,11 @@ export function SupportModal({
   const lang = useStore((s) => s.lang);
   const showToast = useStore((s) => s.showToast);
   const [qr, setQr] = useState<string | null>(null);
+  const [qrOpen, setQrOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
+    setQrOpen(false); // collapsed again each time the modal reopens
     let alive = true;
     QRCode.toDataURL(promptPayPayload(PROMPTPAY_ID), {
       width: QR_PX,
@@ -125,32 +128,51 @@ export function SupportModal({
             {t(lang, 'support.lead2')}
           </p>
 
-          {/* the plate a Thai merchant QR actually looks like — and the number rides on it, so a
-              screenshotted or saved code still says who it pays. Tap the number to copy it. */}
-          <div className="thaiqr">
-            <div className="thaiqr-head">
-              <img src="/thai-qr-payment.svg" alt="Thai QR Payment" width={132} height={40} />
-            </div>
-            <div className="thaiqr-body">
-              <img className="promptpay-mark" src="/prompt-pay.svg" alt="PromptPay" />
-              <img
-                className="thaiqr-qr"
-                width={172}
-                height={172}
-                alt={t(lang, 'support.qrAlt')}
-                src={qr ?? undefined}
-              />
-            </div>
-            <button
-              type="button"
-              className="thaiqr-id"
-              title={t(lang, 'support.copyId')}
-              onClick={onCopyId}
-            >
-              <Icon name="copy" />
-              <span>{formatPromptPayId(PROMPTPAY_ID)}</span>
-            </button>
-          </div>
+          {/* PromptPay stays collapsed by default — tap to reveal, GitHub-disclosure style */}
+          <Collapsible open={qrOpen} onOpenChange={setQrOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                id="support-qr-toggle"
+                type="button"
+                className="support-row support-donate-row group"
+              >
+                <Icon name="qr-code" />
+                <span>{t(lang, qrOpen ? 'support.hideQr' : 'support.showQr')}</span>
+                <Icon
+                  name="chevron-down"
+                  className="transition-transform duration-200 group-data-[state=open]:rotate-180"
+                />
+              </button>
+            </CollapsibleTrigger>
+            {/* the plate a Thai merchant QR actually looks like — and the number rides on it, so a
+                screenshotted or saved code still says who it pays. Tap the number to copy it. */}
+            <CollapsibleContent className="qr-collapsible-content">
+              <div className="thaiqr">
+                <div className="thaiqr-head">
+                  <img src="/thai-qr-payment.svg" alt="Thai QR Payment" width={132} height={40} />
+                </div>
+                <div className="thaiqr-body">
+                  <img className="promptpay-mark" src="/prompt-pay.svg" alt="PromptPay" />
+                  <img
+                    className="thaiqr-qr"
+                    width={172}
+                    height={172}
+                    alt={t(lang, 'support.qrAlt')}
+                    src={qr ?? undefined}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="thaiqr-id"
+                  title={t(lang, 'support.copyId')}
+                  onClick={onCopyId}
+                >
+                  <Icon name="copy" />
+                  <span>{formatPromptPayId(PROMPTPAY_ID)}</span>
+                </button>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* no Thai banking app → cards. Hidden until CARD_DONATE_URL is set, so no dead link ships. */}
           {CARD_DONATE_URL && (

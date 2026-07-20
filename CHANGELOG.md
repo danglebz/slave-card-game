@@ -1,3 +1,10 @@
+# [1.28.0](https://github.com/danglebz/slave-card-game/compare/v1.27.0...v1.28.0) (2026-07-20)
+
+
+### Features
+
+* **support:** rewrite donation row labels for parallel wording ([030f052](https://github.com/danglebz/slave-card-game/commit/030f052012441b23de3e4b109c01716409a4aa64))
+
 # [1.27.0](https://github.com/danglebz/slave-card-game/compare/v1.26.0...v1.27.0) (2026-07-20)
 
 

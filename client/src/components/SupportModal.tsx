@@ -137,7 +137,7 @@ export function SupportModal({
                 className="support-row support-donate-row group"
               >
                 <Icon name="qr-code" />
-                <span>{t(lang, qrOpen ? 'support.hideQr' : 'support.showQr')}</span>
+                <span>{t(lang, 'support.qrToggle')}</span>
                 <Icon
                   name="chevron-down"
                   className="transition-transform duration-200 group-data-[state=open]:rotate-180"

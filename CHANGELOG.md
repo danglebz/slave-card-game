@@ -1,3 +1,10 @@
+# [1.27.0](https://github.com/danglebz/slave-card-game/compare/v1.26.0...v1.27.0) (2026-07-20)
+
+
+### Features
+
+* **support:** collapse the PromptPay QR behind a GitHub-style toggle ([5d2b2fc](https://github.com/danglebz/slave-card-game/commit/5d2b2fcbbf03bff163fef72d22328bbbd17ed5bf))
+
 # [1.26.0](https://github.com/danglebz/slave-card-game/compare/v1.25.0...v1.26.0) (2026-07-19)
 
 
